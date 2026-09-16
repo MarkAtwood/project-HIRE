@@ -5,6 +5,7 @@ pub mod did_key;
 pub mod fido2;
 pub mod goa;
 pub mod gpg;
+mod keystore;
 pub mod oidc;
 pub mod piv;
 pub mod ssh;

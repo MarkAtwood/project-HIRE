@@ -3,19 +3,31 @@
 //!
 //! No network I/O. Reads HIRE_DID_KEYS (whitespace-separated did:key URIs).
 //!
-//! HIRE_DID_KEYS NAMES PUBLIC IDENTIFIERS AND THAT IS DELIBERATE. `did:key`
-//! encodes the verification method in the identifier itself, so the identifier
-//! says which key must answer without saying where that key lives — and hire
-//! holds no secrets of its own. Every other source here is a client of
-//! something that does: ssh-agent, gpg-agent, tailscaled, the kernel. So the
-//! secret half of a `did:key` is looked for in the ssh-agent, which already
-//! holds ed25519 keys and already speaks a signing protocol this crate speaks.
+//! TWO PLACES THE SECRET CAN LIVE, and the preference between them is the
+//! design. `did:key` encodes the verification method in the identifier itself,
+//! so the identifier says which key must answer without saying where that key
+//! lives.
 //!
-//! The alternative was a key file hire reads and a new place for private key
-//! material to sit, which would make hire a keystore, add a file format, and
-//! pre-empt hire-lnaj. Rejected for all three reasons. The cost is stated
-//! plainly: a `did:key` whose secret is in no local agent enumerates and cannot
-//! prove, exactly like an ecdsa key in the ssh agent.
+//! First choice is an agent, because hire would rather not hold a secret at
+//! all: every other source here is a client of something that does, and a key
+//! in the ssh agent is one hire can use without ever seeing it. A `did:key`
+//! whose point matches an agent key is proved through the agent.
+//!
+//! Second is [`crate::keystore`], the drop directory. That exists because the
+//! first choice is unreachable for the person `did:key` is actually for: a DID
+//! holder's key is a file, `ssh-add` refuses a PKCS#8 PEM ed25519 key outright,
+//! and OpenSSH stores ed25519 private keys only in its own format — so "put it
+//! in your agent" was advice nobody could follow. The keystore owns the disk,
+//! the permission rules and the format, so this attestor does not.
+//!
+//! The two are not equivalent and the candidate says which it got: a dropped
+//! key is [`ProofCost::Silent`], because nothing can prompt; an agent key is
+//! [`ProofCost::Interactive`], because `ssh-add -c` prompts and the agent does
+//! not report that constraint.
+//!
+//! HIRE_DID_KEYS STILL NAMES PUBLIC IDENTIFIERS. A DID configured there and
+//! held nowhere local enumerates and does not prove, which is the model
+//! working — some other attestor may yet be able to prove it.
 //!
 //! One physical key can therefore answer as two identities — `key/<fingerprint>`
 //! from ssh-agent and `did/<hash>` from here. That is what a naming layer is;
@@ -32,7 +44,7 @@ use async_trait::async_trait;
 use sha2::{Digest, Sha256};
 
 use crate::claim::ChallengeSignature;
-use crate::ssh;
+use crate::{keystore, ssh};
 use crate::{
     AttainableAssurance, Attestor, AttestorError, Candidate, Evidence, ProofCost,
     SelfAssertedDomain,
@@ -56,11 +68,12 @@ impl DidKeyAttestor {
         Self
     }
 
-    /// Returns true if HIRE_DID_KEYS is set and contains at least one did:key URI.
+    /// Returns true if any did:key identifier is configured or dropped.
     pub fn is_available() -> bool {
         std::env::var("HIRE_DID_KEYS")
             .map(|v| v.split_whitespace().any(|s| s.starts_with("did:key:")))
             .unwrap_or(false)
+            || !keystore::ed25519_keys().is_empty()
     }
 }
 
@@ -99,6 +112,45 @@ pub(crate) fn ed25519_point(did: &str) -> Option<[u8; 32]> {
 
     let (prefix, key) = decoded.split_at(ED25519_MULTICODEC.len());
     (prefix == ED25519_MULTICODEC).then(|| key.try_into().expect("32 of 34 bytes"))
+}
+
+/// The `did:key` identifier an ed25519 public key names.
+///
+/// The inverse of [`ed25519_point`], and it exists because a dropped key has to
+/// be able to say what identity it is: the operator wrote a key file, not an
+/// identifier. Written here rather than in `keystore` so that both directions
+/// of the encoding sit in one file and cannot drift.
+pub(crate) fn did_key_of(point: &[u8; 32]) -> String {
+    let mut payload = Vec::with_capacity(ED25519_DID_LEN);
+    payload.extend_from_slice(&ED25519_MULTICODEC);
+    payload.extend_from_slice(point);
+
+    // Base-58 digits, least significant first: the standard big-endian-bytes to
+    // base58 conversion. No leading-zero handling is needed for the values this
+    // produces -- the multicodec prefix starts 0xed -- and writing the general
+    // form anyway would be a branch no input reaches and no test could cover.
+    let mut digits: Vec<u8> = Vec::new();
+    for byte in payload {
+        let mut carry = u32::from(byte);
+        for digit in digits.iter_mut() {
+            let acc = u32::from(*digit) * 256 + carry;
+            *digit = (acc % 58) as u8;
+            carry = acc / 58;
+        }
+        while carry > 0 {
+            digits.push((carry % 58) as u8);
+            carry /= 58;
+        }
+    }
+
+    let mut did = String::from("did:key:z");
+    did.extend(
+        digits
+            .iter()
+            .rev()
+            .map(|&d| char::from(BASE58BTC[usize::from(d)])),
+    );
+    did
 }
 
 /// The SPIFFE path a DID maps to.
@@ -143,23 +195,41 @@ impl Attestor for DidKeyAttestor {
         // ponytail: did:key candidates sit under ssh.local | ceiling: the
         //   PersonalDid trust domain is never used | upgrade path: switch the
         //   domain once the DID is actually resolved rather than string-matched
-        let candidates = parse_did_keys()
-            .into_iter()
-            .map(|did| {
+        // A dropped key names itself, so it is a candidate whether or not
+        // anyone configured it -- that is the point of the drop directory.
+        let dropped: Vec<String> = keystore::ed25519_keys()
+            .iter()
+            .map(|key| did_key_of(&key.point()))
+            .collect();
+
+        let mut candidates: Vec<Candidate> = Vec::new();
+        for did in dropped.iter().cloned().chain(parse_did_keys()) {
+            // A DID both dropped and configured is one identity. The dropped
+            // spelling comes first, so the survivor is the one that can prove
+            // silently.
+            if candidates.iter().any(|c| c.display_name == did) {
+                continue;
+            }
+            // Silent is a guarantee, and for a key held in this process it is a
+            // real one: nothing in the signing path can reach a human. An agent
+            // key cannot give it, because `ssh-add -c` prompts and the agent
+            // does not report that constraint -- the reason ssh.rs cannot either.
+            let proof_cost = if dropped.contains(&did) {
+                ProofCost::Silent
+            } else {
+                ProofCost::Interactive
+            };
+            candidates.push(
                 Candidate::new(
                     "did:key",
                     SelfAssertedDomain::SshLocal,
                     spiffe_path(&did),
-                    did.clone(),
+                    did,
                 )
                 .with_attainable(AttainableAssurance::Iaa1)
-                // Interactive since the secret is held by the ssh agent, which
-                // prompts for a key added with `ssh-add -c` and does not report
-                // that constraint. Silent is a guarantee and this cannot give
-                // it, for exactly the reason ssh.rs cannot.
-                .with_proof_cost(ProofCost::Interactive)
-            })
-            .collect();
+                .with_proof_cost(proof_cost),
+            );
+        }
         Ok(candidates)
     }
 
@@ -168,17 +238,17 @@ impl Attestor for DidKeyAttestor {
         candidate: &Candidate,
         challenge: &[u8],
     ) -> Result<Vec<Evidence>, AttestorError> {
-        // Re-read the configuration rather than trusting the path, as ssh.rs
-        // re-lists the agent: it asks the truthful question, which is whether
-        // this DID is still one the operator claims right now.
-        let did = parse_did_keys()
+        // Re-enumerate rather than trusting the path, as ssh.rs re-lists the
+        // agent: it asks the truthful question, which is whether this DID is
+        // still one the operator holds or claims right now.
+        let did = self
+            .enumerate()
+            .await?
             .into_iter()
-            .find(|did| spiffe_path(did) == candidate.path)
+            .find(|c| c.path == candidate.path)
+            .map(|c| c.display_name)
             .ok_or_else(|| {
-                AttestorError::ChallengeFailed(format!(
-                    "HIRE_DID_KEYS no longer names {}",
-                    candidate.path
-                ))
+                AttestorError::ChallengeFailed(format!("nothing local names {}", candidate.path))
             })?;
 
         let point = ed25519_point(&did).ok_or_else(|| {
@@ -194,24 +264,40 @@ impl Attestor for DidKeyAttestor {
             AttestorError::ChallengeFailed(format!("{did} does not name an ed25519 key"))
         })?;
 
-        // The secret lives in the agent or it lives nowhere hire can reach.
-        let mut stream = ssh::connect().await?;
-        let key_blob = ssh::list_identities(&mut stream)
-            .await?
-            .into_iter()
-            .map(|(blob, _comment)| blob)
-            .find(|blob| ssh::ed25519_point_of(blob) == Some(point))
-            .ok_or_else(|| {
-                AttestorError::ChallengeFailed(format!("no local agent holds the key {did} names"))
-            })?;
-
-        let framed = ssh::sign(&mut stream, &key_blob, challenge, &candidate.path).await?;
-        // The agent's framing is unwrapped here, where the transport is known.
-        // What makes the signature evidence is that it verifies under the key
-        // the identifier names, and that is true of 64 bytes from any custodian.
-        let signature = ssh::raw_ed25519_signature(&framed).ok_or_else(|| {
-            AttestorError::ChallengeFailed("malformed ssh-agent signature".into())
-        })?;
+        // A dropped key first: it cannot prompt, and asking the agent about a
+        // key hire already holds would risk a prompt for nothing.
+        let dropped = keystore::ed25519_keys();
+        let signature = match dropped.iter().find(|key| key.point() == point) {
+            Some(key) => {
+                tracing::debug!(
+                    event = "did_key_signed_locally",
+                    did = %did,
+                    path = %key.path().display(),
+                );
+                key.sign(challenge)
+            }
+            None => {
+                let mut stream = ssh::connect().await?;
+                let key_blob = ssh::list_identities(&mut stream)
+                    .await?
+                    .into_iter()
+                    .map(|(blob, _comment)| blob)
+                    .find(|blob| ssh::ed25519_point_of(blob) == Some(point))
+                    .ok_or_else(|| {
+                        AttestorError::ChallengeFailed(format!(
+                            "no dropped key and no local agent holds the key {did} names"
+                        ))
+                    })?;
+                let framed = ssh::sign(&mut stream, &key_blob, challenge, &candidate.path).await?;
+                // The agent's framing is unwrapped here, where the transport is
+                // known. What makes the signature evidence is that it verifies
+                // under the key the identifier names, and that is true of 64
+                // bytes from either custodian.
+                ssh::raw_ed25519_signature(&framed).ok_or_else(|| {
+                    AttestorError::ChallengeFailed("malformed ssh-agent signature".into())
+                })?
+            }
+        };
 
         Ok(vec![Evidence::Possession(
             ChallengeSignature::verify_did_key_ed25519(candidate, challenge, &did, &signature)?,
@@ -258,6 +344,26 @@ mod tests {
     #[test]
     fn ed25519_point_decodes_the_spec_vector() {
         assert_eq!(ed25519_point(ED25519_DID), Some(ED25519_KEY));
+    }
+
+    #[test]
+    fn did_key_of_encodes_the_spec_vector() {
+        // The same external vector the decoder is tested against, run the other
+        // way. Checking the encoder only by round-tripping it through the
+        // decoder would let a matched pair of faults agree with each other.
+        assert_eq!(did_key_of(&ED25519_KEY), ED25519_DID);
+    }
+
+    #[test]
+    fn did_key_of_and_ed25519_point_are_inverses() {
+        // Round trip as a second check, not the only one. The all-zero point is
+        // the interesting input: it is the shortest base58 number the multicodec
+        // prefix can produce, so it is where a carry bug would show.
+        for point in [ED25519_KEY, [0u8; 32], [0xffu8; 32]] {
+            let did = did_key_of(&point);
+            assert!(did.starts_with("did:key:z6Mk"), "{did}");
+            assert_eq!(ed25519_point(&did), Some(point), "{did}");
+        }
     }
 
     #[test]
