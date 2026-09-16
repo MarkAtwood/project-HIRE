@@ -469,16 +469,26 @@ The `hire` extension is non-standard but ignorable by consumers that do not unde
 
 ## SPIFFE Community Proposal
 
-Before code, this design should be circulated to the SPIFFE TSC as a two-page discussion document: "Personal SVID — extending SPIFFE Workload API to human identity on the desktop." The SPIFFE community scoped the project to workloads as a deployable beachhead, not because they thought workloads were the only use case. The desktop agent is the natural completion.
+**The plan for taking this upstream is [UPSTREAM.md](UPSTREAM.md).** It covers how SPIFFE
+is governed, what HIRE would be asking for, what has to be true before asking, and the
+sequence.
 
-Sections of that proposal:
-1. Trust domain model for heterogeneous human identity sources
-2. Attestor plugin list (maps to existing SPIRE server attestor API)
-3. Per-RP pseudonymity via deterministic SPIFFE ID derivation
-4. App-attestation selectors per OS
-5. Browser bridge (native messaging, FedCM roadmap)
+Two points from it belong here, because they bear on this document's contents.
 
-Contacts: Evan Gilman (original SPIFFE/SPIRE author), SPIFFE Technical Steering Committee, CNCF TAG Security.
+**Nothing in this specification requires a change to SPIFFE.** Every extension HIRE adds
+is ignorable by construction: the `hire` claim block is an extra JWT claim, the `hire_`
+audience parameters live inside a string SPIFFE treats as opaque, and `hint` is a field
+the Workload API already defines. A stock SPIFFE client library fetches and validates a
+`hired`-issued JWT-SVID unmodified, which is a test in this repository rather than a
+claim. So a standards proposal is optional, and it is sequenced after adoption rather than
+before it.
+
+**If a standard is proposed later**, the material is here already: the trust-domain shapes
+for human sources, the identity-assurance and presence vocabularies, per-consumer
+pseudonymous SPIFFE IDs, and the audience-extension namespace. It would enter the SPIFFE
+standards process at **Proposed** and climb through Experimental and Incubating, which is
+the point at which the normative half of this document would be worth separating from the
+contextual half — the split [DESIGN.md](DESIGN.md) says is waiting for exactly that.
 
 ---
 

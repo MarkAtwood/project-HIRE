@@ -227,6 +227,7 @@ another local user.
 - [MOTIVATIONS.md](MOTIVATIONS.md) -- why this needs to exist at all
 - [SPEC-HIRE.md](SPEC-HIRE.md) -- normative specification: SPIFFE ID schema, trust domains, assurance levels, prior art
 - [PRFAQ.md](PRFAQ.md) -- press release and anticipated questions
+- [UPSTREAM.md](UPSTREAM.md) -- the plan for donating HIRE to SPIFFE: how that project is governed, what would be asked of it, and what has to be true first
 
 ## License
 
@@ -236,7 +237,7 @@ Two licenses apply, by file type:
   protobuf definitions, and service/config files. See [LICENSE](LICENSE).
   Each crate carries `license = "Apache-2.0"` in its manifest.
 - **Documentation** — CC-BY-4.0. `MOTIVATIONS.md`, `SPEC-HIRE.md`, `DESIGN.md`,
-  `PRFAQ.md` and this README. See [LICENSE-CC-BY-4.0](LICENSE-CC-BY-4.0). Each carries an SPDX
+  `PRFAQ.md`, `UPSTREAM.md` and this README. See [LICENSE-CC-BY-4.0](LICENSE-CC-BY-4.0). Each carries an SPDX
   identifier on its first line.
 
 `AGENTS.md` and `CLAUDE.md` are agent tooling instructions and fall under Apache-2.0

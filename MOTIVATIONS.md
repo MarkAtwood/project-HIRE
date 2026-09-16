@@ -154,3 +154,5 @@ both, and trust the README on status: this one goes stale first.
   domain model, and a full comparison against Kerberos, SPIRE, WebAuthn, platform
   SSO and the rest
 - [PRFAQ.md](PRFAQ.md) — the launch framing and anticipated objections
+- [UPSTREAM.md](UPSTREAM.md) — the plan for donating this to SPIFFE, and why the
+  standards proposal comes after adoption rather than before it
