@@ -1,8 +1,8 @@
 #[cfg(unix)]
 use crate::UnixAttestor;
 use crate::{
-    Attestor, DidKeyAttestor, Fido2Attestor, GoaAttestor, GpgAttestor, OidcCachedAttestor,
-    PivAttestor, SshAgentAttestor, TailscaleAttestor,
+    Attestor, AwsSsoAttestor, DidKeyAttestor, Fido2Attestor, GoaAttestor, GpgAttestor,
+    OidcCachedAttestor, PivAttestor, SshAgentAttestor, TailscaleAttestor,
 };
 use std::sync::Arc;
 
@@ -17,7 +17,8 @@ use std::sync::Arc;
 /// 6. FIDO2 hardware keys
 /// 7. GNOME Online Accounts
 /// 8. PIV/smartcard
-/// 9. Unix account (not probed -- see below)
+/// 9. AWS SSO enrollment
+/// 10. Unix account (not probed -- see below)
 ///
 /// Each source is probed with a lightweight availability check before inclusion.
 /// A source that fails to probe is logged and skipped -- never fatal.
@@ -96,7 +97,17 @@ pub async fn probe_sources() -> Vec<Arc<dyn Attestor>> {
         tracing::debug!("piv: no smartcard found or pkcs11 feature not enabled, skipping");
     }
 
-    // 9. Unix account -- always present, so it is pushed rather than probed.
+    // 9. AWS SSO enrollment. Position is arbitrary and deliberately so: this
+    // source can never prove, so it contributes no claim to take a tier slot
+    // from anything above or below it.
+    if AwsSsoAttestor::is_available() {
+        tracing::info!("aws-sso: available");
+        active.push(Arc::new(AwsSsoAttestor::new()));
+    } else {
+        tracing::debug!("aws-sso: no ~/.aws/sso/cache directory, skipping");
+    }
+
+    // 10. Unix account -- always present, so it is pushed rather than probed.
     #[cfg(unix)]
     {
         active.push(Arc::new(UnixAttestor::new()));

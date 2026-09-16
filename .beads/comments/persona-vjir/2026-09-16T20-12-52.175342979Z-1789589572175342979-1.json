@@ -1,0 +1,7 @@
+{
+  "id": "1789589572175342979-1",
+  "issue_id": "persona-vjir",
+  "author": "agent",
+  "text": "CHEAP PARTIAL LANDED 2026-09-16. hire-attestors/src/aws_sso.rs reads startUrl and region from ~/.aws/sso/cache/*.json with no network, and enumerates an organisational candidate with no prove(): the trait default declines. Verified on a real cache -- 'hire enumerate' prints spiffe://ssh.local/org/wolfssl-eng.awsapps.com/via/aws-sso.\n\nWHAT THAT DELIBERATELY DID NOT DECIDE, which is the rest of this bead: what tier a remote authority's word about a bearer token earns. The partial never reaches the question, so the candidate keeps Candidate::new's floor tier rather than declaring an attainable one -- declaring Iaa2 would have answered the open question in a doc comment. The acceptance criterion is unmet and this stays open.\n\nTwo things the partial fixed on the way: the host of startUrl is untrusted input that becomes a SPIFFE path segment, and the first charset check let 'https://../../root/start' through as the host '..'. Now every dot-separated label must be non-empty and alphanumeric-or-hyphen. Secrets in the same file (accessToken, refreshToken, clientSecret) are parsed and dropped with the Value; a test asserts none of them reach the candidate.",
+  "created_at": "2026-09-16T20:12:52.175342979Z"
+}

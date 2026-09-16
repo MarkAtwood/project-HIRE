@@ -1,5 +1,6 @@
 //! Attestor plugin trait and identity source implementations.
 
+pub mod aws_sso;
 pub mod claim;
 pub mod did_key;
 pub mod fido2;
@@ -13,6 +14,7 @@ pub mod tailscale;
 #[cfg(unix)]
 pub mod unix;
 
+pub use aws_sso::AwsSsoAttestor;
 pub use claim::{
     AttainableAssurance, Candidate, ChallengeSignature, Claim, DaemonIdentity, Evidence,
     HardwareTouch, KeyCustody, PlatformIdentity, ProofCost, SelfAssertedDomain, VerifiedToken,
