@@ -27,7 +27,7 @@ identity claims it signs. Treat the assurance and presence levels below as targe
 
 | Area | State |
 |---|---|
-| SPIFFE Workload API over gRPC/UDS | works -- covered by an end-to-end test |
+| SPIFFE Workload API over gRPC/UDS | works -- and a third-party SPIFFE client library fetches, and validates against the published bundle, with no modification |
 | JWT-SVID issuance, ephemeral in-memory CA | works |
 | Attestor registry, startup probing, `enumerate()` | works for most sources; returns candidates, not claims |
 | CLI (`whoami`, `enumerate`, `fetch-jwt`, ...) | works -- `fetch-jwt --spiffe-id` names one identity to prove |
@@ -132,6 +132,20 @@ question from whether it substantiates its assurance row.
 | GPG | iaa1 | none | cross-platform | yes, when a `gpg` binary is present -- `prove()` signs the challenge through gpg-agent and verifies the signature in-process |
 | DID | iaa1/iaa2 | none | cross-platform | `did:key` yes -- from `HIRE_DID_KEYS` or a key dropped in `~/.config/hire/identities`. A dropped key signs in-process and is silently provable; an agent-held one signs through the agent; `did:web` no |
 | Unix account | iaa1 | none | Linux, macOS, BSD | yes -- always available |
+
+## Using it from an application
+
+`hired` is a Workload API endpoint, so a SPIFFE client library finds it the standard way — point `SPIFFE_ENDPOINT_SOCKET` at the socket and use whatever client you already have:
+
+```sh
+export SPIFFE_ENDPOINT_SOCKET=unix://$XDG_RUNTIME_DIR/hire/workload.sock
+```
+
+Nothing about the client is hire-specific. `hire-grpc/tests/stock_client.rs` is the proof: it drives the third-party `spiffe` crate — its own protobuf copy, its own endpoint parsing, its own SVID types and its own JWT verifier — against `hired`, fetches a JWT-SVID, reads the `hint`, fetches the trust bundle and validates the token against it. No code of this workspace takes part in the verification.
+
+The `hire` claim block is an extra a hire-aware application can read; a client that ignores it sees an ordinary JWT-SVID.
+
+**JWT-SVIDs only so far.** `FetchX509SVID` is unimplemented, so a consumer that wants X.509 — envoy, ghostunnel and spiffe-helper among them — does not yet work against `hired`. That is `persona-apyr`.
 
 ## Platform Support
 

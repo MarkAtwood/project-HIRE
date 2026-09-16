@@ -31,6 +31,7 @@ hyper-util.workspace    = true
 base64.workspace        = true
 async-trait.workspace   = true
 serde_json.workspace    = true
+spiffe = { version = "0.16", default-features = false, features = ["jwt-verify-rust-crypto", "workload-api-jwt"] }
 
 [build-dependencies]
 tonic-prost-build.workspace = true
