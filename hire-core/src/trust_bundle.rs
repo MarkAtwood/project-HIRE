@@ -42,7 +42,7 @@ impl TrustBundle {
     /// ponytail: one key, no X.509 authority, no rollover window | ceiling: a
     ///   restart invalidates every outstanding token, and a consumer caching
     ///   this JWKS sees a kid miss with no refresh signal | upgrade path:
-    ///   publish the issuing CA certificate here when hire-4qm lands X.509
+    ///   publish the issuing CA certificate here when hire-apyr lands X.509
     ///   issuance, and publish the outgoing and incoming JWKs together across a
     ///   rotation
     pub fn local(trust_domain: TrustDomain, signer: &SvidSigner) -> Self {

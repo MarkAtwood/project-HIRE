@@ -1,0 +1,13 @@
+{
+  "id": "persona-apyr",
+  "title": "X.509-SVID issuance: sign_x509_svid is a stub and hire-4qm does not exist",
+  "description": "THREE PLACES IN THE CODE CITE A BEAD THAT IS NOT IN THE TRACKER. hire-core/src/signer.rs:222 ('certificate construction is unimplemented (hire-4qm)'), hire/src/main.rs:360 and hire-core/src/trust_bundle.rs:45 all defer to hire-4qm, and 'bd search x509' returns nothing. The single largest unbuilt feature in the workspace has been untracked for the whole review.\n\nMEASURED STATE 2026-09-16: SvidSigner::sign_x509_svid returns SignerError::NotImplemented. FetchX509SVID returns Status::unimplemented. TrustBundle::local publishes x509_authorities empty and documents why -- no CA certificate exists anywhere in this workspace, so a conforming consumer correctly rejects every X509-SVID. 'hire fetch-x509' exits non-zero with the same hire-4qm reference.\n\nWHY IT MATTERS MORE THAN ITS PRIORITY SUGGESTS: README and PRFAQ both promise that any SPIFFE-aware consumer works against hired without modification, naming envoy, ghostunnel and spiffe-helper. Those consumers want X509-SVIDs, not JWT-SVIDs -- the JWT half of the Workload API is the half hired implements. The claim is therefore true only for the JWT-speaking subset.\n\nSCOPE: certificate construction over the existing p256 SigningKey (the ponytail comment in signer.rs names x509-cert as the builder), a URI SAN carrying the pseudonymous SPIFFE ID, an issuing CA the daemon generates at startup alongside the ephemeral JWT key, and publishing that CA in TrustBundle::local so the bundle stops being empty. The per-consumer pseudonym and the presence/assurance gates already exist and should be reused rather than reimplemented -- FetchX509SVID takes the same claim through the same policy.\n\nOPEN QUESTION TO DECIDE FIRST: the hire extension rides in the JWT as a claim block. X.509 has no equivalent slot, so decide whether assurance, presence and auth_methods travel as a certificate extension, are dropped for X.509 consumers, or X.509 is issued only at the floor. That decision changes what the feature is worth.",
+  "acceptance_criteria": "A conforming SPIFFE consumer holding only the published bundle validates an X509-SVID issued by hired; the three hire-4qm references in the code name a bead that exists.",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "feature",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T15:18:18.266065784Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T15:18:18.266065784Z"
+}

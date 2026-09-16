@@ -219,7 +219,7 @@ impl SvidSigner {
     // ponytail: stub X.509 signer | upgrade path: x509-cert builder over the p256 SigningKey
     /// Sign an X.509-SVID with URI SAN = `spiffe_id`.  TTL: 1 hour.
     ///
-    /// Currently stubbed: certificate construction is unimplemented (hire-4qm).
+    /// Currently stubbed: certificate construction is unimplemented (hire-apyr).
     pub fn sign_x509_svid(&self, _spiffe_id: &str) -> Result<Vec<u8>, SignerError> {
         Err(SignerError::NotImplemented("x509_svid".into()))
     }

@@ -357,7 +357,7 @@ async fn prove(args: &[String]) -> Result<()> {
 /// The notice goes to stderr so `hire fetch-x509 > client.pem` leaves the
 /// file empty instead of filling it with prose.
 async fn fetch_x509() -> Result<()> {
-    eprintln!("error: X.509-SVID issuance not yet implemented (hire-4qm)");
+    eprintln!("error: X.509-SVID issuance not yet implemented (hire-apyr)");
     std::process::exit(1);
 }
 
