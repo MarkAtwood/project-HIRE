@@ -32,7 +32,7 @@ use tokio::io::AsyncWriteExt as _;
 
 use crate::claim::ChallengeSignature;
 use crate::{
-    AttainableAssurance, Attestor, AttestorError, Candidate, Evidence, ProofCost,
+    AttainableAssurance, Attestor, AttestorError, Candidate, Evidence, KeyCustody, ProofCost,
     SelfAssertedDomain,
 };
 
@@ -56,6 +56,10 @@ impl Default for GpgAttestor {
         Self::new()
     }
 }
+
+/// The listing every caller here parses. One spelling, because `enumerate` and
+/// `custody_of` must read the same fields out of the same records.
+const LIST_SECRET_KEYS: [&str; 3] = ["--list-secret-keys", "--with-colons", "--fingerprint"];
 
 /// The gpg to run, from a fixed list rather than from `PATH`.
 ///
@@ -148,21 +152,29 @@ fn is_revoked(field: Option<&&str>) -> bool {
 
 /// Pushes a candidate for a primary key the operator holds and has not revoked.
 fn flush_key(
-    candidates: &mut Vec<Candidate>,
+    candidates: &mut Vec<(Candidate, KeyCustody)>,
     fingerprint: Option<String>,
     uid: Option<String>,
     enrollable: bool,
+    custody: KeyCustody,
 ) {
     if let (true, Some(fp), Some(uid)) = (enrollable, fingerprint, uid) {
-        candidates.push(make_candidate(fp, uid));
+        candidates.push((make_candidate(fp, uid), custody));
     }
 }
 
-fn parse_gpg_colons(output: &str) -> Vec<Candidate> {
+/// Every enrollable key in a `--with-colons` listing, with where its secret
+/// half lives.
+///
+/// Custody rides along rather than being read by a second pass, because it
+/// comes from the same `sec` record as the enrolment decision: field 15 is read
+/// once and answers both questions.
+fn parse_gpg_colons(output: &str) -> Vec<(Candidate, KeyCustody)> {
     let mut candidates = Vec::new();
     let mut current_fp: Option<String> = None;
     let mut current_uid: Option<String> = None;
     let mut enrollable = false;
+    let mut custody = KeyCustody::Software;
     // gpg prints an `fpr` after the primary and another after every subkey.
     // Only the first one names the identity; this flag consumes it.
     let mut want_primary_fpr = false;
@@ -176,6 +188,7 @@ fn parse_gpg_colons(output: &str) -> Vec<Candidate> {
                     current_fp.take(),
                     current_uid.take(),
                     enrollable,
+                    custody,
                 );
                 // Field 15 says where the secret key lives: `+` local, `#` not
                 // available (offline-primary stub), anything else a token
@@ -184,6 +197,14 @@ fn parse_gpg_colons(output: &str) -> Vec<Candidate> {
                 // sufficient: a revoked key is one the owner has withdrawn.
                 let secret_held = fields.get(14).is_some_and(|f| *f != "#");
                 enrollable = secret_held && !is_revoked(fields.get(1));
+                // `+` is a local key and anything else is a token serial, which
+                // is the strongest possession case in the set. It used to be
+                // collapsed into the same boolean as `#`, so a Yubikey-held key
+                // graded identically to one sitting in ~/.gnupg (hire-5s4b.129).
+                custody = match fields.get(14) {
+                    Some(&"+") | Some(&"#") | None => KeyCustody::Software,
+                    Some(_) => KeyCustody::HardwareToken,
+                };
                 want_primary_fpr = true;
             }
             Some(&"fpr") if want_primary_fpr => {
@@ -199,8 +220,33 @@ fn parse_gpg_colons(output: &str) -> Vec<Candidate> {
             _ => {}
         }
     }
-    flush_key(&mut candidates, current_fp, current_uid, enrollable);
+    flush_key(
+        &mut candidates,
+        current_fp,
+        current_uid,
+        enrollable,
+        custody,
+    );
     candidates
+}
+
+/// Where gpg says the secret half of `fingerprint` lives.
+///
+/// Software when gpg has no opinion, including when it cannot be asked: the
+/// answer that claims less is the right one to default to, and a key whose
+/// custody cannot be established is not a hardware key.
+pub(crate) async fn custody_of(gpg: &Path, fingerprint: &str) -> KeyCustody {
+    let Ok(output) = run(gpg, &LIST_SECRET_KEYS, &[]).await else {
+        return KeyCustody::Software;
+    };
+    if !output.status.success() {
+        return KeyCustody::Software;
+    }
+    let path = format!("gpg/{}", fingerprint.to_ascii_lowercase());
+    parse_gpg_colons(&String::from_utf8_lossy(&output.stdout))
+        .into_iter()
+        .find(|(candidate, _)| candidate.path == path)
+        .map_or(KeyCustody::Software, |(_, custody)| custody)
 }
 
 // ponytail: gpg candidates sit under ssh.local, not pgp.local | ceiling: the
@@ -231,25 +277,17 @@ impl Attestor for GpgAttestor {
         let gpg =
             which_gpg().ok_or_else(|| AttestorError::Unavailable("gpg binary not found".into()))?;
 
-        let output = tokio::process::Command::new(gpg)
-            .args([
-                "--batch",
-                "--no-tty",
-                "--list-secret-keys",
-                "--with-colons",
-                "--fingerprint",
-            ])
-            .output()
-            .await
-            .map_err(|e| AttestorError::Unavailable(format!("gpg exec failed: {e}")))?;
-
+        let output = run(&gpg, &LIST_SECRET_KEYS, &[]).await?;
         if !output.status.success() {
             // No keys or gpg not configured — not an error.
             return Ok(vec![]);
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        Ok(parse_gpg_colons(&stdout))
+        Ok(parse_gpg_colons(&stdout)
+            .into_iter()
+            .map(|(candidate, _custody)| candidate)
+            .collect())
     }
 
     async fn prove(
@@ -325,6 +363,17 @@ impl Attestor for GpgAttestor {
 mod tests {
     use super::*;
 
+    /// The candidates in a listing, dropping the custody each carries.
+    ///
+    /// Most of these tests are about the enrolment rule, which custody does not
+    /// enter; the one that is about custody calls `parse_gpg_colons` directly.
+    fn candidates_of(listing: &str) -> Vec<Candidate> {
+        parse_gpg_colons(listing)
+            .into_iter()
+            .map(|(candidate, _custody)| candidate)
+            .collect()
+    }
+
     /// `gpg --batch --no-tty --list-secret-keys --with-colons --fingerprint`
     /// for a held 2048-bit key with a signing primary and an encryption subkey.
     const HELD_KEY: &str = "\
@@ -372,7 +421,7 @@ uid:u::::1789437609::7708B404760C34E3AEFB2FC069C86D79AA921DD5::HIRE Current <cur
 
     #[test]
     fn parse_gpg_colons_extracts_candidate() {
-        let candidates = parse_gpg_colons(HELD_KEY);
+        let candidates = candidates_of(HELD_KEY);
         assert_eq!(candidates.len(), 1);
         assert_eq!(candidates[0].source, "gpg");
         assert_eq!(
@@ -395,27 +444,38 @@ uid:u::::1789437609::7708B404760C34E3AEFB2FC069C86D79AA921DD5::HIRE Current <cur
 
     #[test]
     fn parse_gpg_colons_rejects_offline_primary_stub() {
-        assert!(parse_gpg_colons(STUB_KEY).is_empty());
+        assert!(candidates_of(STUB_KEY).is_empty());
     }
 
     #[test]
-    fn parse_gpg_colons_accepts_smartcard_serial() {
+    fn parse_gpg_colons_accepts_and_records_a_smartcard_serial() {
         // Field 15 holds the token's serial number when the secret key lives on
         // a smartcard. That is the strongest possession case in the set, so an
-        // acceptance rule narrowed to a literal `+` would be a regression.
+        // acceptance rule narrowed to a literal `+` would be a regression --
+        // and collapsing it into the same boolean as a local key, which is what
+        // hire-5s4b.129 fixed, discards the one fact a paranoid relying party
+        // most wants to read.
         let listing = HELD_KEY.replace(
             "scESC:::+:::",
             "scESC:::D2760001240103040006123456789012:::",
         );
 
-        let candidates = parse_gpg_colons(&listing);
-        assert_eq!(candidates.len(), 1, "smartcard key dropped");
-        assert!(candidates[0].spiffe_id().uri().contains(HELD_FP));
+        let parsed = parse_gpg_colons(&listing);
+        assert_eq!(parsed.len(), 1, "smartcard key dropped");
+        assert!(parsed[0].0.spiffe_id().uri().contains(HELD_FP));
+        assert_eq!(parsed[0].1, KeyCustody::HardwareToken);
+
+        // The same key held locally, so the two are told apart by field 15 and
+        // not by anything about the key itself.
+        assert_eq!(parse_gpg_colons(HELD_KEY)[0].1, KeyCustody::Software);
+        // An offline-primary stub is refused outright, so it has no custody to
+        // report -- `#` must never read as a serial.
+        assert!(parse_gpg_colons(STUB_KEY).is_empty());
     }
 
     #[test]
     fn parse_gpg_colons_rejects_revoked_primary() {
-        assert!(parse_gpg_colons(REVOKED_KEY).is_empty());
+        assert!(candidates_of(REVOKED_KEY).is_empty());
 
         // The same listing with one uid left live. gpg does not print this --
         // revoking a primary marks every uid `r`, so the real fixture above is
@@ -424,10 +484,7 @@ uid:u::::1789437609::7708B404760C34E3AEFB2FC069C86D79AA921DD5::HIRE Current <cur
         // stated directly rather than inherited from how gpg marks uids.
         let live_uid = REVOKED_KEY.replace("uid:r::::1789437609:", "uid:u::::1789437609:");
         assert_ne!(live_uid, REVOKED_KEY, "fixture edit did not apply");
-        assert!(
-            parse_gpg_colons(&live_uid).is_empty(),
-            "revoked key enrolled"
-        );
+        assert!(candidates_of(&live_uid).is_empty(), "revoked key enrolled");
     }
 
     #[test]
@@ -437,14 +494,14 @@ uid:u::::1789437609::7708B404760C34E3AEFB2FC069C86D79AA921DD5::HIRE Current <cur
         // label it, so field 2 of `e` stays enrollable.
         let listing = HELD_KEY.replace("sec:u:", "sec:e:");
 
-        let candidates = parse_gpg_colons(&listing);
+        let candidates = candidates_of(&listing);
         assert_eq!(candidates.len(), 1, "expired key dropped");
         assert!(candidates[0].spiffe_id().uri().contains(HELD_FP));
     }
 
     #[test]
     fn parse_gpg_colons_skips_revoked_uid_for_display_name() {
-        let candidates = parse_gpg_colons(REVOKED_UID_KEY);
+        let candidates = candidates_of(REVOKED_UID_KEY);
         assert_eq!(candidates.len(), 1);
         // A revoked address names someone the owner stopped answering as.
         assert_eq!(
@@ -461,7 +518,7 @@ uid:u::::1789437609::7708B404760C34E3AEFB2FC069C86D79AA921DD5::HIRE Current <cur
         let held_stub = STUB_KEY.replace("scESC:::#:::", "scESC:::+:::");
         let listing = format!("{HELD_KEY}{STUB_KEY}{held_stub}");
 
-        let candidates = parse_gpg_colons(&listing);
+        let candidates = candidates_of(&listing);
         assert_eq!(candidates.len(), 2);
         assert!(candidates[0].spiffe_id().uri().contains(HELD_FP));
         assert_eq!(

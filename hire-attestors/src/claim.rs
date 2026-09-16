@@ -185,6 +185,30 @@ impl Candidate {
     }
 }
 
+/// Where the key that signed lives, as far as its custodian will say.
+///
+/// NOT A PROOF, AND THE DISTINCTION IS THE WHOLE VALUE OF THE TYPE. Nothing
+/// here verifies an attestation certificate: `HardwareToken` means the
+/// custodian reported a device — a smartcard serial where gpg would otherwise
+/// print `+` for a local key — and hire recorded it. A relying party in a
+/// paranoid environment wants that recorded; a relying party that reads it as
+/// proof of a certified authenticator is reading more than is offered, which is
+/// why whatever is recorded from it must be documented in the same terms.
+///
+/// TRIPWIRE: this must never reach [`Evidence::tier`]. `Iaa3` is hardware-bound
+/// *and* IdP-verified, and a self-asserted key on a very good card is still not
+/// IdP-verified. The moment custody raises a tier, an attestor's report of where
+/// a key lives becomes an assurance level it asserted, which is the hole the
+/// `Candidate`/`Claim` split exists to close.
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum KeyCustody {
+    /// A key hire, an agent, or a file can hold — copyable in principle.
+    Software,
+    /// A key on a device it cannot be copied off, per its custodian.
+    HardwareToken,
+}
+
 /// A signature over a daemon-generated challenge by the key a candidate names.
 ///
 /// Establishes possession and nothing more: `Iaa1`, with no presence. A
@@ -200,6 +224,7 @@ pub struct ChallengeSignature {
     assertion: SignedAssertion,
     challenge: Vec<u8>,
     observed_at: SystemTime,
+    custody: KeyCustody,
 }
 
 impl ChallengeSignature {
@@ -285,6 +310,10 @@ impl ChallengeSignature {
             ),
             challenge: challenge.to_vec(),
             observed_at: SystemTime::now(),
+            // The agent protocol has no field for this. A key may well be
+            // backed by a PKCS#11 token and the agent will not say so, and
+            // `Software` is the answer that claims less.
+            custody: KeyCustody::Software,
         })
     }
 
@@ -349,6 +378,9 @@ impl ChallengeSignature {
             ),
             challenge: challenge.to_vec(),
             observed_at: SystemTime::now(),
+            // A dropped key is a file by definition, and an agent-held one is
+            // unreportable for the reason given in `verify_ssh_ed25519`.
+            custody: KeyCustody::Software,
         })
     }
 
@@ -410,7 +442,13 @@ impl ChallengeSignature {
             )));
         }
 
-        Self::verify_openpgp_against(candidate, challenge, signature, &exported.stdout)
+        // Asked here rather than passed in, so no attestor can report where a
+        // key lives. It is gpg's word either way -- the same word `--export` is
+        // trusted for -- but it is gpg's word obtained by the verifier, and it
+        // costs one more invocation on a path that is already interactive.
+        let custody = crate::gpg::custody_of(&gpg, fingerprint).await;
+
+        Self::verify_openpgp_against(candidate, challenge, signature, &exported.stdout, custody)
     }
 
     /// The cryptography of [`verify_openpgp`](Self::verify_openpgp), over a key
@@ -427,6 +465,7 @@ impl ChallengeSignature {
         challenge: &[u8],
         signature: &[u8],
         exported_key: &[u8],
+        custody: KeyCustody,
     ) -> Result<Self, AttestorError> {
         use pgp::composed::{Deserializable as _, DetachedSignature, SignedPublicKey};
         use pgp::types::KeyDetails as _;
@@ -474,12 +513,18 @@ impl ChallengeSignature {
             assertion: SignedAssertion::new(signature.to_vec(), "application/pgp-signature"),
             challenge: challenge.to_vec(),
             observed_at: SystemTime::now(),
+            custody,
         })
     }
 
     /// The underlying signed assertion.
     pub fn assertion(&self) -> &SignedAssertion {
         &self.assertion
+    }
+
+    /// Where the key that produced this signature lives, per its custodian.
+    pub fn custody(&self) -> KeyCustody {
+        self.custody
     }
 
     /// The challenge this signature was verified against.
@@ -964,6 +1009,7 @@ mod tests {
             assertion: SignedAssertion::new(b"sig".to_vec(), "application/test"),
             challenge: challenge.to_vec(),
             observed_at: SystemTime::now(),
+            custody: KeyCustody::Software,
         })
     }
 
@@ -1089,6 +1135,7 @@ mod tests {
             challenge,
             &unhex(sig),
             &unhex(key),
+            KeyCustody::Software,
         )
     }
 
@@ -1156,6 +1203,7 @@ mod tests {
             &GPG_CHALLENGE,
             &unhex(SUBKEY_SIG),
             &key,
+            KeyCustody::Software,
         )
         .is_err());
     }
@@ -1170,6 +1218,7 @@ mod tests {
             &GPG_CHALLENGE,
             &sig,
             &unhex(PRIMARY_KEY),
+            KeyCustody::Software,
         )
         .is_err());
     }
@@ -1185,6 +1234,7 @@ mod tests {
             &GPG_CHALLENGE,
             &unhex(PRIMARY_SIG),
             &key,
+            KeyCustody::Software,
         )
         .is_err());
     }
@@ -1197,6 +1247,7 @@ mod tests {
             &GPG_CHALLENGE,
             &unhex(PRIMARY_SIG),
             &unhex(PRIMARY_KEY),
+            KeyCustody::Software,
         )
         .is_err());
     }

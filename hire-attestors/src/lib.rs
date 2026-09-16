@@ -15,7 +15,7 @@ pub mod unix;
 
 pub use claim::{
     AttainableAssurance, Candidate, ChallengeSignature, Claim, DaemonIdentity, Evidence,
-    HardwareTouch, PlatformIdentity, ProofCost, SelfAssertedDomain, VerifiedToken,
+    HardwareTouch, KeyCustody, PlatformIdentity, ProofCost, SelfAssertedDomain, VerifiedToken,
 };
 pub use did_key::DidKeyAttestor;
 pub use fido2::Fido2Attestor;
