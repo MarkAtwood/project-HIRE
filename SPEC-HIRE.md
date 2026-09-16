@@ -220,10 +220,17 @@ Each source implements a plugin interface: `enumerate()`, `prove(candidate, chal
 - Notes: the candidate names the **primary** key; the signature may be made by a signing subkey, which is the smartcard shape -- a certify-only primary delegating to a subkey on the card. The primary and every subkey it bound are tried, so the signature never selects its own verifier. An offline-primary stub (`#` in field 15 of `sec`) is not enrolled even though gpg could sign with its subkeys
 
 **did-self** (`did:key`, `did:ipfs`, `did:web`)
-- Method: for `did:key` there is no resolution step -- the identifier encodes the verification method, so the challenge is signed by the key the identifier names. hire holds no key material of its own, so the secret half is looked for in the local ssh agent; a `did:key` no local agent can answer for enumerates and does not prove. `did:web` and `did:ipfs` are not implemented
+- Method: for `did:key` there is no resolution step -- the identifier encodes the verification method, so the challenge is signed by the key the identifier names. The secret half is looked for in two places, in order: the identity drop directory below, then the local ssh agent. A `did:key` in neither enumerates and does not prove. `did:web` and `did:ipfs` are not implemented
 - Returns: DID, verification method, signed assertion
 - Assurance: `iaa1` for `did:key` (self-issued); `iaa2` for `did:web` if the DID document is hosted under a domain the user controls
-- Proof cost: interactive, because the ssh agent prompts for a key added with `ssh-add -c` and does not report that constraint
+- Proof cost: **silent** for a dropped key, since nothing in the signing path can reach a human; **interactive** for an agent-held key, because `ssh-add -c` prompts and the agent does not report that constraint
+
+**identity drop directory** (`$XDG_CONFIG_HOME/hire/identities`, default `~/.config/hire/identities`)
+- Method: the operator writes a file; the daemon offers what it finds. This is the escape hatch for sources hire does not natively support -- a new one becomes a file to produce rather than an attestor to write and a release to ship
+- Implemented today: `*.pem`, a PKCS#8 ed25519 private key, which becomes a provable `did:key`. Unknown extensions are ignored, so other kinds can be added without breaking a directory already in use
+- **Permissions are enforced:** a key readable by group or other is skipped with a log. A secret every account on the box can read is an identity every account on the box can assume
+- This is the one place hire holds a secret of its own, and it exists because the preferred shape was unreachable: `ssh-add` refuses a PKCS#8 PEM ed25519 key outright, and OpenSSH stores ed25519 private keys only in its own format, so a DID holder could not put their key in an agent
+- Not implemented: an unsigned name file (which would yield a candidate and nothing more) and a signed credential such as a JWT or X.509 certificate (which would yield verified evidence, and needs a verifying constructor that does not exist yet)
 
 **unix-account** (Linux, macOS, BSD)
 - Method: `getuid()` for the account, `getpwuid_r` for its name; no agent, no socket, no network

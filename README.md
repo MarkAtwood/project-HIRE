@@ -31,8 +31,9 @@ identity claims it signs. Treat the assurance and presence levels below as targe
 | JWT-SVID issuance, ephemeral in-memory CA | works |
 | Attestor registry, startup probing, `enumerate()` | works for most sources; returns candidates, not claims |
 | CLI (`whoami`, `enumerate`, `fetch-jwt`, ...) | works -- `fetch-jwt --spiffe-id` names one identity to prove |
+| Identity drop directory | `~/.config/hire/identities/*.pem` -- a PKCS#8 ed25519 key becomes a provable `did:key` with no code change. Refused unless `chmod 600` |
 | `prove()` -- evidence backing a claim | ssh-agent (ed25519 keys only), gpg and `did:key` prove possession by signing the daemon's challenge; tailscaled and the kernel are asked again and must answer the same way. OIDC, FIDO2, PIV and GOA still decline |
-| `FetchJWTSVID` consent gate | an unnamed request proves only candidates that declare proving cannot prompt a human -- Tailscale where it runs, the Unix account otherwise. Naming one identity in `spiffe_id` is the consent to prove it, and is how ssh-agent, gpg and `did:key` are reached |
+| `FetchJWTSVID` consent gate | an unnamed request proves only candidates that declare proving cannot prompt a human -- Tailscale, the Unix account, and any `did:key` whose secret was dropped in the identities directory. Naming one identity in `spiffe_id` is the consent to prove it, and is how ssh-agent, gpg and agent-held `did:key` are reached |
 | `FetchJWTSVID` returns a list | every silently-provable identity, one SVID each, best-first and deduplicated by SPIFFE ID |
 | `hint` tag on each SVID | `source=...&identity_assurance=...&presence=...&age=...` -- normative, while the order is advisory |
 | Identity assurance levels | derived from evidence -- see below |
@@ -128,7 +129,7 @@ question from whether it substantiates its assurance row.
 | OIDC cached | iaa2/iaa1 | session | cross-platform | yes -- always registered, scans gcloud and Azure caches |
 | SSH agent | iaa1 | none | cross-platform | yes -- `prove()` is ed25519 only |
 | GPG | iaa1 | none | cross-platform | yes, when a `gpg` binary is present -- `prove()` signs the challenge through gpg-agent and verifies the signature in-process |
-| DID | iaa1/iaa2 | none | cross-platform | `did:key` yes, via `HIRE_DID_KEYS` -- `prove()` signs through whichever local agent holds the key the identifier encodes; `did:web` no |
+| DID | iaa1/iaa2 | none | cross-platform | `did:key` yes -- from `HIRE_DID_KEYS` or a key dropped in `~/.config/hire/identities`. A dropped key signs in-process and is silently provable; an agent-held one signs through the agent; `did:web` no |
 | Unix account | iaa1 | none | Linux, macOS, BSD | yes -- always available |
 
 ## Platform Support
