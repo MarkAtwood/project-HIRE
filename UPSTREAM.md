@@ -109,10 +109,15 @@ has pulled), or import at donation time as a squashed, signed commit and keep th
 repository as the archive. The first preserves the history; the second is cleaner
 paperwork. Decide before the history gets longer.
 
-**Related, and Mark's call alone:** every commit here carries a `Co-Authored-By` trailer
-naming an AI model. That trailer is metadata and is not a DCO certification — the human
-contributor certifies. But a foundation IP review will read the history, and it is better
-to have decided deliberately what that history says than to be asked about it.
+**Attribution is settled:** agents do not take credit — not in a `Co-Authored-By` trailer,
+not in source comments, not on GitHub. The rule is in AGENTS.md. The maintainer is the
+author and the one who certifies the work, which is what a DCO sign-off means anyway.
+
+That leaves the existing history, where 79 of 177 commits carry an AI `Co-Authored-By`
+trailer added before the rule existed. It is the same decision as the DCO gap above and
+should be made once, for both: rewriting the history removes the trailers and adds the
+sign-offs in a single pass, while importing squashed-and-signed makes both moot. Either
+way it gets more expensive as the history grows.
 
 **Name and trademark.** Donation means assigning the trademark to the Linux Foundation, so
 the name has to be one we can give away. `hire`/`HiRE` is taken on crates.io and

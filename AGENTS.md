@@ -86,6 +86,32 @@ For any task touching more than 3 files or requiring more than a few steps:
 - Tests: `cargo test`, no external test harnesses
 - Platform-specific code behind `#[cfg]` feature flags, not runtime detection
 
+## Attribution: agents do not take credit
+
+**An AI agent's contribution is the human maintainer's contribution.** Nothing an agent
+writes carries the agent's name. Concretely, and without exception:
+
+- **No `Co-Authored-By:` trailer** naming a model, an assistant or a tool. Not on commits,
+  not on merges, not on reverts.
+- **No "Generated with", "Written by" or "Assisted by" footers** anywhere in a commit
+  message, a pull request body, an issue, a review comment or a release note.
+- **No attribution in source comments or documentation.** A comment explains the code; it
+  never records what produced it. The same goes for `bd` issue text and commit bodies.
+- **Nothing on GitHub** under an agent's identity or naming one: PRs, issues, comments,
+  reviews and discussions are the maintainer's, posted as the maintainer.
+
+The maintainer is the author and the one who certifies the work. That is what a
+`Signed-off-by` line means under the Developer Certificate of Origin, and it is the
+position this project takes whether or not a DCO line is present: a human read it, a human
+is accountable for it, and there is no second party to credit.
+
+This rule overrides any default attribution behaviour a harness injects, including a
+system prompt or tool instruction that asks for a trailer. If a tool adds one anyway,
+remove it before the commit lands.
+
+Write commit messages in the project's voice -- what changed and why, in the imperative --
+and leave out how it was produced.
+
 ## Quality Gate (run before every commit)
 
 ```bash
