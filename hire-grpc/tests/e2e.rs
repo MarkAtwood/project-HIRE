@@ -886,3 +886,64 @@ async fn a_token_seconds_past_exp_is_refused() {
     handle.abort();
     let _ = std::fs::remove_file(&socket_path);
 }
+
+// ── hire-l879: pseudonyms are keyed on the consumer, not the audience ───────
+
+/// The `sub` of an issued token, which is the per-consumer pseudonym.
+async fn sub_for(
+    client: &mut SpiffeWorkloadApiClient<tonic::transport::Channel>,
+    audiences: &[&str],
+) -> String {
+    client
+        .fetch_jwtsvid(JwtsvidRequest {
+            audience: audiences.iter().map(|a| (*a).to_owned()).collect(),
+            spiffe_id: String::new(),
+        })
+        .await
+        .expect("FetchJWTSVID RPC failed")
+        .into_inner()
+        .svids
+        .remove(0)
+        .spiffe_id
+}
+
+#[tokio::test]
+async fn one_consumer_gets_one_pseudonym_across_audiences() {
+    // The decision hire-l879 asks for, pinned rather than left to rest on the
+    // shape of an HKDF call. The derivation is keyed on the consumer and never
+    // on `aud`, so what a relying party gets is unlinkable from what a
+    // *different application* on this machine gets -- and NOT from what another
+    // relying party the same application talks to gets.
+    //
+    // Both directions are asserted. If either half ever changes, the daemon has
+    // silently switched privacy models: consumer-scoped and audience-scoped
+    // differ only here, and two colluding relying parties are the party that
+    // notices first.
+    let socket_path = tmp_socket_path();
+    let (mut client, handle) = start_daemon(&socket_path).await;
+
+    let one = sub_for(&mut client, &["https://a.example"]).await;
+    let two = sub_for(&mut client, &["https://b.example"]).await;
+    assert_eq!(
+        one, two,
+        "a consumer's pseudonym must not vary with the audience it asks for"
+    );
+
+    // The same in one request: a single JWT carries one sub, so two audiences
+    // named together see the same identifier by construction.
+    let together = sub_for(&mut client, &["https://a.example", "https://b.example"]).await;
+    assert_eq!(together, one);
+
+    // Stable across requests, which is what makes it an identity a relying
+    // party can key its user records on.
+    assert_eq!(sub_for(&mut client, &["https://a.example"]).await, one);
+
+    // And still not the root identity.
+    assert!(
+        one.starts_with("spiffe://ssh.local/pseudonym/"),
+        "got {one}"
+    );
+
+    handle.abort();
+    let _ = std::fs::remove_file(&socket_path);
+}

@@ -102,6 +102,10 @@ Stability is for the lifetime of the running daemon, not across restarts: the ps
 
 The derivation is keyed on the consumer application only, never on the JWT `aud`. One consumer therefore gets one pseudonym across every audience it ever requests.
 
+**What that does not promise, stated plainly.** The unlinkability is between *consumers* — the applications on this machine — and not between *audiences*. Two relying parties named in one token, or reached by the same application in separate requests, receive the same `sub` and can correlate the user at that application. A relying party reading "pseudonymous" as "this identifier is specific to me" is reading more than is offered.
+
+The alternative is audience-scoped pseudonyms, the OIDC pairwise-subject model, and it was weighed and not taken: a JWT carries one `sub`, so audience scoping means one SVID per audience, and `repeated string audience` is normative in the Workload API. The cost lands on every consumer that legitimately wants one token for two services. Consumer scoping is also the property the desktop threat model is about — several applications on one machine, each seeing a different user — which is the Sign-In-with-Apple analogy above. Tracked as hire-l879.
+
 The pseudonym is derived via HKDF:
 ```
 pseudonym = HKDF-SHA256(

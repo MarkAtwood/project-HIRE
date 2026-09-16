@@ -3,13 +3,15 @@
   "title": "sources and auth_methods answer the same question in every issued token",
   "description": "hire-grpc/src/service.rs passes the identical expression vec![claim.source().to_owned()] for BOTH HireClaims fields, so in every token hired issues, 'sources' and 'auth_methods' are single-element and identical to each other.\n\nThey are supposed to answer different questions. SPEC-HIRE.md:356-366 prints them differing: sources [\"tailscale\", \"piv-smartcard\"] is WHERE the identity came from; auth_methods [\"tailscale_oidc\", \"fido2_up\"] is HOW the user authenticated. A consumer reading auth_methods to decide whether a hardware authenticator was involved currently reads an attestor name instead.\n\nSo the spec documents a token hired cannot issue. This is a behavioural gap, not a typing one: Claim carries a single source() and no separate auth-method list, so closing it needs a richer Claim, which is why it was left out of the .51 refactor -- that pass preserved the behaviour byte for byte.\n\nRelated: the transposition hazard named in the HireClaims::new doc comment is unobservable at the current call site precisely because both arguments are the same expression. It becomes real as soon as the two lists diverge.\n\nFound while fixing persona-5s4b.51.",
   "acceptance_criteria": "Claim carries auth methods separately from source; the two arrays can differ; a multi-source identity emits more than one entry.",
-  "status": "open",
+  "status": "closed",
   "priority": 2,
   "issue_type": "bug",
   "owner": "mark@reviewcommit.com",
   "created_at": "2026-09-15T03:57:55.431379719Z",
   "created_by": "agent",
-  "updated_at": "2026-09-15T19:34:28.589691136Z",
+  "updated_at": "2026-09-16T02:47:09.815441234Z",
+  "closed_at": "2026-09-16T02:47:09.815441234Z",
+  "close_reason": "Landed in 4d97a71. auth_methods is now a closed AuthMethod enum in hire-core, derived from the evidence in Claim::derive beside the tier, and HireClaims::new takes it typed so the two lists can no longer be transposed. The vocabulary names MECHANISMS (key_possession, hardware_key_possession, idp_session, idp_token, user_presence) rather than sources, so a consumer policy does not have to enumerate attestors -- SPEC-HIRE's illustrative tailscale_oidc/fido2_up was the source-shaped form and is replaced, with the reasoning recorded in a new spec section. Acceptance criteria met: the two arrays can differ (asserted end to end in hire-grpc/tests/svid_list.rs) and one candidate with several kinds of evidence emits several methods, sorted and deduplicated. PlatformAssertion maps to None, which closes persona-ouo5.7: a bare Unix box issues auth_methods [] rather than ['unix'], so a 'must be non-empty' policy stops being unconditionally satisfied. gpg's field 15 is no longer collapsed into a boolean, so a card-held key reports hardware_key_possession -- the fact persona-qbnm.1 deferred here -- and KeyCustody carries a tripwire, asserted by a test, that it must never raise the tier. Custody is read by the verifying constructor rather than supplied by the attestor. Live: unix [], tailscale [idp_session], gpg and did:key [key_possession].",
   "labels": [
     "review"
   ],

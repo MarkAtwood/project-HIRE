@@ -40,7 +40,7 @@ identity claims it signs. Treat the assurance and presence levels below as targe
 | Identity assurance levels | derived from evidence -- see below |
 | Presence levels | enforced across every audience, and unknown requirements are refused rather than ignored |
 | Presence freshness (`hire_max_age`, 300s presence TTL) | enforced -- but no attestor yet establishes presence at all, so the bound is checked against an observation that always reports no presence |
-| Per-consumer pseudonyms | wired into issuance -- every caller receives a pseudonym, never the root identity |
+| Per-consumer pseudonyms | wired into issuance -- every caller receives a pseudonym, never the root identity. Keyed on the consumer and not the audience, so two relying parties reached by one application see the same `sub` |
 | Consumer attestation | attested once per connection; a caller that cannot be attested is refused |
 | Trust bundle / `ValidateJWTSVID` | works -- publishes a real JWKS, and validation reads only that bundle; an external verifier holding the bundle and nothing else is part of the test suite |
 | X.509-SVID, browser HTTPS gateway | stubs |
