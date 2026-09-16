@@ -16,5 +16,15 @@
     "attestor",
     "security",
     "enrollment"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "persona-08sz",
+      "depends_on_id": "persona-2myu.3",
+      "type": "blocks",
+      "created_at": "2026-09-16T20:26:36.901860569Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    }
   ]
 }

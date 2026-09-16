@@ -1,0 +1,3 @@
+{"id":"01a0abe5-cdaf-7a63-8f06-77cae3ed61ba","issue_id":"persona-2myu.1","event_type":"created","actor":"agent","old_value":"","new_value":"","created_at":"2026-09-16T20:25:59.471682179Z"}
+{"id":"01a0abe5-cdb4-71ab-bb59-e6cd14658071","issue_id":"persona-2myu.1","event_type":"label_added","actor":"agent","comment":"Added label: spec","created_at":"2026-09-16T20:25:59.476110019Z"}
+{"id":"01a0abe5-cdb8-790e-9ea0-8afaea85f9e2","issue_id":"persona-2myu.1","event_type":"label_added","actor":"agent","comment":"Added label: compat","created_at":"2026-09-16T20:25:59.480594124Z"}

@@ -1,0 +1,35 @@
+{
+  "id": "persona-2myu.2",
+  "title": "A conformance suite, and a mark that can be withheld",
+  "description": "THE FAILURE THIS PREVENTS: the day a second implementation exists, the\nword HIRE means whatever its vendor says it means. Without something\nexecutable to point at, \"HIRE-compatible\" is a marketing claim, and the\nfirst one that ships a lower-quality answer under the same vocabulary\nsets the meaning for everyone.\n\nTWO HALVES, AND ONLY THE SECOND IS GOVERNANCE.\n\n1. THE SUITE. Executable, runnable by anyone in minutes, against any\ndaemon speaking the Workload API. The model already exists in\nhire-grpc/tests/stock_client.rs: a third-party client library driven\nthrough connect, fetch, bundle fetch and cryptographic validation. That\ntest proves OUR conformance to SPIFFE. Inverted, the same shape proves\nSOMEONE ELSE's conformance to hire.\n\nThe tests that matter are not the ones that check a field is present.\nThey are the ones that check an implementation cannot say something it\nhas not established:\n\n* a claim reporting an assurance tier with no evidence behind it fails\n* a claim reporting presence with no authenticator assertion behind it\n  fails, which is why this is coupled to persona-3tly.1: until the\n  assertion reaches the consumer there is nothing for a suite to check,\n  and the presence half of conformance cannot be written at all\n* an unnamed request that prompts a human fails, because ProofCost::\n  Silent is a guarantee rather than a hint\n* an unknown hire_ audience parameter that is ignored rather than\n  refused fails\n\n2. THE MARK. A conformance suite with no consequence for failing it is a\ndocument. The consequence is the name, and a name can only be withheld\nby someone who holds it. Today that is one person, which is exactly as\nstrong as that person: buyable, suable, mortal. UPSTREAM.md lists\nassigning the trademark to the Linux Foundation under what we would be\nGIVING UP. Under sudden adoption it is the enforcement mechanism, and\nthe only reason the suite has teeth.\n\nNote also that UPSTREAM records the name itself is not yet clean:\nhire/HiRE is taken on crates.io and github.com/hire is taken. A mark\nthat cannot be assigned cannot be withheld either.\n\nSEQUENCING. The suite can be written now and is useful immediately as a\nsecond opinion on our own daemon. The mark question is a decision, not a\nproject, and the cheap version of it is recording which name we intend\nto be able to give away.\n",
+  "acceptance_criteria": "A suite anyone can run against a daemon claiming to be HIRE, which fails an implementation that reports an assurance or presence level it cannot substantiate; and a decision recorded on who holds the name.",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T20:26:16.349390858Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T20:26:16.349390858Z",
+  "labels": [
+    "spec",
+    "governance"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "persona-2myu.2",
+      "depends_on_id": "persona-2myu",
+      "type": "parent-child",
+      "created_at": "2026-09-16T20:26:16.377988573Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "persona-2myu.2",
+      "depends_on_id": "persona-3tly.1",
+      "type": "blocks",
+      "created_at": "2026-09-16T20:26:36.832499883Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    }
+  ]
+}

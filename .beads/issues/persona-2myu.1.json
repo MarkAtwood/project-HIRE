@@ -1,0 +1,27 @@
+{
+  "id": "persona-2myu.1",
+  "title": "Version the wire surface before anyone freezes it",
+  "description": "UPSTREAM.md states the problem and does not schedule it: \"The hire claim\nblock and the hire_ audience namespace are today changeable at will.\nUnder a graduated project's stability rules they would not be. The HKDF\nscheme label is already versioned for this reason (hire-pseudonym-v1:);\nthe rest of the wire surface is not, and should be before it matters.\"\n\n\"Before it matters\" is a date set by the first integrator, not by us.\n\nWHAT IS UNVERSIONED TODAY:\n\n* the hire claim block inside the JWT-SVID: sources, auth_methods,\n  identity_assurance, presence and whatever joins them\n* the hire_ audience parameter namespace: hire_max_age today, and\n  hire_min_assurance is already filed as persona-ouo5.3\n* the hint tag grammar: source, identity_assurance, presence, age.\n  SvidHint's parser already refuses unknown keys, which is the strict\n  half of a compatibility rule with no other half\n\nWHAT IS VERSIONED: the pseudonym scheme label, hire-pseudonym-v1:. It is\nversioned because changing the derivation silently re-homes every\nconsumer's view of the user, which is a failure loud enough to have been\nimagined in advance. The rest fails quietly, which is why it was not.\n\nTHE DECISION, which is the work and is cheaper than the mechanism: one\nversion for the whole extension surface or one per surface. A single\nhire_version is a constraint -- everything moves together, a consumer\nbranches once. Per-surface versions are a mechanism, and buy independent\nevolution nobody has asked for.\n\nTHEN THE OTHER HALF OF THE RULE: what a consumer does with a version it\ndoes not know. SvidHint refuses unknown keys today, which is right for a\ntag a consumer may ignore entirely and wrong as a general policy: a\nclaim block that refuses to parse on an unknown minor version cannot\never be extended. The likely shape is that unknown fields within a known\nmajor version are ignored and an unknown major version means the claim\nblock is not read at all.\n\nDo this while the only consumer is our own test suite.\n",
+  "acceptance_criteria": "Every extension hire adds to a JWT-SVID carries a version its consumer can branch on, and a documented rule for what a consumer does with a version it does not recognise.",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T20:25:59.467150095Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T20:25:59.467150095Z",
+  "labels": [
+    "spec",
+    "compat"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "persona-2myu.1",
+      "depends_on_id": "persona-2myu",
+      "type": "parent-child",
+      "created_at": "2026-09-16T20:25:59.493227808Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    }
+  ]
+}

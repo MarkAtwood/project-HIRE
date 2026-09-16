@@ -1,0 +1,12 @@
+{
+  "id": "persona-2myu",
+  "title": "Readiness: what adoption arriving in a lump would need",
+  "description": "Not a schedule. A list of things that have to be TRUE before the project\nis adopted at scale, each of which becomes impossible rather than merely\nexpensive once it is.\n\nTHE DISTINCTION THAT MAKES THIS AN EPIC. The roadmap's items 1 through 4\n-- breadth of sources, X.509, Windows, enrollment -- get done because\nfeature work is legible: someone can see it, demo it, and take credit\nfor it. The items in this epic do not get done as a side effect of\nworking that list, because nobody gets credit for a version tag nobody\nneeded yet. They are also the only ones with a deadline that is not ours\nto move: the first serious integrator sets it, and after that every one\nof these costs a migration instead of an afternoon.\n\nSo the test for membership is not \"is this important\" but \"does the cost\nof this go from an afternoon to a migration on a date we do not\ncontrol\".\n\nWHAT PROMPTED IT. A scenario run 2026-09-16: a government mandate in\n2029 requiring HIRE for workloads with a human principal, and HIRE\npresence for presence-sensitive ones. The feature gaps it exposed were\nall on the roadmap already and would be closed by then. The gaps it\nexposed that were NOT on the roadmap are these, and a mandate is only\none of the ways adoption arrives suddenly. An acquisition, a popular\nframework depending on it, or one large vendor shipping it does the\nsame thing.\n\nUPSTREAM.md already contains the seed of this in its list of what\ndonation would cost: the trademark, unilateral direction, freedom to\nchange the wire format. Under sudden adoption every one of those\ninverts and becomes an asset rather than a cost. That inversion is the\nargument for treating this epic as P1 while nothing is forcing it.\n",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "epic",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T20:25:45.384097573Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T20:25:45.384097573Z"
+}

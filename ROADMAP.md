@@ -61,6 +61,26 @@ of items 1 through 4 is not.
 The donation track in [UPSTREAM.md](UPSTREAM.md) is not sequenced against this list. Its
 Phase 0 costs nothing and can start any day; its Phase 1 is gated by items 1 and 2 above.
 
+**Readiness.** `persona-2myu`
+
+Not features, and not sequenced against the five above, because the five get done on
+their own. Feature work is legible -- someone can see it, demo it and take credit for it
+-- so it gets scheduled. Versioning a wire format before anyone depends on it, owning a
+name that can be withheld from an implementation that fails a conformance suite, and
+deciding what a per-consumer pseudonym means to an auditor are invisible right up to the
+day they become impossible.
+
+That is the test for the epic: not whether an item is important, but whether its cost
+goes from an afternoon to a migration on a date somebody else picks. The first serious
+adopter picks it. Everything in that epic is cheap today and has no cheap version later,
+which is the argument for doing it while nothing is forcing it.
+
+One item there is also an exception to item 5 above. Presence need not ship early, but
+either the authenticator's assertion reaches the consumer (`persona-3tly.1`) or the
+`hint` stops claiming a level above `session`. A presence vocabulary that a relying party
+cannot check is one an implementation can claim falsely and nobody can catch, and of the
+two ways to be wrong, saying less is the recoverable one.
+
 ## Why this order and not another
 
 The large-vendor survey (`persona-c7a6`) decides it. Microsoft built the right idea and
@@ -82,7 +102,15 @@ find out.
 
 <!-- BEGIN GENERATED -- regenerate with `make roadmap`, do not edit by hand -->
 
-*Generated from the issue tracker on 2026-09-16: 94 open, 126 closed.*
+*Generated from the issue tracker on 2026-09-16: 98 open, 126 closed.*
+
+### Readiness: what adoption arriving in a lump would need
+
+`persona-2myu` -- 0 of 3 done
+
+- **P1** `persona-2myu.1` -- Version the wire surface before anyone freezes it
+- **P1** `persona-2myu.2` -- A conformance suite, and a mark that can be withheld
+- **P1** `persona-2myu.3` -- Decide whether a pseudonym can be un-mapped, and by whom
 
 ### The presence model claims more than it can establish
 

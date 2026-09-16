@@ -1,0 +1,27 @@
+{
+  "id": "persona-2myu.3",
+  "title": "Decide whether a pseudonym can be un-mapped, and by whom",
+  "description": "A DESIGN COLLISION THAT IS INVISIBLE UNTIL SOMEONE LARGE ADOPTS THIS.\n\nWhat we built: every consumer receives an HKDF-derived pseudonym, never\nthe root identity, keyed on the consumer rather than the audience. Two\nrelying parties reached by one application see the same sub; two\ndifferent applications do not. That is a deliberate privacy property\nand it is working.\n\nWhat an organisation adopting this at scale asks for within a month:\nname the human who did this. An audit function, an incident\ninvestigation, a regulator, a subpoena. Every one of those arrives as a\nrequest to map a pseudonym back to a person.\n\nThose two are in direct opposition and the second one always has a\nlawyer behind it. Deciding under that pressure produces a worse answer\nthan deciding now.\n\nTHE ANSWER I WOULD ARGUE FOR, as a constraint rather than a mechanism:\nNO REVERSAL, EVER, AND THE AUDIT RECORD IS THE CONSUMER'S. The relying\nparty already knows which human it authorized, because it authorized\nthem; it can record its own mapping at the moment of authorization,\nwhere the accountability already sits. hire's job is to answer \"which\nhuman\" once, to a consumer that asked, not to maintain a permanent\nreverse index so a third party can ask later.\n\nWHY THE ALTERNATIVE IS WORSE THAN IT SOUNDS. An escrow means persisting\nthe pseudonym key and making it retrievable. Today the key is ephemeral\nand in memory. A persisted, retrievable key is a single secret whose\ncompromise deanonymises every disclosure that daemon ever made, on every\nmachine that runs it. That is a categorically different artifact from\nwhat exists now and it would need its own threat model, its own storage\nstory, and its own answer for what happens when a laptop is stolen.\n\nNOTE THE INTERACTION WITH persona-08sz. Enrollment already wants to\npersist the pseudonym key so a consumer still recognises the user after\na restart. That is a legitimate requirement and it is NOT an escrow: the\nkey stays on the machine and is readable only by the daemon's own user.\nThe line between \"persisted so it survives a reboot\" and \"retrievable by\nsomeone who is not the user\" is the line this bead has to draw, and it\nhas to be drawn before persona-08sz implements the first half.\n\nIf the answer turns out to be that some deployments need reversal, the\nleast bad shape is that the key belongs to the organisation's enrollment\nauthority rather than to the daemon, so the escrow lives where the\naccountability lives and the desktop holds nothing worth stealing.\n",
+  "acceptance_criteria": "A recorded decision on whether hire supports reversing a per-consumer pseudonym to the underlying identity, who could do it if so, and what the daemon must therefore keep. Decision before code.",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T20:26:33.622512958Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T20:26:33.622512958Z",
+  "labels": [
+    "privacy",
+    "design"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "persona-2myu.3",
+      "depends_on_id": "persona-2myu",
+      "type": "parent-child",
+      "created_at": "2026-09-16T20:26:33.653673276Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    }
+  ]
+}
