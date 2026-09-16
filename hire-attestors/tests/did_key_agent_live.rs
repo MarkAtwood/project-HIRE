@@ -214,14 +214,15 @@ async fn a_did_key_is_proved_by_the_agent_holding_its_secret() {
     let hire_attestors::Evidence::Possession(signature) = &evidence[0] else {
         panic!("did:key must produce possession evidence");
     };
-    let mut framed = Vec::new();
-    framed.extend_from_slice(&(11u32).to_be_bytes());
-    framed.extend_from_slice(b"ssh-ed25519");
-    framed.extend_from_slice(&(64u32).to_be_bytes());
-    framed.extend_from_slice(&signature.assertion().bytes);
+    // The witnessed bytes are the raw signature, whatever custodian produced
+    // it: the ssh agent's framing is unwrapped by the attestor, where the
+    // transport is known.
+    let raw: [u8; 64] = signature.assertion().bytes[..]
+        .try_into()
+        .expect("an ed25519 signature is 64 bytes");
     assert!(
         hire_attestors::ChallengeSignature::verify_did_key_ed25519(
-            candidate, &challenge, &stranger, &framed,
+            candidate, &challenge, &stranger, &raw,
         )
         .is_err(),
         "a signature offered for a DID the candidate does not name must not verify"
@@ -243,17 +244,12 @@ async fn a_did_key_is_proved_by_the_agent_holding_its_secret() {
     let hire_attestors::Evidence::Possession(other_signature) = &other_evidence[0] else {
         panic!("did:key must produce possession evidence");
     };
-    let mut other_framed = Vec::new();
-    other_framed.extend_from_slice(&(11u32).to_be_bytes());
-    other_framed.extend_from_slice(b"ssh-ed25519");
-    other_framed.extend_from_slice(&(64u32).to_be_bytes());
-    other_framed.extend_from_slice(&other_signature.assertion().bytes);
+    let other_raw: [u8; 64] = other_signature.assertion().bytes[..]
+        .try_into()
+        .expect("an ed25519 signature is 64 bytes");
     assert!(
         hire_attestors::ChallengeSignature::verify_did_key_ed25519(
-            candidate,
-            &challenge,
-            &other,
-            &other_framed,
+            candidate, &challenge, &other, &other_raw,
         )
         .is_err(),
         "a good signature by another held key must not witness this candidate"
@@ -263,7 +259,7 @@ async fn a_did_key_is_proved_by_the_agent_holding_its_secret() {
             candidate,
             b"a different challenge entirely",
             &did,
-            &framed,
+            &raw,
         )
         .is_err(),
         "a signature over one challenge must not witness another"
@@ -271,10 +267,8 @@ async fn a_did_key_is_proved_by_the_agent_holding_its_secret() {
     // Control: the same reassembled signature, offered honestly, does verify --
     // so the two refusals above are about what changed and not about the
     // reassembly.
-    hire_attestors::ChallengeSignature::verify_did_key_ed25519(
-        candidate, &challenge, &did, &framed,
-    )
-    .expect("the agent's own signature over this challenge must verify");
+    hire_attestors::ChallengeSignature::verify_did_key_ed25519(candidate, &challenge, &did, &raw)
+        .expect("the agent's own signature over this challenge must verify");
 
     // A signature answering some other challenge is a replay, not evidence.
     assert!(

@@ -297,21 +297,20 @@ impl ChallengeSignature {
     ///    proof is of *some* DID the operator configured;
     /// 2. the DID encodes an ed25519 key, by its multicodec prefix rather than
     ///    by its shape;
-    /// 3. the signature names `ssh-ed25519` and carries exactly 64 bytes;
-    /// 4. the signature verifies over *this* challenge, under the key the DID
+    /// 3. the signature verifies over *this* challenge, under the key the DID
     ///    itself encodes.
     ///
-    /// Check 4 is why the identifier is the input rather than a public key: in
+    /// Check 3 is why the identifier is the input rather than a public key: in
     /// `did:key` the identifier *is* the verification method, so there is no
     /// step where a caller could substitute a different key and no resolution
     /// to get wrong. The DID string is passed in and check 1 is what stops a
     /// caller passing one the candidate does not name.
     ///
-    /// The signature arrives in SSH agent framing because the ssh agent is
-    /// where the secret half lives — see the `did_key` module header for why
-    /// hire looks there and holds no key material of its own. A future
-    /// custodian with different framing wants its own constructor here, not a
-    /// second format accepted by this one.
+    /// The signature is 64 raw bytes, whatever held the secret. An ssh agent
+    /// frames its reply and a key from `crate::keystore` does not, and that
+    /// difference is transport: the attestor unwraps its own transport, and
+    /// what makes the signature evidence is that it verifies under the key the
+    /// identifier names.
     ///
     /// ## Errors
     /// Returns [`AttestorError::ChallengeFailed`] if any check fails. No variant
@@ -320,7 +319,7 @@ impl ChallengeSignature {
         candidate: &Candidate,
         challenge: &[u8],
         did: &str,
-        signature: &[u8],
+        signature: &[u8; 64],
     ) -> Result<Self, AttestorError> {
         if crate::did_key::spiffe_path(did) != candidate.path {
             return Err(AttestorError::ChallengeFailed(
@@ -335,15 +334,8 @@ impl ChallengeSignature {
             AttestorError::ChallengeFailed("did:key does not encode a valid ed25519 point".into())
         })?;
 
-        let (sig_algorithm, rest) = read_string(signature).ok_or_else(malformed)?;
-        let (sig_bytes, rest) = read_string(rest).ok_or_else(malformed)?;
-        if sig_algorithm != SSH_ED25519 || !rest.is_empty() {
-            return Err(malformed());
-        }
-        let sig_bytes = <&[u8; 64]>::try_from(sig_bytes).map_err(|_| malformed())?;
-
         // verify_strict, for the reasons given in `verify_ssh_ed25519`.
-        key.verify_strict(challenge, &Signature::from_bytes(sig_bytes))
+        key.verify_strict(challenge, &Signature::from_bytes(signature))
             .map_err(|_| {
                 AttestorError::ChallengeFailed(
                     "did:key signature does not verify over the challenge".into(),
@@ -352,7 +344,7 @@ impl ChallengeSignature {
 
         Ok(Self {
             assertion: SignedAssertion::new(
-                sig_bytes.to_vec(),
+                signature.to_vec(),
                 "application/vnd.hire.did-key-ed25519-signature",
             ),
             challenge: challenge.to_vec(),

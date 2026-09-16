@@ -182,6 +182,18 @@ pub(crate) async fn list_identities(
     Ok(keys)
 }
 
+/// The raw 64 bytes inside an agent signature blob, if it is an ed25519 one.
+///
+/// For a caller that verifies against a key named somewhere other than by SSH
+/// framing — a `did:key` — where the framing is transport rather than trust.
+/// The algorithm is still checked, so a blob claiming another algorithm is
+/// refused before its bytes are read as an ed25519 signature.
+pub(crate) fn raw_ed25519_signature(blob: &[u8]) -> Option<[u8; 64]> {
+    let (algorithm, rest) = read_string(blob)?;
+    let (signature, rest) = read_string(rest)?;
+    (algorithm == SSH_ED25519 && rest.is_empty()).then(|| signature.try_into().ok())?
+}
+
 /// Ask the agent to sign `challenge` with `key_blob`, returning the signature
 /// blob as the agent framed it: `[algorithm:string][signature:string]`.
 ///

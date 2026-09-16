@@ -205,7 +205,13 @@ impl Attestor for DidKeyAttestor {
                 AttestorError::ChallengeFailed(format!("no local agent holds the key {did} names"))
             })?;
 
-        let signature = ssh::sign(&mut stream, &key_blob, challenge, &candidate.path).await?;
+        let framed = ssh::sign(&mut stream, &key_blob, challenge, &candidate.path).await?;
+        // The agent's framing is unwrapped here, where the transport is known.
+        // What makes the signature evidence is that it verifies under the key
+        // the identifier names, and that is true of 64 bytes from any custodian.
+        let signature = ssh::raw_ed25519_signature(&framed).ok_or_else(|| {
+            AttestorError::ChallengeFailed("malformed ssh-agent signature".into())
+        })?;
 
         Ok(vec![Evidence::Possession(
             ChallengeSignature::verify_did_key_ed25519(candidate, challenge, &did, &signature)?,
