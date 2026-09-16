@@ -33,7 +33,8 @@ Count the things on your laptop that already know who you are.
 The SSH agent holds your keys and will sign a challenge on request. GPG has your
 fingerprint and your web of trust. The browser has passkeys. Tailscale knows your
 tailnet identity, verified through Google or GitHub. `gcloud` has a cached OIDC
-token, and so do `az` and `aws`. The OS has a login session, unlocked by a password
+token and so does `az`; `aws` caches a bearer token that names nobody until you ask
+Amazon. The OS has a login session, unlocked by a password
 or a fingerprint. There is probably a FIDO2 key in a USB port right now, and it will
 prove a human touched it within the last few seconds.
 

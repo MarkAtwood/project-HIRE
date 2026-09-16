@@ -1,0 +1,16 @@
+{
+  "id": "persona-vjir",
+  "title": "aws-sso: the cached token is opaque, not an assertion",
+  "description": "FOUND while looking at what EKS does, and confirmed on a real machine 2026-09-16 by reading the key names in ~/.aws/sso/cache (values not read). MOTIVATIONS says \"gcloud has a cached OIDC token, and so do az and aws\". That is wrong about aws and the difference is the whole bead.\n\nWHAT IS ACTUALLY CACHED. Two files. One is a client registration: clientId, clientSecret, expiresAt, scopes. The other is the token: accessToken, refreshToken, clientId, clientSecret, expiresAt, region, registrationExpiresAt, startUrl. There is NO idToken and no JWT anywhere in it. The accessToken is an opaque IAM Identity Center bearer token.\n\nSO IT IS A THIRD SHAPE, and neither of the two hire already handles:\n- Tailscale is a local daemon that will answer questions about the user.\n- gcloud caches a signed JWT that can be verified offline against the issuer's JWKS (persona-qbnm.7).\n- AWS caches an opaque string that names nobody locally. Learning who it belongs to means exchanging it for role credentials and calling sts:GetCallerIdentity -- a network round trip to an authority, for an answer that is AWS's word rather than a signature.\n\nWHY IT MIGHT STILL BE WORTH IT: under Identity Center the resulting ARN is typically arn:aws:sts::\u003cacct\u003e:assumed-role/AWSReservedSSO_\u003crole\u003e_\u003cid\u003e/\u003csession-name\u003e, and the session name is commonly the user's email. So AWS can name the human. startUrl names the Identity Center instance, which is an organisational identity available with no network call at all.\n\nTHE DESIGN QUESTION TO SETTLE FIRST, because it decides whether this is one attestor or a category: what tier does \"a remote authority vouched for this bearer token\" earn? It is not possession, there is no signature to check, and it is not a local daemon trusted by installation -- the trust does not follow the install because the authority is not on this machine. That is persona-ux32's question about external attestors, made concrete. Do not build before answering it.\n\nALSO NOTE the freshness trap: expiresAt bounds the token, not the authentication. The auth_time rule decided for cached OIDC tokens applies with more force here, since there is not even an iat to reason from.\n\nCHEAP PARTIAL that may be the right scope: read startUrl and region only, with no network, and enumerate an organisational candidate that cannot prove. That is honest, costs nothing, and tells a consumer which company's SSO this desktop is enrolled in.",
+  "acceptance_criteria": "A decision on what tier a remote authority's word about a bearer token earns, recorded before any code.",
+  "status": "open",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T20:02:30.699062396Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T20:02:30.699062396Z",
+  "labels": [
+    "attestor aws research"
+  ]
+}
