@@ -89,35 +89,34 @@ easier document to say yes to.
 
 ## What we control, and should fix regardless
 
-These are table stakes for any CNCF-adjacent project and are worth doing on their own
-merits. All of them are missing today.
+These are table stakes for any CNCF-adjacent project. All of them are now done, as of
+2026-09-16, and none of them was expensive.
 
 | Item | State | Note |
 |---|---|---|
-| **DCO sign-off** | **absent from every commit** | Mandatory for SPIFFE contributions. Zero commits in this repository carry `Signed-off-by`. |
-| `CODE_OF_CONDUCT.md` | missing | CNCF Code of Conduct by reference. |
-| `CONTRIBUTING.md` | missing | Must state the DCO requirement. |
-| `GOVERNANCE.md` | missing | Currently: one maintainer. Say so plainly rather than inventing a committee. |
-| `MAINTAINERS.md` | missing | One name. That is itself a finding for a donation. |
-| `SECURITY.md` | missing | Where to report a vulnerability, and the expected response. |
-| License | **done** | Apache-2.0 on code, CC-BY-4.0 on docs — the CNCF norm. Not to be changed. |
+| **DCO sign-off** | **done** | Every commit carries `Signed-off-by`, added by rewriting the history while there was one author. |
+| `CODE_OF_CONDUCT.md` | done | CNCF Community Code of Conduct v1.3 by reference. Reports go to the maintainer, because `conduct@cncf.io` has no standing over a project CNCF has not accepted. |
+| `CONTRIBUTING.md` | done | DCO, the licensing term for contributions, commit conventions, and the test-integrity rules. |
+| `GOVERNANCE.md` | done | One maintainer decides. Says so rather than inventing a committee. |
+| `MAINTAINERS.md` | done | One name, and it names the succession risk. |
+| `SECURITY.md` | done | Reporting address, an honest expectation rather than a service level, and a scope that excludes attackers who are already root. |
+| License | **done** | Apache-2.0 on code, CC-BY-4.0 on docs. Both license texts are in every commit from the root. Not to be changed. |
 
-**The DCO gap needs a decision, not just a fix.** Sign-off is a per-commit certification
-by the contributor, and this history has none. Two options: rewrite the history to add
-`Signed-off-by` (possible while there is one human author, and a force-push nobody else
-has pulled), or import at donation time as a squashed, signed commit and keep this
-repository as the archive. The first preserves the history; the second is cleaner
-paperwork. Decide before the history gets longer.
+**The DCO gap was closed by rewriting rather than squashing**, on 2026-09-16, while there
+was one human author and a history nobody else had pulled. The reasoning is worth keeping:
+a squash and a rewrite produce identical provenance, so a squash buys nothing on the goal
+and destroys 124 substantive commit bodies whose distinctive content is the alternatives
+that were rejected. The same pass removed the AI co-author trailers, normalised two author
+identities to one so each sign-off matches the author it certifies, and wrote both license
+texts into every commit from the root: a sole author may state the terms under which his
+own work was always contributed.
 
 **Attribution is settled:** agents do not take credit — not in a `Co-Authored-By` trailer,
 not in source comments, not on GitHub. The rule is in AGENTS.md. The maintainer is the
 author and the one who certifies the work, which is what a DCO sign-off means anyway.
 
-That leaves the existing history, where 79 of 177 commits carry an AI `Co-Authored-By`
-trailer added before the rule existed. It is the same decision as the DCO gap above and
-should be made once, for both: rewriting the history removes the trailers and adds the
-sign-offs in a single pass, while importing squashed-and-signed makes both moot. Either
-way it gets more expensive as the history grows.
+The 79 trailers that predated the rule are gone, removed in the same pass that added the
+sign-offs.
 
 **Name and trademark.** Donation means assigning the trademark to the Linux Foundation, so
 the name has to be one we can give away. `hire`/`HiRE` is taken on crates.io and
