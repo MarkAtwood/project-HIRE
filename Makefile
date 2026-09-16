@@ -1,4 +1,4 @@
-.PHONY: check portability fmt lint test audit clean
+.PHONY: check portability fmt lint test audit clean roadmap
 
 check:
 	cargo check --workspace
@@ -29,6 +29,9 @@ test:
 
 audit:
 	cargo audit
+
+roadmap:
+	python3 scripts/gen-roadmap.py
 
 ci: fmt-check lint test audit portability
 	@echo "CI passed"
