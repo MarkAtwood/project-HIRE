@@ -1,0 +1,16 @@
+{
+  "id": "persona-c7a6",
+  "title": "Where the large vendors stopped, and why that is the argument",
+  "description": "SURVEYED 2026-09-16 alongside the overlay-network survey, so neither gets re-investigated. The question: has anyone already built a neutral local API answering \"who is this human\", and if not, how far did they get?\n\nTHE PATTERN, consistent across all of them: identity is solved cloud-side, and the endpoint signal is delegated to a browser extension or a partner agent. Nobody built a neutral local API for a desktop application to ask.\n\n- MICROSOFT got closest and actually shipped it. WAM is a Windows broker an application asks for a token for the account the user signed into Windows with. Bound to Windows 10+, to Entra ID only (Microsoft's documentation says plainly it does not work with third-party IdPs), and to MSAL rather than a socket. One OS, one IdP, one SDK. Beaded separately as a source to consume.\n- AWS ships Verified Access, a reverse proxy in front of applications rather than an API an application calls. Identity from IAM Identity Center; device posture from a browser extension plus third-party device-trust providers. CONFIRMED from AWS's own documentation: AWS also publishes SPIRE integration guidance for App Mesh workloads, which is the asymmetry inside one vendor -- SPIFFE for the processes, nothing for the person.\n- GOOGLE ships Chrome Enterprise device trust connectors: the browser reports device id, serial, OS version, firewall state, hardware-backed on ChromeOS, to a third-party IdP. Device posture, browser-scoped, and who the user is stays cloud-side.\n- ORACLE exposes SPIFFE-based workload identity in OCI. Sourced from a third-party blog rather than Oracle, so treat as unconfirmed before leaning on it.\n- OPENSTACK Keystone federates SAML and OIDC and has no local agent at all.\n\nWHY THIS IS THE ARGUMENT RATHER THAN A DISCOURAGEMENT. \"Nobody thought of this\" is a weak pitch; a reviewer assumes the idea is bad. \"Microsoft built exactly this and scoped it to their own operating system and their own identity provider\" is a strong one, because it concedes the idea is right and locates the gap precisely: the missing thing is not the capability, it is the NEUTRALITY -- every OS, every source, one API, no vendor in the middle. Use that framing in the Phase 0 conversation (UPSTREAM.md) and keep the prior-art table in SPEC-HIRE current, since that is where it is written down.\n\nREVISIT IF: any vendor ships a local human-identity API that is not bound to their own IdP, or Microsoft opens WAM to third-party identity providers. Either would change what this project is for.",
+  "acceptance_criteria": "A decision record. Close it only if a vendor ships a neutral local human-identity API, which would change what HIRE is for.",
+  "status": "open",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T19:53:39.570390613Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T19:53:39.570390613Z",
+  "labels": [
+    "research design upstream"
+  ]
+}

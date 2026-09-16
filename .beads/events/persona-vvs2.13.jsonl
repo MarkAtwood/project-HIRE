@@ -1,0 +1,4 @@
+{"id":"01a0abc8-33ab-7a02-9f22-5f2809feab2f","issue_id":"persona-vvs2.13","event_type":"created","actor":"agent","old_value":"","new_value":"","created_at":"2026-09-16T19:53:39.499656965Z"}
+{"id":"01a0abc8-33b0-7959-a4e5-66ab44475755","issue_id":"persona-vvs2.13","event_type":"label_added","actor":"agent","comment":"Added label: attestor windows microsoft","created_at":"2026-09-16T19:53:39.50461345Z"}
+{"id":"01a0abc8-33b5-77c9-9d75-e6d90d13c7fd","issue_id":"persona-vvs2.13","event_type":"label_added","actor":"agent","comment":"Added label: portability","created_at":"2026-09-16T19:53:39.509511582Z"}
+{"id":"01a0abc8-33ba-73ee-922e-d3c7c46e1e0d","issue_id":"persona-vvs2.13","event_type":"label_added","actor":"agent","comment":"Added label: windows","created_at":"2026-09-16T19:53:39.514258335Z"}

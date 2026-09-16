@@ -1,0 +1,28 @@
+{
+  "id": "persona-vvs2.13",
+  "title": "wam: the Windows account the user signed in with",
+  "description": "SPEC-HIRE lists WAM among the designed Windows sources and no bead existed for it. Filed while surveying what the large vendors have built (see the vendor survey bead).\n\nWHAT IT IS. The Web Account Manager is a Windows authentication broker. An application asks it for a token for \"the account you signed into your Windows session\", which is the same question hired exists to answer. Reached through MSAL (Microsoft.Identity.Client.Broker); PublicClientApplication.OperatingSystemAccount names the current Windows account.\n\nWHY IT MATTERS MORE THAN AN ORDINARY ATTESTOR. It is the closest prior art to this entire project, and it is bound three ways: Windows 10+ only, Microsoft Entra ID only -- the documentation states it does not work with third-party identity providers -- and reachable only through a Microsoft library rather than a neutral socket. hired should CONSUME it rather than compete with it: on a domain-joined Windows box it is the highest-quality answer available, and wrapping it is what makes hired's pitch concrete rather than theoretical. The differentiator is not doing it better, it is doing it for every OS and every source behind one API.\n\nTIER. An Entra-issued token for the signed-in account is IdP-verified, so Iaa2 is the target. Presence follows the auth_time rule already decided for cached OIDC tokens: session presence only if the token dates the authentication, none otherwise. If the broker can be asked for a fresh interactive authentication, that is a separate and later question -- do not build a prompt on the unnamed FetchJWTSVID path.\n\nBLOCKED IN PRACTICE by persona-vvs2: hired does not run on Windows at all until the transport abstraction lands, so this cannot be tested even if written. Filed now so the source is not forgotten, and so the prior-art argument has a bead behind it.\n\nFIRST QUESTION TO ANSWER: whether WAM is reachable from Rust without taking an MSAL dependency -- the underlying broker is a WinRT/COM surface, and whether that is callable directly decides whether this is an attestor or a shim around a C# helper.",
+  "acceptance_criteria": "On a domain-joined Windows machine, the attestor enumerates the signed-in Entra account and proves it with a token the broker issued.",
+  "status": "open",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T19:53:39.494039614Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T19:53:39.494039614Z",
+  "labels": [
+    "attestor windows microsoft",
+    "portability",
+    "windows"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "persona-vvs2.13",
+      "depends_on_id": "persona-vvs2",
+      "type": "parent-child",
+      "created_at": "2026-09-16T19:53:39.527969269Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    }
+  ]
+}

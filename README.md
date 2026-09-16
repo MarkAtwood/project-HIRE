@@ -224,7 +224,8 @@ another local user.
 
 ## Documents
 
-- [MOTIVATIONS.md](MOTIVATIONS.md) -- why this needs to exist at all
+- [MOTIVATIONS.md](MOTIVATIONS.md) -- why this needs to exist at all, and where it came from
+- [ROADMAP.md](ROADMAP.md) -- what order the work goes in, and why that order
 - [SPEC-HIRE.md](SPEC-HIRE.md) -- normative specification: SPIFFE ID schema, trust domains, assurance levels, prior art
 - [PRFAQ.md](PRFAQ.md) -- press release and anticipated questions
 - [UPSTREAM.md](UPSTREAM.md) -- the plan for donating HIRE to SPIFFE: how that project is governed, what would be asked of it, and what has to be true first
@@ -239,7 +240,7 @@ Two licenses apply, by file type:
   protobuf definitions, and service/config files. See [LICENSE](LICENSE).
   Each crate carries `license = "Apache-2.0"` in its manifest.
 - **Documentation** -- CC-BY-4.0. `MOTIVATIONS.md`, `SPEC-HIRE.md`, `DESIGN.md`,
-  `PRFAQ.md`, `UPSTREAM.md`, `CONTRIBUTING.md`, `GOVERNANCE.md`,
+  `PRFAQ.md`, `UPSTREAM.md`, `ROADMAP.md`, `CONTRIBUTING.md`, `GOVERNANCE.md`,
   `CODE_OF_CONDUCT.md`, `MAINTAINERS.md`, `SECURITY.md` and this README. See [LICENSE-CC-BY-4.0](LICENSE-CC-BY-4.0). Each carries an SPDX
   identifier on its first line.
 

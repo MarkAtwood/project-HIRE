@@ -689,7 +689,7 @@ Bitwarden is open source (AGPL); the integration is a Bitwarden CLI plugin / SDK
 
 `hired` is the right starting point because every other component depends on it. After that, priority by impact and dependency:
 
-1. **`hired`** (this spec) -- 5-7 weeks -- foundation; nothing else works without it
+1. **`hired`** (this spec) -- foundation; nothing else works without it. Its own internal sequence, and the reasoning for it, is [ROADMAP.md](ROADMAP.md) rather than a week estimate here
 2. **SSH Bouncer** -- 4-6 weeks -- highest security impact; the gap nobody else is filling; the "is this ZT real?" test
 3. **ZT Control Plane (minimal)** -- 2-3 weeks -- ties `hired` + OPA + SSH CA together; enables delegation grants
 4. **IMAP/SMTP Gateway** -- 3-4 weeks -- enables the delegated-access use case; unblocks engineers
@@ -697,7 +697,7 @@ Bitwarden is open source (AGPL); the integration is a Bitwarden CLI plugin / SDK
 6. **Device Posture Agent** -- 2-3 weeks -- required for full policy; can stub with static "posture ok" initially
 7. **Bitwarden integration** -- 1-2 weeks -- completes the external-site policy requirement
 
-Total: roughly 20-28 weeks of focused Rust work (one person). Parallelizable once `hired` and the ZT control plane are stable: SSH bouncer, IMAP gateway, and device posture can be developed concurrently.
+Total for the components after `hired`: roughly 15-21 weeks of focused Rust work (one person). Parallelizable once `hired` and the ZT control plane are stable: SSH bouncer, IMAP gateway, and device posture can be developed concurrently.
 
 ### What Does Not Need to Be Built
 
