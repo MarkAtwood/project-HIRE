@@ -408,12 +408,30 @@ The JWT-SVID payload carries standard SPIFFE claims plus a `hire` extension obje
       "attested_at": 1745999640,
       "present_until": 1745999940
     },
-    "auth_methods": ["tailscale_oidc", "fido2_up"]
+    "auth_methods": ["idp_session", "hardware_key_possession"]
   }
 }
 ```
 
 The `hire` extension is non-standard but ignorable by consumers that do not understand it. The `sub`/`aud`/`exp`/`spiffe_id` fields are standard SPIFFE JWT-SVID fields.
+
+### Authentication methods (`auth_methods`)
+
+`sources` says **where** the identity came from; `auth_methods` says **how** the human authenticated. The vocabulary is closed, and it names mechanisms rather than sources:
+
+| Method | Meaning |
+|---|---|
+| `key_possession` | A key the human controls signed this request's challenge. Possession, and nothing about who held it |
+| `hardware_key_possession` | The same, by a key on a device it cannot be copied off. Reported by the custodian — a smartcard serial in gpg's key listing — not proved to `hired` |
+| `idp_session` | An identity provider verified the human, as reported by a local daemon. The login may be months old |
+| `idp_token` | An identity provider verified the human, in a token `hired` checked itself. *(not implemented)* |
+| `user_presence` | A human touched an authenticator. *(not implemented)* |
+
+**Mechanisms, not sources, deliberately.** A consumer gating on `hardware_key_possession` does not need to know that gpg, PIV and FIDO2 exist or which of them is installed on this machine. A `{source}_{mechanism}` vocabulary — the earlier `tailscale_oidc`, `fido2_up` — makes every policy a list of sources, which is the field next door.
+
+**An empty list is a real answer.** `getuid()` is not an authentication method, so an identity resting on the Unix account alone carries `sources: ["unix"]` and `auth_methods: []`. A consumer whose policy is "`auth_methods` must be non-empty" is therefore meaningful rather than unconditionally satisfied.
+
+**`hardware_key_possession` does not raise the tier.** `iaa3` means hardware-bound *and* IdP-verified, and a self-asserted PGP key is not IdP-verified however good the card is. The method is provenance a relying party can read; the tier is a separate judgement.
 
 ---
 

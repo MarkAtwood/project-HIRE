@@ -36,6 +36,7 @@ identity claims it signs. Treat the assurance and presence levels below as targe
 | `FetchJWTSVID` consent gate | an unnamed request proves only candidates that declare proving cannot prompt a human -- Tailscale, the Unix account, and any `did:key` whose secret was dropped in the identities directory. Naming one identity in `spiffe_id` is the consent to prove it, and is how ssh-agent, gpg and agent-held `did:key` are reached |
 | `FetchJWTSVID` returns a list | every silently-provable identity, one SVID each, best-first and deduplicated by SPIFFE ID |
 | `hint` tag on each SVID | `source=...&identity_assurance=...&presence=...&age=...` -- normative, while the order is advisory |
+| `auth_methods` in the token | how the human authenticated, derived from the evidence and distinct from `sources`. Empty on a bare Unix box, because `getuid()` is not an authentication |
 | Identity assurance levels | derived from evidence -- see below |
 | Presence levels | enforced across every audience, and unknown requirements are refused rather than ignored |
 | Presence freshness (`hire_max_age`, 300s presence TTL) | enforced -- but no attestor yet establishes presence at all, so the bound is checked against an observation that always reports no presence |
