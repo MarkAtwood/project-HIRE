@@ -1,0 +1,44 @@
+{
+  "id": "persona-qbnm.7.3",
+  "title": "Resolve the issuer's JWKS: discovery, cache, and kid-miss refresh",
+  "description": "Given an issuer and a client, fetch the keys. Two requests: GET {iss}/.well-known/openid-configuration for the jwks_uri, then GET that.\n\nREUSE THE SHAPE THAT EXISTS. hire-core/src/trust_bundle.rs:60-70 already parses a jsonwebtoken JwkSet, finds a key by kid, and -- importantly -- checks the coordinate lengths before building a DecodingKey, because DecodingKey::from_ec_components concatenates whatever it is given. Read that function before writing this one; the same trap applies to a fetched JWKS and there it is attacker-adjacent rather than self-published.\n\nCACHE, WITH A REFRESH RULE. A kid that is not in the cache is the signal to refetch, exactly as trust_bundle.rs:44 already flags for the local bundle: a consumer caching a JWKS sees a kid miss with no refresh signal. Rate-limit the refetch, or a token with a junk kid becomes a request amplifier.\n\nTESTS MUST BE OFFLINE, which is repo discipline and not negotiable. That shapes the design: the fetch belongs behind a seam a test can serve locally (a tokio listener on 127.0.0.1 is enough and needs no new dependency), and the verifying constructor in persona-qbnm.7.5 must take a JWKS rather than fetch one, so that IT can be tested with no network at all. Do not put the fetch inside the constructor.\n\nponytail note: one JWKS per issuer, refetched on kid miss, is the whole cache. Do not build an expiry policy from Cache-Control headers until something needs it.",
+  "acceptance_criteria": "A JWKS is fetched and cached for an issuer, a kid miss triggers exactly one rate-limited refetch, and every test runs with no network.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T15:57:04.803938721Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T15:57:25.493709211Z",
+  "labels": [
+    "oidc network",
+    "attestor",
+    "driver"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "persona-qbnm.7.3",
+      "depends_on_id": "persona-qbnm.7",
+      "type": "parent-child",
+      "created_at": "2026-09-16T15:57:04.832490818Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "persona-qbnm.7.3",
+      "depends_on_id": "persona-qbnm.7.1",
+      "type": "blocks",
+      "created_at": "2026-09-16T15:57:05.141141122Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "persona-qbnm.7.3",
+      "depends_on_id": "persona-qbnm.7.2",
+      "type": "blocks",
+      "created_at": "2026-09-16T15:57:05.202516552Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{"id":"01a0aaef-9af9-7a35-9e4f-5e3ef401ee3f","issue_id":"persona-qbnm.7.1","event_type":"created","actor":"agent","old_value":"","new_value":"","created_at":"2026-09-16T15:57:04.633669844Z"}
+{"id":"01a0aaef-9afe-7235-9134-4200d50e479f","issue_id":"persona-qbnm.7.1","event_type":"label_added","actor":"agent","comment":"Added label: oidc dependency network","created_at":"2026-09-16T15:57:04.638145542Z"}
+{"id":"01a0aaef-9b02-777c-827a-18ea01508b23","issue_id":"persona-qbnm.7.1","event_type":"label_added","actor":"agent","comment":"Added label: attestor","created_at":"2026-09-16T15:57:04.642491462Z"}
+{"id":"01a0aaef-9b06-7ab2-a801-fd9d1739b170","issue_id":"persona-qbnm.7.1","event_type":"label_added","actor":"agent","comment":"Added label: driver","created_at":"2026-09-16T15:57:04.646701786Z"}

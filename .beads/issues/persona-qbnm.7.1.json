@@ -1,0 +1,28 @@
+{
+  "id": "persona-qbnm.7.1",
+  "title": "Choose the HTTPS client, and bound what it may reach",
+  "description": "MEASURED 2026-09-16: there is no HTTPS client anywhere in this workspace. jsonwebtoken appears only in hire-core (signer.rs, trust_bundle.rs) and hire-grpc/src/service.rs; hyper-util is the Unix-socket transport for tonic, not a TLS client. Verifying an issuer signature needs a network fetch, so this is a new dependency and it is the first thing the rest of persona-qbnm.7 waits on.\n\nTHE POSTURE IS ALREADY SETTLED, so do not re-open it: personad MAY make outbound network connections (see the personad-may-use-the-network memory; the opposite was decided and reverted on 2026-09-14). did:web is defined as an HTTPS fetch, OIDC verification means fetching a JWKS, and SPIFFE Federation syncs bundles between hosts. Refusing the network does not make those sources local, it makes them unsupported.\n\nWHAT TO DECIDE: which client. Weigh these, and record the reason rather than the choice alone.\n- reqwest+rustls is the obvious default and is already named as the upgrade path in did_key.rs's header. It is also a large tree for two GET requests.\n- ureq or a hyper+rustls hand-roll is smaller; ureq is blocking, which matters inside an async prove().\n- Whatever is chosen must expose: a total timeout, a response size cap, and control over redirects. persona-qbnm.7.4 explains why those three are requirements rather than preferences.\n- rustls vs native-tls decides whether the trust anchors are the OS store or webpki-roots. The OS store is what an enterprise MITM proxy is installed into, which on a corporate desktop is the environment this source exists for.\n\nALSO DECIDE WHERE IT LIVES. hire-attestors would gain the dependency, and hire-core must not: persona-core-must-stay-portable is enforced by CI, and a TLS stack with platform backends is exactly the kind of thing that breaks the Windows and Darwin cross-checks.",
+  "acceptance_criteria": "A client crate chosen with the reason recorded, carrying timeout, size-cap and redirect controls; hire-core's portability cross-checks still pass.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T15:57:04.629224459Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T15:57:04.629224459Z",
+  "labels": [
+    "oidc dependency network",
+    "attestor",
+    "driver"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "persona-qbnm.7.1",
+      "depends_on_id": "persona-qbnm.7",
+      "type": "parent-child",
+      "created_at": "2026-09-16T15:57:04.661166613Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    }
+  ]
+}

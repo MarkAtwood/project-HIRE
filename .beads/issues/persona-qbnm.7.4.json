@@ -1,0 +1,28 @@
+{
+  "id": "persona-qbnm.7.4",
+  "title": "Decide what binds_to means for a cached token, before writing the constructor",
+  "description": "Evidence::binds_to returns true unconditionally for Evidence::IdpVerified (hire-attestors/src/claim.rs), and the ponytail comment beside it names the token's nonce as the intended binding. That was harmless while no attestor could build a VerifiedToken. It stops being harmless the moment persona-qbnm.7.3 lands.\n\nTHE PROBLEM. Claim::derive filters evidence through binds_to so that evidence answering an earlier challenge is a replay and not evidence. A cached ID token cannot answer this request's challenge: it carries a nonce from somebody else's login flow, minted before hired existed. So every FetchJWTSVID converts the same file on disk into a fresh claim, for as long as the token is unexpired.\n\nWHAT THAT IS AND IS NOT. It is not a freshness bug -- persona-qbnm.7's auth_time split already decided that an undated token claims no presence. It is a question about whether a static artifact should satisfy a challenge-response path at all, and the answer shapes what the OIDC source is worth.\n\nTHE OPTIONS, and the third is probably right:\n- Leave it true. The token is evidence of an identity, not of a live interaction, and the tier already says so (Iaa2, no presence). Cheapest, and it means a stolen cache file is a usable identity until exp.\n- Require a nonce match. Correct in principle and unreachable in practice: hired does not participate in the login that mints the token.\n- Treat exp as the binding and say so. A cached token is admissible while the issuer says it is valid, and the daemon adds nothing. That is honest, checkable, and it is what the code already does by accident -- the work is writing it down in binds_to and in the tier documentation rather than leaving it as an unexamined `true`.\n\nTRIPWIRE: whatever is decided, hire-grpc/tests/e2e.rs a_replayed_proof_is_denied must keep passing unedited. If it needs an edit, the line has been crossed -- escalate rather than weaken it.",
+  "acceptance_criteria": "binds_to has an arm for IdpVerified written deliberately, with the reasoning recorded; the replay test passes unedited.",
+  "status": "open",
+  "priority": 1,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T15:57:04.893009509Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T15:57:04.893009509Z",
+  "labels": [
+    "oidc security design",
+    "attestor",
+    "driver"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "persona-qbnm.7.4",
+      "depends_on_id": "persona-qbnm.7",
+      "type": "parent-child",
+      "created_at": "2026-09-16T15:57:04.920139158Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    }
+  ]
+}

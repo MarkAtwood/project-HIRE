@@ -1,0 +1,36 @@
+{
+  "id": "persona-qbnm.7.6",
+  "title": "Wire oidc prove() and re-anchor the identity to its own trust domain",
+  "description": "The last step, and the one that makes the source real: OidcCachedAttestor::prove reads the cached token it enumerated, verifies it, and returns Evidence::IdpVerified. Claim::derive then re-anchors the trust domain to TrustDomain::OrgOidc(issuer), which is the payoff -- the work identity stops sitting under ssh.local, where oidc.rs's own ponytail comment has been apologising for it.\n\nMIND THE TRUST DOMAIN SPELLING. persona-5s4b.37 gave every variant a reserved authority, so OrgOidc renders as oidc.{domain} and the authority must be lowercase and within [a-z0-9.-_]. An issuer host that is not -- an IDN, an unexpected port, a trailing dot -- must be refused rather than producing a SPIFFE ID that does not parse. Read TrustDomain::from_str before writing the extraction.\n\nRE-READ RATHER THAN CARRY FORWARD, as ssh.rs re-lists the agent and gpg.rs re-enumerates: prove() should read the cache again and confirm the token it is about to verify is still the one the candidate names. A candidate enumerated a minute ago may name a token that has been replaced.\n\nWATCH THE CANDIDATE PATH WHILE HERE. candidate_from_jwt builds user/{sub}/via/oidc-cached from an UNVERIFIED sub, so the SPIFFE path is attacker-influenced by whoever can write the cache, and SpiffeId::new does not validate the path component. The issued token carries a pseudonym rather than this path, so the blast radius is the log line and the HKDF input rather than the credential -- but a sub containing a slash still produces a SPIFFE ID nobody can parse back. Either validate it here or file it; do not leave it unexamined a third time.\n\nProofCost stays Silent: reading a file and checking a signature cannot prompt anybody. That means a verified OIDC identity joins the unnamed FetchJWTSVID answer, which is the first Iaa2 source most desktops will actually have.",
+  "acceptance_criteria": "On a machine with a cached token, FetchJWTSVID returns an SVID whose root trust domain is oidc.{issuer} and whose auth_methods carry idp_token.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T15:57:05.057157836Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T15:57:05.057157836Z",
+  "labels": [
+    "oidc driver",
+    "attestor",
+    "driver"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "persona-qbnm.7.6",
+      "depends_on_id": "persona-qbnm.7",
+      "type": "parent-child",
+      "created_at": "2026-09-16T15:57:05.084977713Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    },
+    {
+      "issue_id": "persona-qbnm.7.6",
+      "depends_on_id": "persona-qbnm.7.5",
+      "type": "blocks",
+      "created_at": "2026-09-16T15:57:05.383768582Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    }
+  ]
+}
