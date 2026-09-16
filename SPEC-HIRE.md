@@ -556,7 +556,7 @@ The full ZT desktop stack has six distinct layers. `hired` owns one of them.
 | IMAP/SMTP gateway | Mail enforcement point | **gap -- to build** |
 | API proxy (HTTP/gRPC) | Envoy + OPA ext-authz | mostly exists; integration needed |
 | ZT sudo | PAM module | **gap -- to build** |
-| Device posture | partial (various MDM tools) | **gap -- no clean open-source** |
+| Device posture | partial (proprietary MDM tools) | **gap -- no clean open-source** |
 | Password manager (external sites) | Bitwarden (open source) | exists; ZT integration needed |
 | Desktop login (FIDO2-rooted) | PAM config + FIDO2 PAM module | mostly exists; policy config needed |
 
@@ -666,7 +666,7 @@ A separate daemon (not `hired`) that reports device health to the ZT control pla
 
 The ZT control plane combines the device posture report with the `hired` SVID when evaluating policy. A user with `iaa3` identity but an unpatched device may be denied high-privilege credentials.
 
-**What exists:** various MDM agents, Osquery. The gap is a clean open-source device posture agent that speaks a standard format to the ZT control plane and does not require a vendor MDM subscription. This is 2-3 weeks of Rust work but requires per-platform implementation (Linux, macOS, Windows each have different APIs for encryption state, patch level, etc.).
+**What exists:** proprietary MDM agents, Osquery. The gap is a clean open-source device posture agent that speaks a standard format to the ZT control plane and does not require a vendor MDM subscription. This is 2-3 weeks of Rust work but requires per-platform implementation (Linux, macOS, Windows each have different APIs for encryption state, patch level, etc.).
 
 ---
 
