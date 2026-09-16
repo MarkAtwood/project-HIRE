@@ -185,18 +185,18 @@ Each source implements a plugin interface: `enumerate()`, `prove(candidate, chal
 - Assurance: `iaa3`, presence: `hardware`
 - Notes: presence expires on configurable TTL; re-challenge triggers Hello prompt
 
-**secure-enclave** (macOS)
+**secure-enclave** (macOS) — *(not implemented; no attestor exists)*
 - Method: `LocalAuthentication` + `CryptoTokenKit`; TouchID or Face ID as platform FIDO2 authenticator
 - Returns: Secure Enclave-backed assertion with timestamp
 - Assurance: `iaa3`, presence: `hardware`
 
-**fido2** (Linux, cross-platform)
+**fido2** (Linux, cross-platform) — *(compiled out by default and `prove()` is unimplemented, so it establishes no presence today; `hire-attestors` declares no default features)*
 - Method: `libfido2`; USB/NFC hardware authenticator
 - Returns: authenticator data including UP bit, timestamp
 - Assurance: `iaa3`, presence: `hardware`
 - Notes: UP bit proves physical touch; UV bit (biometric on the key itself) optionally required
 
-**piv-smartcard** (cross-platform)
+**piv-smartcard** (cross-platform) — *(not implemented; `is_available()` returns false in both `cfg` arms, so it never activates even with `--features pkcs11`)*
 - Method: PKCS#11 via standard slot; PIV/CAC/YubiKey PIV application
 - Returns: X.509 certificate (may include UPN, email, DOD EDIPI); signed challenge
 - Assurance: `iaa3` if card is hardware-bound and PIN is required; presence depends on PIN mode
@@ -320,7 +320,7 @@ Register `hired` as a FedCM identity provider. The browser handles the trust UI;
 
 - `FetchX509SVIDs` — streaming; returns X.509-SVIDs, refreshes before expiry
 - `FetchX509Bundles` — trust bundles for all active trust domains
-- `FetchJWTSVID` — returns JWT-SVIDs for a given audience; triggers presence challenge if `hire_require_presence` is set in the audience claim. `spiffe_id` unset returns every identity provable **without prompting a human**; `spiffe_id` set names one identity to prove, and naming it is the consent to prompt for it
+- `FetchJWTSVID` — returns JWT-SVIDs for a given audience; refuses when `hire_require_presence` names a level no available source establishes, which today is any level above `none`. `spiffe_id` unset returns every identity provable **without prompting a human**; `spiffe_id` set names one identity to prove, and naming it is the consent to prompt for it
 - `FetchJWTBundles` — JWKS endpoints for all trust domains
 - `ValidateJWTSVID` — validates a JWT-SVID against the trust bundle
 
@@ -374,7 +374,9 @@ presence at all, so it stops satisfying `hire_require_presence` — the decay
 runs through the ordinary presence gate rather than through a second refusal
 path.
 
-If presence requirements are not met, `hired` triggers a presence challenge (FIDO2 touch prompt, Hello dialog, etc.) before issuing the SVID. If the challenge cannot be satisfied within the timeout, the RPC returns `UNAUTHENTICATED`.
+If presence requirements are not met, the RPC returns `UNAUTHENTICATED`.
+
+*(The challenge path is not implemented.)* The design is that `hired` first triggers a presence challenge — a FIDO2 touch prompt, a Hello dialog — and refuses only if it cannot be satisfied within a timeout. No attestor can raise such a prompt today, so a request naming any presence level above `none` is refused outright rather than prompted for. Who owns that prompt is open question 4 below.
 
 ### CLI (hire)
 
@@ -398,7 +400,7 @@ hire trust-bundle add spiffe://x/     # import a remote trust bundle
 
 ## HVID Extension (Human Verifiable Identity Document)
 
-The JWT-SVID payload carries standard SPIFFE claims plus a `hire` extension object:
+The JWT-SVID payload carries standard SPIFFE claims plus a `hire` extension object. The example below is the full shape and is deliberately richer than anything `hired` can issue today: no source establishes presence, so every token it actually signs carries `"present": false` with an empty `auth_methods` or one naming a key rather than a touch.
 
 ```json
 {
@@ -413,7 +415,7 @@ The JWT-SVID payload carries standard SPIFFE claims plus a `hire` extension obje
     "identity_assurance": "iaa3",
     "presence": {
       "present": true,
-      "attested_by": "fido2_up",
+      "attested_by": "fido2",
       "attested_at": 1745999640,
       "present_until": 1745999940
     },
@@ -482,9 +484,11 @@ Contacts: Evan Gilman (original SPIFFE/SPIRE author), SPIFFE Technical Steering 
 
 ## Position in the Zero Trust Desktop Stack
 
-`hired` is the **identity leaf** of a Zero Trust desktop framework — roughly 20–25% of the total system. It is the necessary foundation: every other component depends on having a standard local API that answers "who is this human and are they present." Without `hired`, each enforcement point invents its own identity answer at varying quality.
+`hired` is the **identity leaf** of a Zero Trust desktop framework — roughly 20–25% of the total system. It is the necessary foundation: every other component depends on having a standard local API that answers "who is this human, and how much should we believe it." Several of those components additionally want to know that a human is present, and they get that where the hardware can produce it; none of them can start without the identity. Without `hired`, each enforcement point invents its own identity answer at varying quality.
 
 The full ZT desktop stack has six distinct layers. `hired` owns one of them.
+
+**These sections describe consumers that do not exist yet, and several of them require hardware presence.** That requirement belongs to the component being described, not to `hired`: an SSH bouncer that wants a FIDO2 touch per connection is making a defensible choice for an SSH bouncer. Read them as designs for what those components would ask of `hired` on a machine with the hardware to answer. Against `hired` as it stands, every policy sample below that names `hardware` presence is unsatisfiable, because no source establishes presence at all — see Status in the README.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -513,9 +517,9 @@ The full ZT desktop stack has six distinct layers. `hired` owns one of them.
                            │ FetchJWTSVID
 ┌──────────────────────────▼───────────────────────────────────────┐
 │  hired  (this spec)                                           │
-│  SPIFFE Workload API — human identity + presence                 │
+│  SPIFFE Workload API — human identity, with provenance           │
 └──────────────────────────┬───────────────────────────────────────┘
-                           │ identity + presence sources
+                           │ identity sources
          ┌─────────────────┼──────────────────────┐
     Tailscale         FIDO2 / Hello           SSH agent
     OIDC/IdP          TouchID / PIV           GPG / DID / GOA
@@ -534,7 +538,7 @@ The full ZT desktop stack has six distinct layers. `hired` owns one of them.
 
 | ZT Primitive | Who owns it | State |
 |---|---|---|
-| Human identity + presence | `hired` | **this spec** |
+| Human identity | `hired` | **this spec** |
 | Workload identity | SPIFFE/SPIRE | exists |
 | Policy engine | OPA | exists |
 | Credential minting (SSH CA, delegation broker) | ZT control plane | **gap — to build** |
@@ -553,7 +557,7 @@ The full ZT desktop stack has six distinct layers. `hired` owns one of them.
 The policy decision point sitting above `hired`. It consumes the `hired` JWT-SVID plus a device posture report and evaluates them against OPA policy to determine what credentials the user may receive.
 
 **Inputs:**
-- `hired` JWT-SVID (identity + presence assurance + auth methods)
+- `hired` JWT-SVID (identity, assurance tier, auth methods, and presence where a source established it)
 - Device posture report (patch level, disk encryption state, MDM enrollment, binary integrity)
 - Resource request (what the user or delegated software is trying to access)
 
@@ -860,8 +864,11 @@ The per-platform work is entirely in the attestor plugins — the "how do I disc
 Implementation: a single Rust binary with `#[cfg]` feature flags per platform, compiling to a static binary on each target. The SPIFFE gRPC socket is the universal interface. Applications write to the socket API once and run everywhere.
 
 This table is the **design**. Sources are marked *(not implemented)* where no
-attestor exists today; everything unmarked is active in a default build. The
-distinction matters because a platform's entry describes what `hired` is
+attestor exists today; everything unmarked is active in a default build. Nothing
+in the Presence column produces a presence claim yet: `libfido2` is compiled out
+of a default build and its `prove()` is unimplemented, and the rest have no
+attestor at all. The distinction matters because a platform's entry describes
+what `hired` is
 meant to federate, not what it currently federates.
 
 | Platform | Identity sources | Presence sources | Socket |
@@ -910,14 +917,14 @@ The Unix account source is absent from that list because there is nothing to pro
 
 | System | What it does | What it doesn't do |
 |---|---|---|
-| **SPIRE Agent** | Workload identity via attestation + SVID issuance | Human identity. Explicitly scoped to "what process is this," not "what human is here." No presence, no FIDO2, no desktop identity sources. Go, no FIPS path. |
-| **Kerberos / GSSAPI** | Cryptographic proof of identity from a KDC | Single identity source only. No multi-source federation, no presence model, no per-consumer pseudonyms, no hardware attestation. |
-| **macOS Keychain / Windows Credential Manager** | Platform-specific identity and credential store | No cross-platform API, no SPIFFE, no presence model, no pseudonymity. Applications must code to each platform separately. |
+| **SPIRE Agent** | Workload identity via attestation + SVID issuance | Human identity. Explicitly scoped to "what process is this," not "what human is here." No desktop identity sources, and no presence. Go, no FIPS path. |
+| **Kerberos / GSSAPI** | Cryptographic proof of identity from a KDC | One identity source, and no local API for an application to ask. No multi-source federation, no per-consumer pseudonyms, no presence model. |
+| **macOS Keychain / Windows Credential Manager** | Platform-specific identity and credential store | No cross-platform API, no SPIFFE, no pseudonymity. Applications must code to each platform separately. |
 | **pam-u2f / pam-fido2** | FIDO2 at the PAM authentication layer | Answers "is a human present" but not "who are they" beyond Unix UID. No daemon, no API for applications, no identity metadata. |
-| **Hashicorp Vault Agent** | Injects secrets and short-lived certs into workloads | Closer to SPIRE than hired. No human identity, no presence, no desktop integration. |
-| **ssh-agent** | Holds keys, signs challenges on demand via socket API | No identity metadata, no presence, no multi-source federation. But it is the closest UX analog — a daemon that applications talk to over a socket for cryptographic operations. |
-| **1Password / Bitwarden CLI** | Password storage and credential population | Password managers, not identity providers. No SPIFFE, no attestation model, no presence levels. |
-| **Platform SSO (Windows SSPI, macOS ASAuth)** | OS-level single sign-on for platform-native apps | Platform-locked. No cross-platform API. SSPI is Windows-only, ASAuth is macOS-only. No presence model beyond "session exists." |
+| **Hashicorp Vault Agent** | Injects secrets and short-lived certs into workloads | Closer to SPIRE than hired. No human identity and no desktop integration. |
+| **ssh-agent** | Holds keys, signs challenges on demand via socket API | No identity metadata and no multi-source federation: it answers about keys, not about people. But it is the closest UX analog — a daemon that applications talk to over a socket for cryptographic operations. |
+| **1Password / Bitwarden CLI** | Password storage and credential population | Password managers, not identity providers. No SPIFFE and no attestation model — they hold what you know, not what you are. |
+| **Platform SSO (Windows SSPI, macOS ASAuth)** | OS-level single sign-on for platform-native apps | Platform-locked, and one identity source each. No cross-platform API: SSPI is Windows-only, ASAuth is macOS-only. |
 | **WebAuthn / Passkeys** | FIDO2-based authentication to web services | Browser-only. No local daemon API. No identity federation — each relying party gets an independent credential. |
 
 The gap: **nobody built "SPIRE but for the human at the keyboard."** The SPIFFE community scoped the project to workloads as a deployable beachhead, not because they thought workloads were the only use case. The desktop agent is the natural completion — same API, same trust model, different attestation sources.
@@ -932,7 +939,8 @@ The gap: **nobody built "SPIRE but for the human at the keyboard."** The SPIFFE 
 
 They are complementary:
 - A server running `uild` can accept HVIDs (JWT-SVIDs from `hired`) as one of its input token types
-- A `hired`-issued JWT-SVID carries `hire.presence` which maps to `uild`'s `auth_strength: hardware_key | biometric`
+- A `hired`-issued JWT-SVID carries the identity, its source and its assurance tier, which is what `uild` needs to normalize the caller against its other input types
+- Where a source established presence, `hire.presence` additionally maps to `uild`'s `auth_strength: hardware_key | biometric`. On a desktop with no such hardware the mapping below floors at `password`, which is the honest answer rather than a degraded one
 - The SPIFFE trust bundle from `hired` acts as the JWKS endpoint that `uild` uses to verify the token
 
 Mapping from `hired` `identity_assurance` to `uild` `identity_assurance`:
@@ -976,7 +984,7 @@ This also means kith works without Tailscale: on a machine with `hired` and any 
 
 4. **Presence challenge UX**: when a consumer requests `hardware` presence and none is available, who owns the prompt? A `hired`-owned tray notification or polkit dialog is cleanest — it avoids requiring every consumer to build its own FIDO2 touch UI.
 
-5. **Presence decay** — *implemented*: `present_until` is a fixed 300-second TTL measured from the observation the claim rests on, not from the clock at request time, so re-requesting cannot extend it. Nothing a caller does extends the window; soft presence signals do not exist and could not extend a hardware-presence claim if they did. What remains open is whether the TTL should be per-attestor rather than daemon-wide.
+5. **Presence decay** — *the arithmetic is implemented; it has never had a live presence claim to decay*: `present_until` is a fixed 300-second TTL measured from the observation the claim rests on, not from the clock at request time, so re-requesting cannot extend it. Nothing a caller does extends the window; soft presence signals do not exist and could not extend a hardware-presence claim if they did. What remains open is whether the TTL should be per-attestor rather than daemon-wide.
 
 6. **Cross-machine presence propagation**: if Alice's `kithd` sends a message, can Bob's `kithd` verify that Alice was hardware-present at send time? Options: (a) include a signed HVID attachment in the message envelope; (b) Alice's `hired` issues a per-message presence assertion. The SPIFFE JWT-SVID shape already handles this — the JWT is the signed assertion, the audience is the message ID.
 

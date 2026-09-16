@@ -37,10 +37,13 @@ there, or it re-prompts until its users learn to click straight through. Both
 failures come from the same missing thing: no way to ask how strong the answer is,
 and no way for the answer to say.
 
-The same goes the other direction. Nothing tells the application whether a human is
-present *right now*, as opposed to having been present when the laptop was unlocked
-this morning. A session lasts until logout; presence starts decaying the moment it
-is observed.
+There is a narrower version of the same gap, on the machines that can close it.
+Nothing tells the application whether a human is present *right now*, as opposed to
+having been present when the laptop was unlocked this morning: a session lasts until
+logout, while presence starts decaying the moment it is observed. That distinction
+only exists where there is hardware to make it -- a FIDO2 key, a PIV card, a
+fingerprint reader -- so it is a better answer on the desktops that have one, not a
+precondition for answering at all.
 
 ## Why it stayed missing
 
@@ -118,14 +121,31 @@ application rather than the ones that chose a particular login button.
 
 ## Where this actually is
 
-None of the above is finished. The daemon serves the SPIFFE Workload API and issues
-signed credentials, but it currently asserts identity claims rather than establishing
-them: `prove()` is unimplemented across every attestor, and a FIDO2 key that is only
-plugged in will produce a credential claiming a touch that never happened. Pseudonym
-derivation is written and tested but not yet connected to issuance.
+None of the above is finished, but less of it is aspirational than when this document
+was first written, and the paragraph that used to sit here had gone stale in four
+separate ways.
+
+The daemon establishes identity claims rather than asserting them. `prove()` is
+implemented for five sources -- the Unix account, Tailscale, ssh-agent, GPG and
+`did:key` -- and discovery is a separate operation from proof, so a FIDO2 key that is
+merely plugged in yields a candidate and can never yield a credential claiming a touch
+that never happened. That was the specific defect this paragraph named, and closing it
+is what the `Candidate`/`Claim` split is for. Pseudonym derivation is connected to
+issuance: every consumer receives its own opaque identifier and never the root
+identity. A third-party SPIFFE client library fetches and validates against the
+published bundle with no modification, which is the claim this whole document rests on.
+
+What is still missing is breadth rather than foundation. The work identity -- the
+cached OIDC token from `gcloud` or `az`, which on a corporate desktop is the answer an
+application most often wants -- cannot yet be verified, so it enumerates and does not
+prove. X.509-SVID issuance is a stub, so the consumers that speak X.509 rather than
+JWT do not work yet. `hired` does not run on Windows. And no source establishes
+physical presence at all, which costs less than it sounds: presence was always the
+qualifier, and the answers above it are the product.
 
 This document argues for what the daemon is for. [README.md](README.md) records what
-runs today, and the gap between the two is large. Read both.
+runs today, and the gap between the two is real but no longer the whole story. Read
+both, and trust the README on status: this one goes stale first.
 
 ## Further reading
 

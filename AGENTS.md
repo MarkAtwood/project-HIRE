@@ -38,9 +38,9 @@ cp -rf source dest          # NOT: cp -r source dest
 
 ## Project Context
 
-hired is a **user-session daemon** that federates heterogeneous human-identity sources behind the standard SPIFFE Workload API socket. It is "SPIRE for humans": a local daemon that answers "who is the person at this workstation and how confident are we they are physically present?" CLI is `hire`, daemon is `hired`. No new wire protocol -- consumers call `FetchJWTSVID` / `FetchX509SVIDs` on the local socket and get standard SPIFFE SVIDs. Any SPIFFE-aware client works unmodified.
+hired is a **user-session daemon** that federates heterogeneous human-identity sources behind the standard SPIFFE Workload API socket. It is "SPIRE for humans": a local daemon that answers "who is the person at this workstation, and how much should we believe it?" -- the best identity the machine can establish, with its provenance and assurance attached. Where the hardware can also establish that a human is physically present, that qualifies the answer; it is not the question, and most desktops will never produce it. CLI is `hire`, daemon is `hired`. No new wire protocol -- consumers call `FetchJWTSVID` / `FetchX509SVIDs` on the local socket and get standard SPIFFE SVIDs. Any SPIFFE-aware client works unmodified.
 
-Read `~/PROJECT/SPEC-HIRE.md` before making design changes -- it is the authoritative spec.
+Read `SPEC-HIRE.md` in this repository before making design changes -- it is the authoritative spec.
 
 ## Before Writing Code
 
@@ -115,7 +115,7 @@ All three must pass clean. If `cargo fmt` changes files, stage and include those
 | moot | `~/PROJECT/moot/` | Second JMAP Chat implementation (Python). Future hired consumer. |
 | jmap-chat-types | crates.io | Mark's crate. Shared JMAP Chat wire types. |
 | jmap-types | crates.io | Mark's crate. Base JMAP types. |
-| SPEC-HIRE.md | `~/PROJECT/SPEC-HIRE.md` | Authoritative design spec for hired. |
+| SPEC-HIRE.md | `SPEC-HIRE.md`, in this repository | Authoritative design spec for hired. |
 
 ## Beads Issue Tracker
 
