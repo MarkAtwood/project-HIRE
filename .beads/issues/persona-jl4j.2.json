@@ -12,7 +12,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-16T01:46:03.943843782Z",
   "closed_at": "2026-09-16T01:46:03.943843782Z",
-  "close_reason": "Implemented in 3624bf9. FetchJWTSVID returns every silently-provable identity, one SVID per distinct SPIFFE ID, best-first by PROVEN assurance (stable, so the registration-order tiebreak from persona-5s4b.87 survives) and each tagged with the persona-jl4j.1 hint. Both epic constraints hold and are tested: only silent candidates are in the list (hire-grpc/tests/no_prompt.rs and svid_list.rs), and the order is advisory while the tag is normative. The policy gates moved inside per-claim issuance, so an audience demanding presence now gets the identities that have it instead of a blanket refusal; an empty list refuses with the first refusal's reason. Live: a box running Tailscale answers with two SVIDs, iaa2 from tailscaled and iaa1 from the Unix account.",
+  "close_reason": "Implemented in 2b8f413. FetchJWTSVID returns every silently-provable identity, one SVID per distinct SPIFFE ID, best-first by PROVEN assurance (stable, so the registration-order tiebreak from persona-5s4b.87 survives) and each tagged with the persona-jl4j.1 hint. Both epic constraints hold and are tested: only silent candidates are in the list (hire-grpc/tests/no_prompt.rs and svid_list.rs), and the order is advisory while the tag is normative. The policy gates moved inside per-claim issuance, so an audience demanding presence now gets the identities that have it instead of a blanket refusal; an empty list refuses with the first refusal's reason. Live: a box running Tailscale answers with two SVIDs, iaa2 from tailscaled and iaa1 from the Unix account.",
   "labels": [
     "api",
     "spiffe",

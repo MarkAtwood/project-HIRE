@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-14T06:09:48.230954173Z",
   "closed_at": "2026-09-14T06:09:48.230954173Z",
-  "close_reason": "Fixed in 88b01ee. Consumers receive spiffe://{td}/pseudonym/{64hex}, derived per consumer from an ephemeral per-process key; unattested consumers are refused rather than served the root identity. Two review findings fixed before landing: the issuance log carried the root beside the pseudonym, and the specs documented the wrong HKDF construction. Residual claim-block correlation filed separately.",
+  "close_reason": "Fixed in 2525fc3. Consumers receive spiffe://{td}/pseudonym/{64hex}, derived per consumer from an ephemeral per-process key; unattested consumers are refused rather than served the root identity. Two review findings fixed before landing: the issuance log carried the root beside the pseudonym, and the specs documented the wrong HKDF construction. Residual claim-block correlation filed separately.",
   "labels": [
     "correctness",
     "review"

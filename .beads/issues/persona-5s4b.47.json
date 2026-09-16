@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-14T05:04:07.466543456Z",
   "closed_at": "2026-09-14T05:04:07.466543456Z",
-  "close_reason": "Fixed in 56ca5e5. Presence is now the fold of every audience's requirement, and the persona_ namespace is closed so unknown requirements are refused rather than defaulted to None. The .47 bypass was demonstrated failing against the old code before the fix. Also closed the unprefixed require_presence spelling, which the specs themselves recommended and which gated nothing.",
+  "close_reason": "Fixed in 7fa9814. Presence is now the fold of every audience's requirement, and the persona_ namespace is closed so unknown requirements are refused rather than defaulted to None. The .47 bypass was demonstrated failing against the old code before the fix. Also closed the unprefixed require_presence spelling, which the specs themselves recommended and which gated nothing.",
   "labels": [
     "crypto",
     "review"

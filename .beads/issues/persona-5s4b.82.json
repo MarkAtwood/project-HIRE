@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-14T18:08:45.808812577Z",
   "closed_at": "2026-09-14T18:08:45.808812577Z",
-  "close_reason": "Fixed together in e3940ad. The bundle publishes a real one-key JWKS keyed by the trust domain's SPIFFE ID and no X.509 authority (empty is proto-permitted; a SEC1 point in an ASN.1 DER field was not). ValidateJWTSVID resolves the bundle and selects by kid with no fallback to the local key. A third-party verifier using only the published JWKS and the token, via python stdlib plus openssl, is part of the suite and was observed failing against the unfixed code first.",
+  "close_reason": "Fixed together in ca3c9ee. The bundle publishes a real one-key JWKS keyed by the trust domain's SPIFFE ID and no X.509 authority (empty is proto-permitted; a SEC1 point in an ASN.1 DER field was not). ValidateJWTSVID resolves the bundle and selects by kid with no fallback to the local key. A third-party verifier using only the published JWKS and the token, via python stdlib plus openssl, is part of the suite and was observed failing against the unfixed code first.",
   "labels": [
     "correctness",
     "review"

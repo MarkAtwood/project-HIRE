@@ -11,7 +11,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-14T01:08:01.415645681Z",
   "closed_at": "2026-09-14T01:08:01.415645681Z",
-  "close_reason": "Fixed in 3633e0b. protoc and libudev install steps added to the check and msrv jobs; AsRawFd import gated to Linux. Verified: local gates all exit 0, and cargo check --target aarch64-apple-darwin --all-targets --all-features compiles clean with zero warnings.",
+  "close_reason": "Fixed in 81acd58. protoc and libudev install steps added to the check and msrv jobs; AsRawFd import gated to Linux. Verified: local gates all exit 0, and cargo check --target aarch64-apple-darwin --all-targets --all-features compiles clean with zero warnings.",
   "labels": [
     "workspace",
     "review"

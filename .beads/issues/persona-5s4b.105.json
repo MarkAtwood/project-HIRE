@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-14T04:29:21.131634694Z",
   "closed_at": "2026-09-14T04:29:21.131634694Z",
-  "close_reason": "Resolved as a side effect of persona-okek (4698b8a), not fixed directly. OidcCachedAttestor no longer implements prove() at all — no attestor does; only the trait's declining default at lib.rs:108 remains. oidc.rs constructs no SignedAssertion, so there is no code path that hands a caller a live IdP bearer token. Reopen if a real OIDC prove() is written: the requirement then is that it must not return the IdP token itself, and must bind to the challenge (see .116).",
+  "close_reason": "Resolved as a side effect of persona-okek (95f8e36), not fixed directly. OidcCachedAttestor no longer implements prove() at all — no attestor does; only the trait's declining default at lib.rs:108 remains. oidc.rs constructs no SignedAssertion, so there is no code path that hands a caller a live IdP bearer token. Reopen if a real OIDC prove() is written: the requirement then is that it must not return the IdP token itself, and must bind to the challenge (see .116).",
   "labels": [
     "risk",
     "maintainer-burden",

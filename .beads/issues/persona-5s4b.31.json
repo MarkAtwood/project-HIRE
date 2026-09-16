@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-14T00:08:06.340648179Z",
   "closed_at": "2026-09-14T00:08:06.340648179Z",
-  "close_reason": "cargo-audit added as a separate CI job plus a make audit target wired into make ci, with a daily schedule trigger so advisories against an unchanged lockfile are caught. Runs the binary directly so .cargo/audit.toml (the documented rsa ignore) is honoured and CI matches local. Commit dad1c65.",
+  "close_reason": "cargo-audit added as a separate CI job plus a make audit target wired into make ci, with a daily schedule trigger so advisories against an unchanged lockfile are caught. Runs the binary directly so .cargo/audit.toml (the documented rsa ignore) is honoured and CI matches local. Commit e1b8d47.",
   "labels": [
     "workspace",
     "review"

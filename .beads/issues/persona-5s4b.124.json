@@ -11,7 +11,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-15T03:47:07.71089472Z",
   "closed_at": "2026-09-15T03:47:07.71089472Z",
-  "close_reason": "Fixed in 440c6eb: fetch-x509, trust-bundle add and trust-bundle remove write to stderr and exit 1; the trust-bundle unknown-subcommand arm exits 1 like enroll's and main's. Verified by running: 'persona fetch-x509 \u003e FILE' now leaves FILE 0 bytes with exit 1. Also added --help arms to both dispatchers, which unwrap_or(\"--help\") had made answer 'unknown subcommand: --help'.",
+  "close_reason": "Fixed in a76dd0b: fetch-x509, trust-bundle add and trust-bundle remove write to stderr and exit 1; the trust-bundle unknown-subcommand arm exits 1 like enroll's and main's. Verified by running: 'persona fetch-x509 \u003e FILE' now leaves FILE 0 bytes with exit 1. Also added --help arms to both dispatchers, which unwrap_or(\"--help\") had made answer 'unknown subcommand: --help'.",
   "labels": [
     "review"
   ],

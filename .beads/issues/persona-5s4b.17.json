@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-15T05:20:52.573067368Z",
   "closed_at": "2026-09-15T05:20:52.573067368Z",
-  "close_reason": "Fixed in 2a7e025. Verified empirically rather than by inspection: with the build script unchanged and the build settled, 'touch proto/spiffe/workload/workload.proto \u0026\u0026 cargo build -p persona-grpc' produced NO work before the fix (Finished, nothing compiled) and recompiles persona-grpc after it. The proto list and include root are each named once and used for both the rerun-if-changed directives and compile_protos, so the trigger cannot drift from the compiler input. Note build artifacts land in /home/mark/Cache/cargo-target per ~/.cargo/config.toml, not ./target.",
+  "close_reason": "Fixed in 9a12c0e. Verified empirically rather than by inspection: with the build script unchanged and the build settled, 'touch proto/spiffe/workload/workload.proto \u0026\u0026 cargo build -p persona-grpc' produced NO work before the fix (Finished, nothing compiled) and recompiles persona-grpc after it. The proto list and include root are each named once and used for both the rerun-if-changed directives and compile_protos, so the trigger cannot drift from the compiler input. Note build artifacts land in /home/mark/Cache/cargo-target per ~/.cargo/config.toml, not ./target.",
   "labels": [
     "workspace",
     "review"

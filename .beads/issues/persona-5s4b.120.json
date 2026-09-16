@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-15T02:03:37.374736176Z",
   "closed_at": "2026-09-15T02:03:37.374736176Z",
-  "close_reason": "Fixed in 1a8e749: --list-secret-keys replaces --list-keys (parser retargeted pub/sub -\u003e sec/ssb), the fpr following sec names the identity instead of the last subkey's, and the SPIFFE path carries the full fingerprint (did:key the full SHA-256). Fixtures are real gpg output from throwaway keys. Verified on the real keyring: strangers' keys gone, 15 candidates, all full 40-hex.",
+  "close_reason": "Fixed in 8815b2b: --list-secret-keys replaces --list-keys (parser retargeted pub/sub -\u003e sec/ssb), the fpr following sec names the identity instead of the last subkey's, and the SPIFFE path carries the full fingerprint (did:key the full SHA-256). Fixtures are real gpg output from throwaway keys. Verified on the real keyring: strangers' keys gone, 15 candidates, all full 40-hex.",
   "labels": [
     "attestors",
     "gpg",

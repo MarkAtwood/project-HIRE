@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-14T17:18:58.356878634Z",
   "closed_at": "2026-09-14T17:18:58.356878634Z",
-  "close_reason": "rustls deleted from persona-grpc and personad in 39d0331. It was declared, referenced by zero lines of Rust, and pinned to features=[\"ring\"], so removing it was part of dropping ring rather than separate cleanup. The serde_json inheritance half of .104 was fixed earlier.",
+  "close_reason": "rustls deleted from persona-grpc and personad in 3cd5231. It was declared, referenced by zero lines of Rust, and pinned to features=[\"ring\"], so removing it was part of dropping ring rather than separate cleanup. The serde_json inheritance half of .104 was fixed earlier.",
   "labels": [
     "rust",
     "cargo",

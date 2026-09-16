@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-14T00:32:00.434975534Z",
   "closed_at": "2026-09-14T00:32:00.434975534Z",
-  "close_reason": "Fixed and verified. See commit 7c013e3. .3 closed separately: x509-cert bumped to 0.3.0; deletion recommendation retained in its notes.",
+  "close_reason": "Fixed and verified. See commit 6355a5d. .3 closed separately: x509-cert bumped to 0.3.0; deletion recommendation retained in its notes.",
   "labels": [
     "rust",
     "ci",

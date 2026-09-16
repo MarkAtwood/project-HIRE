@@ -11,7 +11,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-15T04:19:13.054981063Z",
   "closed_at": "2026-09-15T04:19:13.054981063Z",
-  "close_reason": "Fixed in 76a4a7d: both error lines moved to stderr; identity lines stay on stdout. Verified by running with personad down -- stdout is 0 lines, the error appears on stderr, and timeout kills it at exit 124, i.e. it was still polling. The give-up question was decided by Mark: watch never terminates on its own. A daemon restart must not kill a watch someone is reading, and the fail-open hazard needs a command to exit before it can mislead, which watch does not. No threshold, no knob. 'no identity' stays on stdout as an observed state.",
+  "close_reason": "Fixed in 5b9dd6c: both error lines moved to stderr; identity lines stay on stdout. Verified by running with personad down -- stdout is 0 lines, the error appears on stderr, and timeout kills it at exit 124, i.e. it was still polling. The give-up question was decided by Mark: watch never terminates on its own. A daemon restart must not kill a watch someone is reading, and the fail-open hazard needs a command to exit before it can mislead, which watch does not. No threshold, no knob. 'no identity' stays on stdout as an observed state.",
   "labels": [
     "review"
   ],

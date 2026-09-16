@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-15T03:37:09.830531072Z",
   "closed_at": "2026-09-15T03:37:09.830531072Z",
-  "close_reason": "Fixed in cd382e7: both enroll subcommands name the missing store and exit 1; fabricated success output deleted along with the libc dep and the Linux-only /proc/self/exe read; --help marks enroll not implemented. Verified by running: 'enroll origin URL \u0026\u0026 deploy' now blocks.",
+  "close_reason": "Fixed in 5d92a6f: both enroll subcommands name the missing store and exit 1; fabricated success output deleted along with the libc dep and the Linux-only /proc/self/exe read; --help marks enroll not implemented. Verified by running: 'enroll origin URL \u0026\u0026 deploy' now blocks.",
   "labels": [
     "risk",
     "maintainer-burden",

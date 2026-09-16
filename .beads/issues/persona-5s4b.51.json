@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-15T03:57:55.361579717Z",
   "closed_at": "2026-09-15T03:57:55.361579717Z",
-  "close_reason": "Fixed in 4f63194: service.rs builds PersonaClaims and serialises it; the json! literal is gone. No wire change, verified by a scratch program comparing old literal vs typed path over identical inputs. PersonaClaims gained an inherent new() because #[non_exhaustive] blocks cross-crate literals; the attribute was kept (nine sites in persona-core). New test's oracle is SPEC-HIA.md, mutation-verified. NOTE: the bead's divergence table was partly stale -- hvid.rs already declared attested_at/present_until as u64, so no RFC 3339 mismatch existed.",
+  "close_reason": "Fixed in d5328cb: service.rs builds PersonaClaims and serialises it; the json! literal is gone. No wire change, verified by a scratch program comparing old literal vs typed path over identical inputs. PersonaClaims gained an inherent new() because #[non_exhaustive] blocks cross-crate literals; the attribute was kept (nine sites in persona-core). New test's oracle is SPEC-HIA.md, mutation-verified. NOTE: the bead's divergence table was partly stale -- hvid.rs already declared attested_at/present_until as u64, so no RFC 3339 mismatch existed.",
   "labels": [
     "rust",
     "type-design",

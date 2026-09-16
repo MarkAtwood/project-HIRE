@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-14T01:37:38.347538184Z",
   "closed_at": "2026-09-14T01:37:38.347538184Z",
-  "close_reason": "Fixed in ceea8bd. Single persona_grpc::socket::workload_socket_path() helper; all four call sites use it, three hand-formatted copies deleted. Also fixed two defects found in review: empty XDG_RUNTIME_DIR yielding a relative path, and an unsafe /tmp fallback directory. Tests 37 -\u003e 48, none modified.",
+  "close_reason": "Fixed in 2558a7c. Single persona_grpc::socket::workload_socket_path() helper; all four call sites use it, three hand-formatted copies deleted. Also fixed two defects found in review: empty XDG_RUNTIME_DIR yielding a relative path, and an unsafe /tmp fallback directory. Tests 37 -\u003e 48, none modified.",
   "labels": [
     "workspace",
     "review"

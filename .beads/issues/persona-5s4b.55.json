@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-14T04:17:22.426577042Z",
   "closed_at": "2026-09-14T04:17:22.426577042Z",
-  "close_reason": "Implemented in 4698b8a. Claim moved to its own module with private fields; enumerate returns Candidate, prove returns Evidence, Claim::derive is fallible so no evidence means no claim and the daemon declines. All three acceptance criteria verified by execution. .55 fixed by construction: SelfAssertedDomain has no OrgOidc variant, so oidc.rs cannot anchor a trust domain from an unverified iss.",
+  "close_reason": "Implemented in 95f8e36. Claim moved to its own module with private fields; enumerate returns Candidate, prove returns Evidence, Claim::derive is fallible so no evidence means no claim and the daemon declines. All three acceptance criteria verified by execution. .55 fixed by construction: SelfAssertedDomain has no OrgOidc variant, so oidc.rs cannot anchor a trust domain from an unverified iss.",
   "labels": [
     "crypto",
     "untrusted-input",

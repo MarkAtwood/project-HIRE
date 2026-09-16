@@ -13,7 +13,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-16T01:37:15.964797529Z",
   "closed_at": "2026-09-16T01:37:15.964797529Z",
-  "close_reason": "Tailscale half landed in 510c875: prove() re-reads tailscaled's status and requires the same identity, yielding the new Evidence::DaemonAssertion (Iaa2, no presence). Trust in the local daemon is asserted, per the assert-trust-in-local-daemons decision, and calibration was not built. The oidc half is a different question -- a verifier to write, not a trust to assert -- and is re-filed with the measurements behind it, including the finding that auth_time is usually absent from cached gcloud and Azure tokens, which is the real blocker rather than the JWKS fetch.",
+  "close_reason": "Tailscale half landed in 1365300: prove() re-reads tailscaled's status and requires the same identity, yielding the new Evidence::DaemonAssertion (Iaa2, no presence). Trust in the local daemon is asserted, per the assert-trust-in-local-daemons decision, and calibration was not built. The oidc half is a different question -- a verifier to write, not a trust to assert -- and is re-filed with the measurements behind it, including the finding that auth_time is usually absent from cached gcloud and Azure tokens, which is the real blocker rather than the JWKS fetch.",
   "labels": [
     "attestor",
     "driver",

@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-15T19:39:41.998742458Z",
   "closed_at": "2026-09-15T19:39:41.998742458Z",
-  "close_reason": "KEEP note, not a defect. Verified 2026-09-15 that the design it praises is intact: hire-core/src/signer.rs exposes only 'pub fn new() -\u003e Result\u003cSelf, SignerError\u003e', which generates a fresh ephemeral key; the sole other constructor, from_pkcs8_der, is #[cfg(test)] and private. There is still no persistence API, so an ephemeral-by-construction signing key cannot be accidentally written to disk. Strengthened since filing: the PKCS#8 DER is no longer retained at all -- the EncodingKey is built once at construction and every copy of the private key in the stack now zeroizes on drop (persona-5s4b.39, commit eb3eddd). Closing as recorded.",
+  "close_reason": "KEEP note, not a defect. Verified 2026-09-15 that the design it praises is intact: hire-core/src/signer.rs exposes only 'pub fn new() -\u003e Result\u003cSelf, SignerError\u003e', which generates a fresh ephemeral key; the sole other constructor, from_pkcs8_der, is #[cfg(test)] and private. There is still no persistence API, so an ephemeral-by-construction signing key cannot be accidentally written to disk. Strengthened since filing: the PKCS#8 DER is no longer retained at all -- the EncodingKey is built once at construction and every copy of the private key in the stack now zeroizes on drop (persona-5s4b.39, commit bfd820b). Closing as recorded.",
   "labels": [
     "review",
     "whats-good"

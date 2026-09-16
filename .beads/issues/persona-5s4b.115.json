@@ -10,7 +10,7 @@
   "created_by": "agent",
   "updated_at": "2026-09-15T03:37:09.905356154Z",
   "closed_at": "2026-09-15T03:37:09.905356154Z",
-  "close_reason": "Fixed in c78a05e. Two defects: (1) 'no identity sources active' counted candidates, not sources, and registry.rs pushes UnixAttestor unconditionally so it was false every time it printed -- that is the .115 contradiction. Counts are now separate. (2) The CLI stops claiming to speak for the daemon. NO RPC was added: the settled constraint is that personad invents no protocol and workload.proto declares one service with no diagnostic method, so the bead's 'add an RPC' fix direction was deliberately not followed. The note also asserts no specific env difference, because a user unit shares HOME and therefore the gpg keyring.",
+  "close_reason": "Fixed in de08f08. Two defects: (1) 'no identity sources active' counted candidates, not sources, and registry.rs pushes UnixAttestor unconditionally so it was false every time it printed -- that is the .115 contradiction. Counts are now separate. (2) The CLI stops claiming to speak for the daemon. NO RPC was added: the settled constraint is that personad invents no protocol and workload.proto declares one service with no diagnostic method, so the bead's 'add an RPC' fix direction was deliberately not followed. The note also asserts no specific env difference, because a user unit shares HOME and therefore the gpg keyring.",
   "labels": [
     "macos",
     "cli",
