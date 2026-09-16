@@ -1,6 +1,33 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 # Why hired exists
 
+## How this started
+
+I wrote a chat app that runs over Tailscale, and I used Tailscale as its identity
+service. `kithd` asked `tailscaled` who the user was, and that was the whole of
+it. It works, and it is the obvious thing to do: Tailscale already knows, it is
+already running, and the answer comes back over a local socket with no password
+prompt anywhere.
+
+Then the question a systems person arrives at sooner or later. Is there a standard
+API for this? Not a Tailscale API -- a standard one, the call any application on
+any machine makes to ask who the user is, the way it calls `getaddrinfo` instead of
+writing its own resolver.
+
+So I went looking.
+
+There is one for workloads. SPIFFE is a CNCF standard with a specified local
+socket, a specified credential format, and client libraries in every language
+anyone cares about; Kubernetes and every major service mesh use it to answer "what
+process is this". For the human at the keyboard, there was nothing -- and the
+absence is not because the question is rare. Every application on the machine
+already answers it, each one differently, each one alone.
+
+The rest of this document is what I found while looking, and why the gap is worth
+closing rather than routing around one application at a time.
+
+## What is already on the machine
+
 Count the things on your laptop that already know who you are.
 
 The SSH agent holds your keys and will sign a challenge on request. GPG has your
