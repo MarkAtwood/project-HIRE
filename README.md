@@ -32,7 +32,7 @@ identity claims it signs. Treat the assurance and presence levels below as targe
 | Attestor registry, startup probing, `enumerate()` | works for most sources; returns candidates, not claims |
 | CLI (`whoami`, `enumerate`, `fetch-jwt`, ...) | works -- `fetch-jwt --spiffe-id` names one identity to prove |
 | Identity drop directory | `~/.config/hire/identities/*.pem` -- a PKCS#8 ed25519 key becomes a provable `did:key` with no code change. Refused unless `chmod 600` |
-| `prove()` -- evidence backing a claim | ssh-agent (ed25519 keys only), gpg and `did:key` prove possession by signing the daemon's challenge; tailscaled and the kernel are asked again and must answer the same way. OIDC, FIDO2, PIV and GOA still decline |
+| `prove()` -- evidence backing a claim | ssh-agent (ed25519 keys only), gpg and `did:key` prove possession by signing the daemon's challenge; tailscaled and the kernel are asked again and must answer the same way. OIDC, FIDO2, PIV and GOA still decline, and AWS SSO declines by design |
 | `FetchJWTSVID` consent gate | an unnamed request proves only candidates that declare proving cannot prompt a human -- Tailscale, the Unix account, and any `did:key` whose secret was dropped in the identities directory. Naming one identity in `spiffe_id` is the consent to prove it, and is how ssh-agent, gpg and agent-held `did:key` are reached |
 | `FetchJWTSVID` returns a list | every silently-provable identity, one SVID each, best-first and deduplicated by SPIFFE ID |
 | `hint` tag on each SVID | `source=...&identity_assurance=...&presence=...&age=...` -- normative, while the order is advisory |
@@ -128,6 +128,7 @@ question from whether it substantiates its assurance row.
 | Secure Enclave (TouchID) | iaa3 | hardware | macOS | no -- no attestor exists |
 | GNOME Online Accounts | iaa2 | session | Linux (GNOME) | no -- `goa` is a placeholder feature with no D-Bus dependency |
 | OIDC cached | iaa2/iaa1 | session only when the token dates the authentication | cross-platform | enumerates, and cannot prove -- no verifier for an issuer signature exists yet |
+| AWS IAM Identity Center | none | none | cross-platform | enumerates the organisation this desktop is enrolled in, and cannot prove a person -- the cached token is an opaque bearer string, not an assertion |
 | SSH agent | iaa1 | none | cross-platform | yes -- `prove()` is ed25519 only |
 | GPG | iaa1 | none | cross-platform | yes, when a `gpg` binary is present -- `prove()` signs the challenge through gpg-agent and verifies the signature in-process |
 | DID | iaa1/iaa2 | none | cross-platform | `did:key` yes -- from `HIRE_DID_KEYS` or a key dropped in `~/.config/hire/identities`. A dropped key signs in-process and is silently provable; an agent-held one signs through the agent; `did:web` no |
@@ -153,20 +154,21 @@ The consumer-facing API is identical on every platform -- the SPIFFE Workload AP
 
 `Sources today` lists the attestors a default build ships for that platform. Each
 still has its own runtime check -- Tailscale needs its socket, SSH agent needs
-`SSH_AUTH_SOCK`, `did:key` needs `HIRE_DID_KEYS`, GPG needs a `gpg` binary --
+`SSH_AUTH_SOCK`, `did:key` needs `HIRE_DID_KEYS`, GPG needs a `gpg` binary, AWS SSO needs
+`~/.aws/sso/cache` --
 so a given machine activates a subset. Only OIDC cached and Unix account are
 unconditional. Anything designed but absent is marked `(not implemented)`.
 
-Measured on one Linux box: `tailscale, ssh-agent, oidc-cached, gpg, unix`, five
-sources, with `did:key` skipped for an unset `HIRE_DID_KEYS`.
+Measured on one Linux box: `tailscale, ssh-agent, oidc-cached, gpg, aws-sso,
+unix`, six sources, with `did:key` skipped for an unset `HIRE_DID_KEYS`.
 
 | Platform | Service manager | Sources today | Designed, not built |
 |---|---|---|---|
-| Linux (systemd) | `hired.service` (user unit) | Tailscale, SSH agent, OIDC cached, `did:key`, GPG, Unix account | GNOME Online Accounts, PIV, Kerberos; FIDO2 needs `--features fido2` |
+| Linux (systemd) | `hired.service` (user unit) | Tailscale, SSH agent, OIDC cached, `did:key`, GPG, AWS SSO, Unix account | GNOME Online Accounts, PIV, Kerberos; FIDO2 needs `--features fido2` |
 | Linux (non-systemd) | Init script or user session | Same as above. Socket at `$XDG_RUNTIME_DIR/hire/workload.sock`, or `/tmp/hire-{uid}/workload.sock` if that is unset | Same as above |
-| macOS | LaunchAgent | SSH agent, OIDC cached, `did:key`, GPG, Unix account | TouchID / Secure Enclave, Keychain, PIV (not implemented); Tailscale probes the Linux socket path and so never activates here |
+| macOS | LaunchAgent | SSH agent, OIDC cached, `did:key`, GPG, AWS SSO, Unix account | TouchID / Secure Enclave, Keychain, PIV (not implemented); Tailscale probes the Linux socket path and so never activates here |
 | Windows | -- | none; `hired` does not run on Windows | The whole platform (not implemented) -- the named-pipe transport is the gate. See the `hire-vvs2` epic |
-| FreeBSD / OpenBSD | User session | SSH agent, GPG, OIDC cached, `did:key`, Unix account | Kerberos, PIV (not implemented); FIDO2 needs `--features fido2` |
+| FreeBSD / OpenBSD | User session | SSH agent, GPG, OIDC cached, `did:key`, AWS SSO, Unix account | Kerberos, PIV (not implemented); FIDO2 needs `--features fido2` |
 | Containers | Bind-mount host socket | Inherits host identity | -- |
 | WSL2 | Native Linux `hired` | Same as Linux | Bridging to a Windows `hired` (not implemented) |
 

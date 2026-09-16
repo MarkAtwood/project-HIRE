@@ -215,6 +215,12 @@ Each source implements a plugin interface: `enumerate()`, `prove(candidate, chal
   - `auth_time` absent: `iaa2` with **no** presence, dated at the instant `hired` checked the signature. That dates the check, not the human
 - Notes: staleness is explicit in the claim; the token is not refreshed on behalf of the consumer. A cached token is a bearer artifact -- a verified signature proves the issuer issued it, not that whoever holds it is the subject
 
+**aws-sso** (cross-platform) -- *(enumerates an organisation, and cannot prove a person)*
+- Method: read `startUrl` and `region` from `~/.aws/sso/cache/*.json`. No network call, and no other field is retained
+- Returns: the host of the IAM Identity Center start URL, which names the organisation this desktop is enrolled in -- not a person
+- Assurance: none. `prove()` is the trait default and declines
+- Notes: the cache holds an opaque bearer token and no `idToken`, so there is nothing in it a machine can verify locally. Naming the human means exchanging the token for role credentials and calling `sts:GetCallerIdentity` -- a network round trip for an answer that is AWS's word rather than a signature, and what tier that earns is undecided. `expiresAt` bounds the token, not the authentication, so it is not a presence signal either
+
 **ssh-agent**
 - Method: SSH agent protocol via `SSH_AUTH_SOCK`; sign a challenge with each key in the agent
 - Returns: public key fingerprint; signed challenge

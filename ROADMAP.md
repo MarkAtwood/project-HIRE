@@ -82,7 +82,7 @@ find out.
 
 <!-- BEGIN GENERATED -- regenerate with `make roadmap`, do not edit by hand -->
 
-*Generated from the issue tracker on 2026-09-16: 93 open, 126 closed.*
+*Generated from the issue tracker on 2026-09-16: 94 open, 126 closed.*
 
 ### The presence model claims more than it can establish
 
@@ -171,7 +171,7 @@ find out.
 - `persona-ouo5.3` -- No hire_min_assurance, so a consumer cannot gate on assurance at all
 - `persona-ux32` -- Trust for attestors we cannot reach by installing them
 
-*And 10 lower-priority items: polish, documentation drift and small cleanups. `bd ready` lists them.*
+*And 11 lower-priority items: polish, documentation drift and small cleanups. `bd ready` lists them.*
 
 <!-- END GENERATED -->
 
