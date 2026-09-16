@@ -1,8 +1,8 @@
 //! Key material the operator dropped in a directory, and the only place hire
 //! holds a secret of its own.
 //!
-//! Every other source is a client of something that holds the key — ssh-agent,
-//! gpg-agent, tailscaled, the kernel — and that is still the preferred shape.
+//! Every other source is a client of something that holds the key -- ssh-agent,
+//! gpg-agent, tailscaled, the kernel -- and that is still the preferred shape.
 //! This exists because the preference was not reachable for one real case: a
 //! `did:key` whose secret is a file cannot be loaded into an agent at all.
 //! `ssh-add` refuses a PKCS#8 PEM ed25519 key with "invalid format", and
@@ -18,7 +18,7 @@
 //!
 //! WHAT IS HERE IS A SECRET, so the rules are not lazy ones:
 //!
-//! * the file must not be readable by group or other — a key anyone on the box
+//! * the file must not be readable by group or other -- a key anyone on the box
 //!   can read is one anyone on the box can be;
 //! * the format is PKCS#8 PEM and nothing else, so the algorithm is named by an
 //!   OID in the file rather than guessed from a length;
@@ -28,7 +28,7 @@
 //! ponytail: ed25519 only, and only the `.pem` extension | ceiling: an RSA or
 //!   P-256 key in the drop directory is skipped, and a dropped JWT or X.509
 //!   credential is ignored rather than verified | upgrade path: hire-lnaj's
-//!   other two halves — an unsigned name file that yields a candidate and
+//!   other two halves -- an unsigned name file that yields a candidate and
 //!   nothing more, and a signed credential that yields `Evidence::IdpVerified`
 //!   once a verifying constructor for it exists. Both belong in this module,
 //!   beside the directory scan that already found them.
@@ -42,7 +42,7 @@ use ed25519_dalek::{Signer as _, SigningKey};
 /// Where the operator drops identity material.
 ///
 /// `$XDG_CONFIG_HOME/hire/identities`, falling back to `~/.config` as the XDG
-/// base directory specification requires — so this is the same directory on a
+/// base directory specification requires -- so this is the same directory on a
 /// machine that sets the variable and one that does not.
 pub(crate) fn drop_dir() -> PathBuf {
     let base = std::env::var_os("XDG_CONFIG_HOME")
@@ -57,7 +57,7 @@ pub(crate) fn drop_dir() -> PathBuf {
 /// An ed25519 private key the operator dropped, and where it came from.
 ///
 /// Holds the key rather than a handle to it, because there is nothing to hold a
-/// handle to: no agent has it. The `SigningKey` zeroizes on drop — that is
+/// handle to: no agent has it. The `SigningKey` zeroizes on drop -- that is
 /// `ed25519-dalek`'s own `zeroize` default feature, not something to re-derive
 /// here.
 pub(crate) struct DroppedKey {
@@ -105,7 +105,7 @@ impl std::fmt::Debug for DroppedKey {
 ///
 /// ponytail: rescans the directory on every call | ceiling: one `readdir` and
 ///   one read per key per proof | upgrade path: cache on mtime, once anything
-///   calls this often enough to notice — `oidc.rs` has the same shape and
+///   calls this often enough to notice -- `oidc.rs` has the same shape and
 ///   hire-5s4b.2 is the bead for both.
 pub(crate) fn ed25519_keys() -> Vec<DroppedKey> {
     let dir = drop_dir();
@@ -191,7 +191,7 @@ fn refuse_shared_permissions(_metadata: &std::fs::Metadata) -> Result<(), &'stat
 /// Hand-rolled rather than pulling a PEM feature through `ed25519-dalek`: it is
 /// base64 between two fixed lines, `base64` is already a dependency, and the
 /// alternative adds a dependency edge to save four lines. The label must be
-/// `PRIVATE KEY` — PKCS#8's label — so an `OPENSSH PRIVATE KEY` or an
+/// `PRIVATE KEY` -- PKCS#8's label -- so an `OPENSSH PRIVATE KEY` or an
 /// `RSA PRIVATE KEY` (PKCS#1, a different structure) is refused here rather
 /// than producing a confusing parse error later.
 fn pem_body(pem: &str) -> Option<Vec<u8>> {

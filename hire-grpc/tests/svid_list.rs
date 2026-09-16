@@ -37,7 +37,7 @@ const AUDIENCE: &str = "https://test.example.com";
 ///
 /// `attains` is what the candidate declares it *could* reach; the claim's real
 /// tier comes from the evidence and is `iaa1` for every double here, since
-/// possession is all any of them has. That mismatch is deliberate — it is the
+/// possession is all any of them has. That mismatch is deliberate -- it is the
 /// property `AttainableAssurance` exists to keep, and a sort that read the
 /// declaration instead of the proof would order these wrongly.
 #[derive(Debug)]

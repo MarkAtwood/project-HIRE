@@ -1,4 +1,4 @@
-//! hire — CLI for the hired identity daemon.
+//! hire -- CLI for the hired identity daemon.
 
 use anyhow::{Context, Result};
 use hire_grpc::workload::spiffe_workload_api_client::SpiffeWorkloadApiClient;

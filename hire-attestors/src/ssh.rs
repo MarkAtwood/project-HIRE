@@ -1,4 +1,4 @@
-//! SSH agent attestor — enumerates agent keys and proves possession of them.
+//! SSH agent attestor -- enumerates agent keys and proves possession of them.
 //!
 //! Speaks the SSH agent wire protocol directly over `SSH_AUTH_SOCK`:
 //! `REQUEST_IDENTITIES` to enumerate, `SIGN_REQUEST` to prove.
@@ -138,7 +138,7 @@ pub(crate) fn spiffe_path(key_blob: &[u8]) -> String {
 /// key type or a malformed blob.
 ///
 /// Used to match an agent key against a key named somewhere other than by its
-/// SSH fingerprint — a `did:key`, for instance. It answers "is this the same
+/// SSH fingerprint -- a `did:key`, for instance. It answers "is this the same
 /// key?" and nothing else; whether a signature by it is any good is decided by
 /// a verifying constructor in `claim.rs`, never here.
 pub(crate) fn ed25519_point_of(key_blob: &[u8]) -> Option<[u8; 32]> {
@@ -185,7 +185,7 @@ pub(crate) async fn list_identities(
 /// The raw 64 bytes inside an agent signature blob, if it is an ed25519 one.
 ///
 /// For a caller that verifies against a key named somewhere other than by SSH
-/// framing — a `did:key` — where the framing is transport rather than trust.
+/// framing -- a `did:key` -- where the framing is transport rather than trust.
 /// The algorithm is still checked, so a blob claiming another algorithm is
 /// refused before its bytes are read as an ed25519 signature.
 pub(crate) fn raw_ed25519_signature(blob: &[u8]) -> Option<[u8; 64]> {
@@ -302,13 +302,13 @@ impl Attestor for SshAgentAttestor {
             // Refused before the agent is asked to sign: a signature we cannot
             // verify is one we must not collect, and a confirm-flagged key must
             // not raise a dialog for a proof we would discard. The verifying
-            // constructor checks this again — that check is the trust boundary,
+            // constructor checks this again -- that check is the trust boundary,
             // this one is the message an operator can act on.
             //
             // ponytail: one event per unsupported key per RPC | ceiling: an agent
             //   holding four rsa keys logs four lines per request | upgrade path:
             //   decide in enumerate() so an unprovable key is never offered as a
-            //   candidate — a separate decision, it changes `hire enumerate`.
+            //   candidate -- a separate decision, it changes `hire enumerate`.
             let algorithm = String::from_utf8_lossy(algorithm).into_owned();
             tracing::info!(
                 event = "ssh_key_unsupported",

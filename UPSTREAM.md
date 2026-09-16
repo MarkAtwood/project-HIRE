@@ -2,7 +2,7 @@
 # Donating HIRE to SPIFFE
 
 **Not yet, and the order matters more than the paperwork.** HIRE should ask SPIFFE for the
-smallest thing first, and the smallest thing is not a donation — it is attendance. The
+smallest thing first, and the smallest thing is not a donation -- it is attendance. The
 donation is worth preparing for and worth being patient about, because the one asset that
 makes the case is adoption, and HIRE has none yet.
 
@@ -22,15 +22,15 @@ the CNCF TOC is not in the path for a sub-project decision.
 The **SPIFFE Steering Committee (SSC)** is the governance head and is "exclusively
 responsible for SPIFFE's standards and the Project's strategic goals", with final
 authority over technical direction, governance and process, and contribution policy. It
-has at least five members, no more than two from any one organization, and — the rule
-worth reading twice — **at least 40% must be from organizations running a SPIFFE
+has at least five members, no more than two from any one organization, and -- the rule
+worth reading twice -- **at least 40% must be from organizations running a SPIFFE
 implementation in production.** Terms are 24 months.
 
 Below the SSC are three SIGs: `sig-community`, `sig-spec` and `sig-spire`. A proposal
 "under the purview of a SIG" goes to the SIG lead first. Decisions run on lazy consensus;
 new or changed functionality needs two maintainer approvals.
 
-Specifications live in `spiffe/spiffe/standards/` — `SPIFFE-ID.md`, `X509-SVID.md`,
+Specifications live in `spiffe/spiffe/standards/` -- `SPIFFE-ID.md`, `X509-SVID.md`,
 `JWT-SVID.md`, `SPIFFE_Workload_API.md`, `SPIFFE_Federation.md` and others, now including
 `WIT-SVID.md` and a Broker API. They carry four stability levels: **Proposed**,
 **Experimental**, **Incubating**, **Stable**. Incubating requires SIG-Spec consensus that
@@ -68,8 +68,8 @@ last.
 ### Why the spec ask goes last, and may never be needed
 
 **HIRE requires no change to SPIFFE to work.** That is not an argument, it is a test
-result: `hire-grpc/tests/stock_client.rs` drives the third-party `spiffe` crate — its own
-protobuf copy, endpoint parsing, SVID types and JWT verifier — through connect, fetch,
+result: `hire-grpc/tests/stock_client.rs` drives the third-party `spiffe` crate -- its own
+protobuf copy, endpoint parsing, SVID types and JWT verifier -- through connect, fetch,
 bundle fetch and cryptographic validation against `hired`, unmodified. The extensions
 HIRE adds are all ignorable by construction:
 
@@ -82,7 +82,7 @@ HIRE adds are all ignorable by construction:
 So HIRE can be adopted, deployed and useful with the spec untouched. Proposing a standard
 before there are users is asking a standards body to bless a design with one
 implementation and no deployments, which is the reliable way to receive a polite no. After
-adoption, the same proposal is a description of something that already works — a much
+adoption, the same proposal is a description of something that already works -- a much
 easier document to say yes to.
 
 ---
@@ -111,7 +111,7 @@ identities to one so each sign-off matches the author it certifies, and wrote bo
 texts into every commit from the root: a sole author may state the terms under which his
 own work was always contributed.
 
-**Attribution is settled:** agents do not take credit — not in a `Co-Authored-By` trailer,
+**Attribution is settled:** agents do not take credit -- not in a `Co-Authored-By` trailer,
 not in source comments, not on GitHub. The rule is in AGENTS.md. The maintainer is the
 author and the one who certifies the work, which is what a DCO sign-off means anyway.
 
@@ -127,7 +127,7 @@ accumulate brand equity in a name that cannot be assigned.
 
 ## The evidence that actually decides it
 
-The SSC composition rule — 40% from organizations running SPIFFE in production — says what
+The SSC composition rule -- 40% from organizations running SPIFFE in production -- says what
 this community weights. Not design quality. Deployment.
 
 What HIRE can put on the table today:
@@ -143,7 +143,7 @@ What is missing, in the order it will be asked about:
 
 - **Users.** Zero. One named future consumer (kith).
 - **X.509-SVID issuance** (`persona-apyr`). Until it exists, "any SPIFFE-aware consumer
-  works" is true only of the JWT-speaking subset — and envoy, ghostunnel and spiffe-helper
+  works" is true only of the JWT-speaking subset -- and envoy, ghostunnel and spiffe-helper
   are the consumers a SPIFFE audience will name first.
 - **The work IdP** (`persona-qbnm.7`). On a corporate desktop the answer an application
   most wants is the Google or Microsoft account, and it is the source that cannot answer.
@@ -157,32 +157,32 @@ What is missing, in the order it will be asked about:
 Each phase has an exit criterion. Do not start the next one early; the cost of asking too
 soon is a "no" that is expensive to reverse.
 
-**Phase 0 — be a participant.** Join `spiffe.slack.com`, the `spiffe-dev` and
+**Phase 0 -- be a participant.** Join `spiffe.slack.com`, the `spiffe-dev` and
 `spiffe-users` lists, and the weekly community call. Attend SIG-Spec. Answer other
 people's questions. Ask, without proposing anything, how the project thinks about human
-identity on the Workload API — it may already have an opinion, and if it has a bad
+identity on the Workload API -- it may already have an opinion, and if it has a bad
 experience with this idea it is far cheaper to learn that now.
 *Exit: known by name to SIG-Spec, and an answer to whether human identity is welcome in
 scope.*
 
-**Phase 1 — make the demo undeniable.** Land X.509-SVID issuance and the OIDC verifier, so
+**Phase 1 -- make the demo undeniable.** Land X.509-SVID issuance and the OIDC verifier, so
 a stock consumer of either flavour works and the identity most enterprises care about is
 one of the sources. Add the governance files. Fix the DCO.
 *Exit: `spiffe-helper` or `ghostunnel` runs against `hired` unmodified, and the repository
 passes a CNCF-style hygiene review.*
 
-**Phase 2 — ask the small question.** Offer a SIG-Spec demo or a community-call talk. Ask
+**Phase 2 -- ask the small question.** Offer a SIG-Spec demo or a community-call talk. Ask
 about an ecosystem listing on spiffe.io. This is a request for attention, not for
 governance, and the answer tells you what the donation conversation would be like.
 *Exit: a public demo given, and an explicit reaction to the human-identity idea.*
 
-**Phase 3 — offer the donation.** Propose to the SSC that HIRE join as a sub-project, with
+**Phase 3 -- offer the donation.** Propose to the SSC that HIRE join as a sub-project, with
 the Tornjak precedent as the model. Bring the adoption story, the conformance evidence and
 a named second maintainer. Expect the LF Contribution Agreement and trademark assignment.
 *Exit: an SSC decision either way. A "not yet" with conditions is a good outcome and
 should be written down here.*
 
-**Phase 4 — propose the standard, if it is still wanted.** By now HIRE either has users or
+**Phase 4 -- propose the standard, if it is still wanted.** By now HIRE either has users or
 does not. With users, a `SPIFFE_Human_Identity.md` entering at **Proposed** describes
 something real: the trust-domain shapes for human sources, the assurance and presence
 vocabularies, per-consumer pseudonymous SPIFFE IDs, and the audience-extension namespace.
@@ -215,7 +215,7 @@ the only distribution channel that reaches the people who already run SPIFFE.
 Signs the plan is not working, and what each one means:
 
 - **Phase 0 produces indifference rather than argument.** If SIG-Spec has no opinion about
-  human identity on the Workload API, the idea is not contentious — it is uninteresting to
+  human identity on the Workload API, the idea is not contentious -- it is uninteresting to
   them. Reconsider whether SPIFFE is the right home, or whether HIRE is better off as an
   independent implementation of a SPIFFE-compatible API.
 - **"Why is this not just SPIRE with a different attestor?"** Have the answer ready: SPIRE
@@ -231,12 +231,12 @@ Signs the plan is not working, and what each one means:
 ## Sources
 
 - [SPIFFE and SPIRE graduate from the CNCF incubator](https://www.cncf.io/announcements/2022/09/20/spiffe-and-spire-projects-graduate-from-cloud-native-computing-foundation-incubator/)
-- [SPIFFE governance](https://github.com/spiffe/spiffe/blob/main/GOVERNANCE.md) — SSC composition and authority
-- [SPIFFE contributing guide](https://github.com/spiffe/spiffe/blob/main/CONTRIBUTING.md) — DCO and SIG review
+- [SPIFFE governance](https://github.com/spiffe/spiffe/blob/main/GOVERNANCE.md) -- SSC composition and authority
+- [SPIFFE contributing guide](https://github.com/spiffe/spiffe/blob/main/CONTRIBUTING.md) -- DCO and SIG review
 - [SPIFFE standards directory](https://github.com/spiffe/spiffe/tree/main/standards) and [STABILITY.md](https://raw.githubusercontent.com/spiffe/spiffe/main/standards/STABILITY.md)
 - [SIG creation procedure](https://raw.githubusercontent.com/spiffe/spiffe/main/community/sig-creation-procedure.md)
 - [Tornjak](https://github.com/spiffe/tornjak) and [IBM's donation announcement](https://research.ibm.com/blog/tornjak-project-cncf)
-- [CNCF project lifecycle and process](https://contribute.cncf.io/projects/lifecycle/) — Contribution Agreement and trademark transfer
+- [CNCF project lifecycle and process](https://contribute.cncf.io/projects/lifecycle/) -- Contribution Agreement and trademark transfer
 - [SPIFFE: get involved](https://spiffe.io/docs/latest/spiffe-about/get-involved/)
 
 *Governance facts checked 2026-09-16. Re-check before acting on any phase: the SSC turns

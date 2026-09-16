@@ -16,7 +16,7 @@ use hire_core::{IdentityAssurance, PresenceLevel};
 /// An ed25519 private key in PKCS#8 PEM, from `openssl genpkey -algorithm
 /// ed25519`. The same fixture `keystore`'s unit tests use, repeated here
 /// because an integration test is its own crate and cannot reach into that
-/// module — and generating one at test time would need openssl installed.
+/// module -- and generating one at test time would need openssl installed.
 const PEM: &str = "-----BEGIN PRIVATE KEY-----\n\
 MC4CAQAwBQYDK2VwBCIEIGV2Z2g6KyPmHDTcq69qBACmoiylPq73K6Il2aZZtftW\n\
 -----END PRIVATE KEY-----\n";

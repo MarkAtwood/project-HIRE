@@ -1,4 +1,4 @@
-//! hired — human identity daemon, SPIFFE Workload API.
+//! hired -- human identity daemon, SPIFFE Workload API.
 
 use std::sync::Arc;
 
@@ -28,12 +28,12 @@ async fn main() -> anyhow::Result<()> {
 
     info!("hired starting");
 
-    // Ephemeral CA keypair — never persisted
+    // Ephemeral CA keypair -- never persisted
     let signer = Arc::new(SvidSigner::new().context("failed to generate signing keypair")?);
 
     // Trust bundle store: seed with the JWT authority for our local trust domain.
     let bundles = Arc::new(TrustBundleStore::new());
-    // ponytail: hardcoded local trust domain | upgrade to configurable trust domain per SPEC-HIRE §Trust Domain Model
+    // ponytail: hardcoded local trust domain | upgrade to configurable trust domain per SPEC-HIRE section Trust Domain Model
     bundles.upsert(TrustBundle::local(TrustDomain::SshLocal, &signer));
 
     // Probe identity sources

@@ -1,7 +1,7 @@
 // hire-5s4b.41 AC: a caller the daemon cannot attest gets no SVID.
 //
 // Driven off-socket on purpose. The branch under test is the refusal, which is
-// reached exactly when the connection carries no PeerIdentity — so constructing
+// reached exactly when the connection carries no PeerIdentity -- so constructing
 // a request without that extension exercises the real code path rather than
 // mocking it. The transport half is covered by tests/two_consumers.rs.
 

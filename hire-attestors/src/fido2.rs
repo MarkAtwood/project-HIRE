@@ -1,4 +1,4 @@
-//! FIDO2 hardware attestor — enumerates connected FIDO2 devices.
+//! FIDO2 hardware attestor -- enumerates connected FIDO2 devices.
 //!
 //! Requires the `fido2` feature. When compiled without it, enumerate returns
 //! empty so the crate still builds everywhere.

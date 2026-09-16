@@ -4,7 +4,7 @@
 // Linux-only, and this is a platform gate with a reason, not an #[ignore].
 // Consumers are distinguished by the SHA-256 of their executable, so two real
 // consumers means two real binaries. Appending a trailing byte to a copy of the
-// test binary changes its hash while leaving it executable — true of ELF, false
+// test binary changes its hash while leaving it executable -- true of ELF, false
 // of Mach-O, where arm64 macOS SIGKILLs a binary whose ad-hoc signature no longer
 // matches. macOS therefore has no end-to-end proof of this property; say so
 // rather than papering over it.
@@ -103,7 +103,7 @@ fn distinct_copy(dest: &std::path::Path, tag: &[u8]) {
 ///
 /// `tokio::process`, not `std::process`: the daemon under test is a task on this
 /// same runtime, so blocking the thread on a child that is trying to connect to
-/// it deadlocks — the accept loop never runs.
+/// it deadlocks -- the accept loop never runs.
 async fn consumer_run(exe: &std::path::Path, sock: &str, out: &std::path::Path) -> String {
     let _ = std::fs::remove_file(out);
     let status = tokio::process::Command::new(exe)
@@ -191,7 +191,7 @@ async fn two_consumers_get_two_pseudonyms() {
 
     // `attested_at` is published on purpose: withholding it leaves a consumer
     // unable to judge freshness for itself. It is a whole-second value derived
-    // from the observation, and the window is derived from it in turn — so
+    // from the observation, and the window is derived from it in turn -- so
     // neither is the request clock, and two consumers served from ONE
     // observation would receive byte-identical values. That case is not
     // reachable end to end today, because every request re-runs prove() and

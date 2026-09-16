@@ -117,8 +117,8 @@ impl WorkloadApiService {
         }
 
         // The daemon's own TTL, applied as decay rather than as a second refusal
-        // path: past the TTL the claim asserts no presence, and the gate below —
-        // and the `Ord` on PresenceLevel it rests on — keeps doing all the work.
+        // path: past the TTL the claim asserts no presence, and the gate below --
+        // and the `Ord` on PresenceLevel it rests on -- keeps doing all the work.
         let presence = if age.is_some_and(|age| age < PRESENCE_TTL) {
             claim.presence()
         } else {
@@ -138,7 +138,7 @@ impl WorkloadApiService {
         // cannot move them. Truncation is the fail-closed direction: attested_at
         // reads up to a second older than it was and present_until up to a
         // second shorter, never the reverse. A pre-epoch observation publishes
-        // as 0, which is honestly "maximally old" — unlike the
+        // as 0, which is honestly "maximally old" -- unlike the
         // `unwrap_or_default()` this replaces, where zero meant "now".
         //
         // hire-5s4b.118, accepted and bounded: two consumers served from one
@@ -187,7 +187,7 @@ impl WorkloadApiService {
 
         // The tag is normative and the order SVIDs arrive in is not, so this is
         // what a caller with several SVIDs is expected to read. An age that
-        // cannot be measured — a claim dated into the future — publishes as
+        // cannot be measured -- a claim dated into the future -- publishes as
         // `u64::MAX`, which is honestly "maximally old" and is the fail-shut
         // direction for any caller gating on it.
         let hint = SvidHint {
@@ -254,7 +254,7 @@ impl WorkloadApiService {
 
 /// How long a presence observation is honoured before it asserts nothing.
 ///
-/// Fixed, daemon-wide, and not extendable by anything a caller does — SPEC-HIRE
+/// Fixed, daemon-wide, and not extendable by anything a caller does -- SPEC-HIRE
 /// "a fixed TTL from the last hardware attestation, not extended by
 /// keyboard/mouse activity".
 ///
@@ -279,7 +279,7 @@ type BoxStream<T> = Pin<Box<dyn tokio_stream::Stream<Item = Result<T, Status>> +
 /// is a deterministic refusal with no special case for zero. An unmeasurable age
 /// (`None`, from `Claim::age_at` on a forward-dated observation) satisfies no
 /// bound. An absent bound is satisfied by anything, including an unmeasurable age
-/// — naming no bound asks no question.
+/// -- naming no bound asks no question.
 ///
 /// A named function rather than an inline `if`, because no end-to-end test can
 /// put an observation of a chosen age in front of it: `observed_at` is stamped
@@ -296,7 +296,7 @@ fn within_max_age(age: Option<Duration>, max_age: Option<Duration>) -> bool {
 /// produces something specific to this request rather than replayable.
 ///
 /// The binding is checked in two places, and both are required. The attestor verifies
-/// the signature against this challenge and the key its candidate names —
+/// the signature against this challenge and the key its candidate names --
 /// `ChallengeSignature::verify_ssh_ed25519` is the only way to build possession
 /// evidence, so there is no unchecked path. `Claim::derive` is then given the same
 /// challenge and discards evidence that answers a different one, because the attestor
@@ -391,7 +391,7 @@ impl SpiffeWorkloadApi for WorkloadApiService {
         req: Request<JwtsvidRequest>,
     ) -> Result<Response<JwtsvidResponse>, Status> {
         // Consumer attestation, before anything else is parsed. A caller the
-        // daemon cannot name learns nothing further — not whether the audience was
+        // daemon cannot name learns nothing further -- not whether the audience was
         // well formed, not whether this user has any identity at all.
         //
         // tonic installs the per-connection ConnectInfo into every request's
@@ -420,7 +420,7 @@ impl SpiffeWorkloadApi for WorkloadApiService {
         // and the request is gated on the strictest requirement any of them
         // names. `max` is commutative, so the outcome cannot depend on argument
         // order, and `PresenceLevel::None` is the least element and is what an
-        // audience naming no policy contributes — so no audience an attacker
+        // audience naming no policy contributes -- so no audience an attacker
         // adds, in any position, can lower the bar.
         let exts = req
             .audience
@@ -438,7 +438,7 @@ impl SpiffeWorkloadApi for WorkloadApiService {
 
         // The tightest bound any audience names. `min` is commutative, so the
         // outcome cannot depend on argument order, and an audience naming no
-        // bound contributes nothing — so no audience an attacker adds, in any
+        // bound contributes nothing -- so no audience an attacker adds, in any
         // position, can loosen a bound another audience named. Mirror image of
         // the `max` fold over require_presence.
         let max_age = exts.iter().filter_map(|e| e.max_age).min();
@@ -590,8 +590,8 @@ impl SpiffeWorkloadApi for WorkloadApiService {
         //
         // ponytail: no clock seam. Unit tests pass `now` explicitly to
         //   Claim::age_at, so the fold and the age arithmetic are exercised
-        //   against fixed constants. The end-to-end tests cannot do that — the
-        //   clock is read here, inside the RPC — so they hold one observation
+        //   against fixed constants. The end-to-end tests cannot do that -- the
+        //   clock is read here, inside the RPC -- so they hold one observation
         //   and wait for it to genuinely age, which costs a few seconds of
         //   wall time in hire-grpc/tests/e2e.rs.
         //   | ceiling: those waits are real sleeps, so the suite is that much
@@ -636,7 +636,7 @@ impl SpiffeWorkloadApi for WorkloadApiService {
     // `self.signer` is deliberately not read in this method. A validator that
     // asks the issuing key whether the issuing key signed something asserts
     // nothing a third party could check, and it keeps passing when the
-    // published bundle is empty — which is how hire-5s4b.60 hid behind
+    // published bundle is empty -- which is how hire-5s4b.60 hid behind
     // hire-5s4b.82. The only key material this method may touch is what
     // FetchJWTBundles would hand a consumer.
     async fn validate_jwtsvid(

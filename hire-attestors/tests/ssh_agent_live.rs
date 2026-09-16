@@ -5,7 +5,7 @@
 //! CI sets that variable to the empty string. A Cargo integration test file is
 //! its own binary, so one test per file means there is nothing to race. If a
 //! second live-agent test is ever wanted, the answer is a second file, not a
-//! constructor taking a socket path — that would put a test-only field on a
+//! constructor taking a socket path -- that would put a test-only field on a
 //! production unit struct to buy a seam the process boundary already provides.
 //!
 //! Skips, with a printed reason, where openssh-client is absent. It spawns its

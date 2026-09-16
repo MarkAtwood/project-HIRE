@@ -28,7 +28,7 @@ fn malformed() -> AttestorError {
 /// (`OrgOidc`, `PivIssuer`) are absent, because naming an issuer is a claim
 /// about a third party and may come only from verified evidence. This is why
 /// `oidc.rs` can no longer write `TrustDomain::OrgOidc(extract_domain(&iss))`
-/// in `enumerate()` — the variant does not exist here (hire-5s4b.55).
+/// in `enumerate()` -- the variant does not exist here (hire-5s4b.55).
 ///
 /// A future `TrustDomain` variant is unavailable to candidates until someone
 /// adds it here deliberately. That failure mode is closed, which is the point.
@@ -94,7 +94,7 @@ pub enum AttainableAssurance {
 /// FAILS SAFE, AND THE ASYMMETRY IS THE POINT. [`Silent`](Self::Silent) is a
 /// guarantee that proving *cannot* prompt; [`Interactive`](Self::Interactive)
 /// means only that it *may*. A source that cannot tell which it is must say
-/// `Interactive` — gpg-agent prompts through pinentry for an uncached key and
+/// `Interactive` -- gpg-agent prompts through pinentry for an uncached key and
 /// signs silently for a cached one, so it is `Interactive` unless it has
 /// checked. Guessing wrong in this direction costs a source its place in the
 /// unprompted set; guessing wrong in the other costs the user an unasked-for
@@ -136,7 +136,7 @@ impl Candidate {
     /// Both declarations default to their conservative end:
     /// [`AttainableAssurance::Iaa1`] and [`ProofCost::Interactive`]. An
     /// attestor that says nothing is therefore proved last and never on the
-    /// unprompted path — it stops working rather than starting to prompt, and
+    /// unprompted path -- it stops working rather than starting to prompt, and
     /// of the two ways to be wrong that is the one a user forgives. Declare the
     /// real values with [`with_attainable`](Self::with_attainable) and
     /// [`with_proof_cost`](Self::with_proof_cost).
@@ -159,7 +159,7 @@ impl Candidate {
     /// Declare the highest tier this candidate could reach if proven.
     ///
     /// An upper bound the attestor offers, never a claim. Nothing reads it to
-    /// decide what an issued credential says — see [`AttainableAssurance`].
+    /// decide what an issued credential says -- see [`AttainableAssurance`].
     #[must_use]
     pub fn with_attainable(mut self, attainable: AttainableAssurance) -> Self {
         self.attainable = attainable;
@@ -169,7 +169,7 @@ impl Candidate {
     /// Declare whether proving this candidate can interrupt a human.
     ///
     /// Use [`ProofCost::Silent`] only where prompting is impossible, not merely
-    /// unlikely — see [`ProofCost`] for why the two directions differ.
+    /// unlikely -- see [`ProofCost`] for why the two directions differ.
     #[must_use]
     pub fn with_proof_cost(mut self, proof_cost: ProofCost) -> Self {
         self.proof_cost = proof_cost;
@@ -189,8 +189,8 @@ impl Candidate {
 ///
 /// NOT A PROOF, AND THE DISTINCTION IS THE WHOLE VALUE OF THE TYPE. Nothing
 /// here verifies an attestation certificate: `HardwareToken` means the
-/// custodian reported a device — a smartcard serial where gpg would otherwise
-/// print `+` for a local key — and hire recorded it. A relying party in a
+/// custodian reported a device -- a smartcard serial where gpg would otherwise
+/// print `+` for a local key -- and hire recorded it. A relying party in a
 /// paranoid environment wants that recorded; a relying party that reads it as
 /// proof of a certified authenticator is reading more than is offered, which is
 /// why [`AuthMethod::HardwareKeyPossession`] is documented in the same terms.
@@ -203,7 +203,7 @@ impl Candidate {
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum KeyCustody {
-    /// A key hire, an agent, or a file can hold — copyable in principle.
+    /// A key hire, an agent, or a file can hold -- copyable in principle.
     Software,
     /// A key on a device it cannot be copied off, per its custodian.
     HardwareToken,
@@ -212,7 +212,7 @@ pub enum KeyCustody {
 /// A signature over a daemon-generated challenge by the key a candidate names.
 ///
 /// Establishes possession and nothing more: `Iaa1`, with no presence. A
-/// signature proves that a key is reachable, not that a human asked for it —
+/// signature proves that a key is reachable, not that a human asked for it --
 /// an agent key with no passphrase signs with no prompt at all.
 ///
 /// The challenge it verified against is retained, because verification inside
@@ -239,7 +239,7 @@ impl ChallengeSignature {
     ///
     /// Four checks, and dropping any one makes the other three prove nothing:
     ///
-    /// 1. the blob hashes to the key the candidate names — without this, the
+    /// 1. the blob hashes to the key the candidate names -- without this, the
     ///    proof is of *some* key in the agent;
     /// 2. the blob is `ssh-ed25519` with a 32-byte point and no trailing bytes;
     /// 3. the signature names the same algorithm and carries exactly 64 bytes;
@@ -294,7 +294,7 @@ impl ChallengeSignature {
 
         // verify_strict, not verify: it rejects small-order R, small-order
         // public keys and non-canonical encodings, and it is inherent, so no
-        // trait import. Stricter and fewer imports — no tradeoff to weigh.
+        // trait import. Stricter and fewer imports -- no tradeoff to weigh.
         // The blob came off a socket.
         key.verify_strict(challenge, &Signature::from_bytes(sig_bytes))
             .map_err(|_| {
@@ -322,7 +322,7 @@ impl ChallengeSignature {
     ///
     /// Four checks, and dropping any one makes the other three prove nothing:
     ///
-    /// 1. the DID hashes to the path the candidate names — without this, the
+    /// 1. the DID hashes to the path the candidate names -- without this, the
     ///    proof is of *some* DID the operator configured;
     /// 2. the DID encodes an ed25519 key, by its multicodec prefix rather than
     ///    by its shape;
@@ -390,7 +390,7 @@ impl ChallengeSignature {
     /// Four checks, and dropping any one makes the other three prove nothing:
     ///
     /// 1. the exported key's primary fingerprint is the one the candidate names
-    ///    — without this, the proof is of *some* key in the keyring;
+    ///    -- without this, the proof is of *some* key in the keyring;
     /// 2. the key's own self-signatures and subkey bindings verify, so a subkey
     ///    is one this primary actually adopted and, where it can sign, carries
     ///    the embedded back-signature that proves it agreed to be adopted;
@@ -411,8 +411,8 @@ impl ChallengeSignature {
     /// inside this constructor, using the binary resolved from a fixed list in
     /// [`crate::gpg`], so an attestor cannot choose the key its own signature
     /// will be verified against. What hire trusts gpg for is therefore exactly
-    /// one thing — that `--export <fingerprint>` returns the key that
-    /// fingerprint names — and the cryptography is done here. Pinning that key
+    /// one thing -- that `--export <fingerprint>` returns the key that
+    /// fingerprint names -- and the cryptography is done here. Pinning that key
     /// at enrollment (hire-08sz) is what would remove the last of it.
     ///
     /// The instant is stamped after verification, as in
@@ -458,7 +458,7 @@ impl ChallengeSignature {
     /// constructor is the only way in from outside this module, so no attestor
     /// can hand over a key of its own choosing. What the split buys is a
     /// verifier that can be tested against committed fixtures on a machine with
-    /// no gpg installed — the four checks are exercised offline, and the live
+    /// no gpg installed -- the four checks are exercised offline, and the live
     /// test then covers the part that needs a real agent.
     fn verify_openpgp_against(
         candidate: &Candidate,
@@ -490,7 +490,7 @@ impl ChallengeSignature {
         // The primary and every subkey it bound, tried in turn. The set is
         // exactly this candidate's keys, because the export was by the
         // candidate's own fingerprint and check 2 has already refused any
-        // subkey the primary did not adopt — so a signature by any of them is a
+        // subkey the primary did not adopt -- so a signature by any of them is a
         // signature by the key that was asked. Selecting by the signature's
         // stated issuer instead would let the signature choose its own verifier.
         //
@@ -558,8 +558,8 @@ fn hex(bytes: &[u8]) -> String {
 ///
 /// WHY IT MATTERS THAT auth_time IS OPTIONAL. `auth_time` is REQUIRED in OIDC
 /// Core only when the client asked for `max_age` or requested it as an
-/// essential claim. hire does not mint these tokens — gcloud and the Azure CLI
-/// do — so whether it is present was decided by somebody else's authorization
+/// essential claim. hire does not mint these tokens -- gcloud and the Azure CLI
+/// do -- so whether it is present was decided by somebody else's authorization
 /// request. An earlier contract here said the constructor must REFUSE a token
 /// without it. That closed hire-ogiv's bug and also made the whole OIDC source
 /// dead on any cache that omits the claim, which is the common case. Decided by
@@ -567,9 +567,9 @@ fn hex(bytes: &[u8]) -> String {
 ///
 /// So the tier follows [`authenticated_at`](Self::authenticated_at):
 ///
-/// * `Some` — `Iaa2` with `PresenceLevel::Session`, dated at the instant the
+/// * `Some` -- `Iaa2` with `PresenceLevel::Session`, dated at the instant the
 ///   issuer says the human authenticated.
-/// * `None` — `Iaa2` with `PresenceLevel::None`, dated at
+/// * `None` -- `Iaa2` with `PresenceLevel::None`, dated at
 ///   [`verified_at`](Self::verified_at), which dates the CHECK and not the
 ///   human. That is the same shape [`DaemonIdentity`] already has and for the
 ///   same reason: an identity provider vouched for this person at some past
@@ -582,18 +582,18 @@ fn hex(bytes: &[u8]) -> String {
 /// STILL A BEARER ARTIFACT. A verified signature proves the issuer issued it,
 /// not that whoever holds it is the subject. hire reads it out of the user's
 /// own cache while running as that user, which is the basis on which it reads
-/// their keyring — worth stating rather than assuming.
+/// their keyring -- worth stating rather than assuming.
 ///
 /// There is deliberately no public constructor: nothing in this workspace can
 /// verify a token signature yet, so nothing may claim it did. The unit tests in
 /// this module build one by struct literal, because they are a descendant of
-/// this module — that is the only construction path today.
+/// this module -- that is the only construction path today.
 ///
 /// ponytail: no verifying constructor until there is a verifier | ceiling: Iaa2
 /// and issuer-anchored trust domains are unreachable, so oidc contributes
 /// nothing at all today | upgrade path: add
 /// `pub fn verify(raw: &str, key: &DecodingKey, v: &Validation) -> Result<Self, _>`
-/// here, next to the JWKS cache that makes it possible — and nowhere else. It
+/// here, next to the JWKS cache that makes it possible -- and nowhere else. It
 /// must also decide what `Evidence::binds_to` does with a cached token, which
 /// today returns `true` unconditionally: the nonce in such a token comes from
 /// somebody else's login flow, not from this request's challenge.
@@ -608,13 +608,13 @@ pub struct VerifiedToken {
     /// [`PlatformIdentity::asked_at`], which says the same thing at greater
     /// length and means it here too.
     verified_at: SystemTime,
-    /// When the issuer says the human authenticated — never when the daemon
+    /// When the issuer says the human authenticated -- never when the daemon
     /// read the token.
     ///
     /// A verifying constructor must build this from the token's `auth_time`
     /// and must leave it `None` when that claim is absent. Substituting
     /// `SystemTime::now()`, or the token's `iat`, would make a cached token
-    /// report a fresher authentication than happened — `auth_time <= iat`
+    /// report a fresher authentication than happened -- `auth_time <= iat`
     /// always, so `iat` claims the human authenticated more recently than they
     /// did, and a token minted from a refresh token an hour ago can stand for
     /// an authentication from a month ago. That is hire-ogiv's bug restored on
@@ -650,7 +650,7 @@ impl VerifiedToken {
 ///
 /// ponytail: no constructor until an authenticator can actually be driven |
 /// ceiling: `PresenceLevel::Hardware` and Iaa3 are unreachable | upgrade path:
-/// add one constructor per authenticator family here — CTAP2 (`rpIdHash[32] ||
+/// add one constructor per authenticator family here -- CTAP2 (`rpIdHash[32] ||
 /// flags[1] || signCount[4]`, UP is bit 0 of flags) and PKCS#11 slot 9A have
 /// different witnesses, so do not force one byte layout on both.
 #[derive(Debug, Clone)]
@@ -673,7 +673,7 @@ impl HardwareTouch {
     /// is the one that is right about a suspend and wrong about a step |
     /// upgrade path: when an attestor first caches an assertion across
     /// requests, pair an `Instant` on at observation and take
-    /// `wall_age.max(mono_age)` — older wins, which fails closed both ways.
+    /// `wall_age.max(mono_age)` -- older wins, which fails closed both ways.
     pub fn touched_at(&self) -> SystemTime {
         self.touched_at
     }
@@ -685,7 +685,7 @@ impl HardwareTouch {
 /// There is no key material and no signature here because there are none to
 /// have: the operating system is the entire authority. Do not hand it a
 /// [`SignedAssertion`](crate::SignedAssertion) for symmetry with
-/// [`ChallengeSignature`] — that constructor is public, so the bytes would be
+/// [`ChallengeSignature`] -- that constructor is public, so the bytes would be
 /// forgeable by anyone and `assertion()` would start lying across the enum.
 ///
 /// Unlike [`VerifiedToken`] and [`HardwareTouch`] this observation can actually
@@ -694,7 +694,7 @@ impl HardwareTouch {
 ///
 /// It records *which* account, because this is the one variant with no secret
 /// and no challenge behind it. Without that field the observation says only
-/// "some account was asked about", which is true of every account at once — and
+/// "some account was asked about", which is true of every account at once -- and
 /// a value obtained legitimately from [`Attestor::prove`](crate::Attestor::prove)
 /// could be paired with any candidate at all. [`Evidence::binds_to`] compares it.
 #[derive(Debug, Clone)]
@@ -705,7 +705,7 @@ pub struct PlatformIdentity {
 
 impl PlatformIdentity {
     /// Record that the daemon asked the kernel which account it runs under, and
-    /// got `account` — a SPIFFE path component, as it would appear on a
+    /// got `account` -- a SPIFFE path component, as it would appear on a
     /// [`Candidate`].
     ///
     /// Infallible, alone among the payloads in this module: a process always
@@ -729,8 +729,8 @@ impl PlatformIdentity {
     /// It dates a question, not a person. Nobody was observed doing anything at
     /// this instant: the account was there before it and is there after it, and
     /// asking again a second later moves the timestamp without anything having
-    /// happened. Reading it the way [`HardwareTouch::touched_at`] is read — as
-    /// the moment a human was seen — is exactly the confusion the accompanying
+    /// happened. Reading it the way [`HardwareTouch::touched_at`] is read -- as
+    /// the moment a human was seen -- is exactly the confusion the accompanying
     /// [`PresenceLevel::None`] exists to prevent.
     pub fn asked_at(&self) -> SystemTime {
         self.asked_at
@@ -763,7 +763,7 @@ impl PlatformIdentity {
 ///
 /// The instant is stamped in [`observe`](Self::observe) rather than passed in,
 /// so nothing can re-date a cached answer, and there is no signature because
-/// there is none to have — the daemon holds the credential, not hire.
+/// there is none to have -- the daemon holds the credential, not hire.
 #[derive(Debug, Clone)]
 pub struct DaemonIdentity {
     subject: String,
@@ -772,7 +772,7 @@ pub struct DaemonIdentity {
 
 impl DaemonIdentity {
     /// Record that a local daemon was asked which identity it holds, and named
-    /// `subject` — a SPIFFE path component, as it would appear on a
+    /// `subject` -- a SPIFFE path component, as it would appear on a
     /// [`Candidate`].
     ///
     /// Crate-visible, so no downstream crate can state an identity no daemon
@@ -791,7 +791,7 @@ impl DaemonIdentity {
 
     /// When the daemon was asked.
     ///
-    /// It dates a question, not a person — read [`PlatformIdentity::asked_at`],
+    /// It dates a question, not a person -- read [`PlatformIdentity::asked_at`],
     /// which says the same thing at greater length and means it here too.
     pub fn asked_at(&self) -> SystemTime {
         self.asked_at
@@ -859,7 +859,7 @@ impl Evidence {
             ),
             // The kernel names the account a process runs under. That is not a
             // human being present, and it is not a check on who holds the
-            // account — only that something outside this process said so.
+            // account -- only that something outside this process said so.
             Evidence::PlatformAssertion(p) => {
                 (IdentityAssurance::Iaa1, PresenceLevel::None, p.asked_at())
             }
@@ -902,7 +902,7 @@ impl Evidence {
     ///
     /// A `PlatformAssertion` is unbound and always will be: the kernel answers
     /// the same question however it is asked, so there is no nonce for it to
-    /// carry. What that costs is the binding, not freshness — the assertion is
+    /// carry. What that costs is the binding, not freshness -- the assertion is
     /// observed afresh inside the `prove` it answers, so there is nothing
     /// stale to replay.
     ///
@@ -958,8 +958,8 @@ impl Claim {
     /// and there must be no `derive` that skips the comparison. Plain `==`: the
     /// challenge is a public nonce and this is a freshness check, not a MAC.
     ///
-    /// Where a source is available whenever the machine is — `unix` on any
-    /// Unix box — `None` is unreachable in practice and the daemon issues on
+    /// Where a source is available whenever the machine is -- `unix` on any
+    /// Unix box -- `None` is unreachable in practice and the daemon issues on
     /// every request. Holding a credential therefore says nothing on its own;
     /// the assurance field is what a consumer has to read.
     pub fn derive(candidate: &Candidate, challenge: &[u8], evidence: &[Evidence]) -> Option<Claim> {
@@ -975,7 +975,7 @@ impl Claim {
             assurance = assurance.max(a);
             // Presence and its observation move together. Folding the instants
             // independently with `max` would let a `Possession` produced this
-            // millisecond — which carries no presence at all — re-date a
+            // millisecond -- which carries no presence at all -- re-date a
             // four-minute-old touch: hire-ogiv's defect, one layer down. A
             // tie takes the newer, because a second genuine touch is a second
             // genuine observation.
@@ -987,7 +987,7 @@ impl Claim {
 
         // SPEC-HIRE.md: Iaa3 is "hardware-bound *and* IdP-verified". It is the
         // one tier no single piece of evidence reaches, so it is a rule over the
-        // fold rather than a fourth variant — a combined variant would multiply
+        // fold rather than a fourth variant -- a combined variant would multiply
         // combinatorially the moment a fourth evidence kind appears.
         if presence >= PresenceLevel::Hardware && assurance >= IdentityAssurance::Iaa2 {
             assurance = IdentityAssurance::Iaa3;
@@ -1080,8 +1080,8 @@ impl Claim {
     ///
     /// `None` is the fail-shut answer to a clock that stepped backwards or an
     /// attestor that dated evidence forwards: an age that cannot be measured
-    /// satisfies no bound. `unwrap_or_default()` — the idiom hire-ogiv
-    /// deletes from `hire-grpc/src/service.rs` — would call a forward-dated
+    /// satisfies no bound. `unwrap_or_default()` -- the idiom hire-ogiv
+    /// deletes from `hire-grpc/src/service.rs` -- would call a forward-dated
     /// attestation maximally fresh, which is the fail-open this field exists to
     /// remove.
     ///
@@ -1107,7 +1107,7 @@ mod tests {
     /// Possession evidence bound to [`TEST_CHALLENGE`].
     ///
     /// A struct literal, as the `verified_token` and `hardware_touch` helpers
-    /// below already are — this module is a descendant of `claim`. What is
+    /// below already are -- this module is a descendant of `claim`. What is
     /// under test here is the tier table and the challenge filter, not the
     /// signature check; that has its own module, against RFC 8032 and pyca.
     fn possession() -> Evidence {
@@ -1165,7 +1165,7 @@ mod tests {
         SystemTime::UNIX_EPOCH + Duration::from_secs(secs)
     }
 
-    // ── OpenPGP verification (hire-qbnm.1) ────────────────────────────────
+    // -- OpenPGP verification (hire-qbnm.1) --------------------------------
     //
     // Every byte below came out of GnuPG 2.4.4: `gpg --export <fpr>` and
     // `gpg --detach-sign` over CHALLENGE, for two throwaway keys. The oracle is
@@ -1625,7 +1625,7 @@ mod tests {
         assert_eq!(c.display_name(), "Alice");
     }
 
-    // ── Observation time ──────────────────────────────────────────────────
+    // -- Observation time --------------------------------------------------
 
     #[test]
     fn age_at_measures_a_past_attestation() {
@@ -1748,7 +1748,7 @@ mod tests {
         assert!(c.attested_at() >= before && c.attested_at() <= after);
     }
 
-    // ── The challenge filter (hire-5s4b.116) ───────────────────────────
+    // -- The challenge filter (hire-5s4b.116) ---------------------------
 
     #[test]
     fn evidence_answering_another_challenge_is_not_evidence() {
@@ -1781,8 +1781,8 @@ mod tests {
     /// hire-ouo5.1: a platform assertion is refused for an account it does
     /// not name.
     ///
-    /// `PlatformIdentity` cannot be forged — the field is private and the
-    /// constructor is crate-visible — but it need not be forged to be misused.
+    /// `PlatformIdentity` cannot be forged -- the field is private and the
+    /// constructor is crate-visible -- but it need not be forged to be misused.
     /// It is the one payload with no secret and no challenge behind it, so any
     /// caller of `prove` legitimately obtains one, and before this check
     /// `Claim::derive` would pair it with whatever candidate it was handed:
@@ -1827,7 +1827,7 @@ mod tests {
     ///
     /// The oracle is SPEC-HIRE, not this crate: the assurance table grades a
     /// local account self-asserted, `iaa1`. A candidate declaring it could
-    /// reach `iaa3` — which is what a FIDO2 key merely plugged in declares —
+    /// reach `iaa3` -- which is what a FIDO2 key merely plugged in declares --
     /// and backed only by the kernel naming an account must still derive
     /// `Iaa1`. If this ever reports `Iaa3`, discovery has become attestation
     /// again, which is the defect the `Candidate`/`Claim` split exists to
@@ -1869,7 +1869,7 @@ mod tests {
     /// hire-jl4j.3: each builder sets its own field and leaves the other alone.
     ///
     /// Two consuming setters over adjacent fields is exactly the shape a
-    /// copy-paste error survives silently — `with_proof_cost` assigning
+    /// copy-paste error survives silently -- `with_proof_cost` assigning
     /// `attainable` still compiles, still returns `Self`, and produces a
     /// candidate that prompts when it said it would not.
     #[test]
@@ -1896,8 +1896,8 @@ mod tests {
 /// `hire-attestors/tests/fixtures/gen_ssh_fixtures.py`; regenerating these
 /// with hire would turn the oracle into a mirror.
 ///
-/// Where the two disagree, dalek's `verify_strict` is the stricter one — it
-/// refuses small-order points and non-canonical encodings that pyca accepts —
+/// Where the two disagree, dalek's `verify_strict` is the stricter one -- it
+/// refuses small-order points and non-canonical encodings that pyca accepts --
 /// so a row expecting `Err` against a pyca `Ok` is correct, not a defect.
 #[cfg(test)]
 mod ssh_ed25519_verification {

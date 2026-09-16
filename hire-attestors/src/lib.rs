@@ -101,7 +101,7 @@ pub trait Attestor: Send + Sync + fmt::Debug {
     ///
     /// `challenge` is a freshly-generated nonce. The attestor proves the key
     /// material backing the candidate, and the tier follows from what it
-    /// proved — see [`Claim::derive`].
+    /// proved -- see [`Claim::derive`].
     ///
     /// The default declines. An attestor that cannot verify anything cannot
     /// contribute an assurance level, and the daemon declines rather than

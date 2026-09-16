@@ -149,10 +149,10 @@ both, and trust the README on status: this one goes stale first.
 
 ## Further reading
 
-- [README.md](README.md) — overview, current implementation state, installation
-- [SPEC-HIRE.md](SPEC-HIRE.md) — normative specification, SPIFFE ID schema, trust
+- [README.md](README.md) -- overview, current implementation state, installation
+- [SPEC-HIRE.md](SPEC-HIRE.md) -- normative specification, SPIFFE ID schema, trust
   domain model, and a full comparison against Kerberos, SPIRE, WebAuthn, platform
   SSO and the rest
-- [PRFAQ.md](PRFAQ.md) — the launch framing and anticipated objections
-- [UPSTREAM.md](UPSTREAM.md) — the plan for donating this to SPIFFE, and why the
+- [PRFAQ.md](PRFAQ.md) -- the launch framing and anticipated objections
+- [UPSTREAM.md](UPSTREAM.md) -- the plan for donating this to SPIFFE, and why the
   standards proposal comes after adoption rather than before it

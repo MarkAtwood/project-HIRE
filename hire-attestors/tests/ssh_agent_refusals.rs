@@ -6,7 +6,7 @@
 //!
 //! One `#[test]`, for the same reason as `ssh_agent_live.rs`: the attestor is
 //! aimed through the process-global `SSH_AUTH_SOCK`. Both cases run inside it,
-//! sequentially, against one socket — `prove()` opens a fresh connection per
+//! sequentially, against one socket -- `prove()` opens a fresh connection per
 //! call, so the fake agent scripts them by connection order with nothing shared.
 
 use std::sync::atomic::{AtomicBool, Ordering};

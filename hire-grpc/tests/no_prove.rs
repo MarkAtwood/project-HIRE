@@ -1,6 +1,6 @@
 // hire-okek AC2. `CandidateOnlyAttestor` deliberately implements no
 // `prove()`. If `Attestor::prove` ever loses its default body this file stops
-// compiling — that is the "deleting every prove() implementation still
+// compiling -- that is the "deleting every prove() implementation still
 // compiles" half of the criterion, checked by the compiler, with no assertion
 // to rot.
 //

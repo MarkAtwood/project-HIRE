@@ -29,7 +29,7 @@ pub enum AssuranceError {
 ///
 /// THE VOCABULARY IS MECHANISMS, NOT SOURCES, and that is the point of having
 /// it. A consumer gating on `hardware_key_possession` does not need to know
-/// that gpg, PIV and FIDO2 exist, or which of them is installed here — whereas
+/// that gpg, PIV and FIDO2 exist, or which of them is installed here -- whereas
 /// a `{source}_{mechanism}` vocabulary makes every policy a list of sources,
 /// which is the field next door. SPEC-HIRE's illustrative `tailscale_oidc` and
 /// `fido2_up` were the source-shaped form and are replaced by this one.
@@ -51,7 +51,7 @@ pub enum AuthMethod {
 
     /// The same, by a key on a device it cannot be copied off.
     ///
-    /// Reported by the custodian rather than proved to hire — a smartcard
+    /// Reported by the custodian rather than proved to hire -- a smartcard
     /// serial in gpg's key listing, say. It is recorded because a relying party
     /// in a paranoid environment wants to know, and it deliberately does not
     /// raise the assurance tier: `Iaa3` means hardware-bound *and* IdP-verified,
@@ -146,7 +146,7 @@ pub enum PresenceLevel {
     /// TOTP or password re-entry (software-level).
     Software,
 
-    /// FIDO2 UP, Windows Hello, TouchID, or PIV PIN — timestamped,
+    /// FIDO2 UP, Windows Hello, TouchID, or PIV PIN -- timestamped,
     /// hardware-backed.
     Hardware,
 }

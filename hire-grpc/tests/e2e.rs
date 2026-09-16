@@ -21,7 +21,7 @@ mod common;
 
 const AUDIENCE: &str = "https://test.example.com";
 
-// ── Test attestor ─────────────────────────────────────────────────────────────
+// -- Test attestor -------------------------------------------------------------
 
 #[derive(Debug)]
 struct TestAttestor;
@@ -58,7 +58,7 @@ impl Attestor for TestAttestor {
     }
 }
 
-// ── Helper: build a fresh socket path ─────────────────────────────────────────
+// -- Helper: build a fresh socket path -----------------------------------------
 
 fn tmp_socket_path() -> String {
     use std::sync::atomic::{AtomicU32, Ordering};
@@ -75,8 +75,8 @@ fn tmp_socket_path() -> String {
 /// An attestor that proves once, at construction, and replays that same proof
 /// on every later request regardless of the challenge it is handed.
 ///
-/// The proof is genuine — a real signature, through the real verifying
-/// constructor — which is the point: signature verification inside an attestor
+/// The proof is genuine -- a real signature, through the real verifying
+/// constructor -- which is the point: signature verification inside an attestor
 /// establishes only that *some* challenge was answered, and the attestor picks
 /// which. This double is the shape a cache-and-replay attestor would take, and
 /// what the test below proves is that `Claim::derive` refuses it anyway.
@@ -177,14 +177,14 @@ async fn connect(socket_path: &str) -> SpiffeWorkloadApiClient<tonic::transport:
     SpiffeWorkloadApiClient::new(channel)
 }
 
-// ── Integration test ──────────────────────────────────────────────────────────
+// -- Integration test ----------------------------------------------------------
 
 #[tokio::test]
 async fn fetch_and_validate_jwt_svid() {
     let socket_path = tmp_socket_path();
     let (mut client, server_handle) = start_daemon(&socket_path).await;
 
-    // ── 1. FetchJWTSVID ──────────────────────────────────────────────────────
+    // -- 1. FetchJWTSVID ------------------------------------------------------
 
     let resp = client
         .fetch_jwtsvid(JwtsvidRequest {
@@ -210,7 +210,7 @@ async fn fetch_and_validate_jwt_svid() {
     );
 
     // Check 2b: the issued ID is a pseudonym, and the token carries no trace of
-    // the root identity — through `sub`, `spiffe_id`, or any hire claim.
+    // the root identity -- through `sub`, `spiffe_id`, or any hire claim.
     assert!(
         svid.spiffe_id.starts_with("spiffe://ssh.local/pseudonym/"),
         "consumer must receive a pseudonym, got: {}",
@@ -361,7 +361,7 @@ async fn signed_audience_has_hire_params_stripped() {
     let _ = std::fs::remove_file(&socket_path);
 }
 
-// ── hire-5s4b.82: validation follows the bundle ────────────────────────────
+// -- hire-5s4b.82: validation follows the bundle ----------------------------
 
 /// Start a daemon whose published bundle is a *foreign* signer's, while the
 /// service signs with its own. The discriminator for hire-5s4b.82: today's
@@ -483,7 +483,7 @@ async fn validate_refuses_a_trust_domain_with_no_published_authority() {
     let _ = std::fs::remove_file(&socket_path);
 }
 
-// ── hire-5s4b.96: the oracle is outside this codebase ──────────────────────
+// -- hire-5s4b.96: the oracle is outside this codebase ----------------------
 
 #[tokio::test]
 async fn a_third_party_verifies_a_token_with_only_the_published_bundle() {
@@ -616,7 +616,7 @@ async fn a_generous_max_age_issues_a_token() {
     let _ = std::fs::remove_file(&socket_path);
 }
 
-// The `min` fold over audiences, closed end to end in both argument orders —
+// The `min` fold over audiences, closed end to end in both argument orders --
 // the mirror of presence_requirement_is_taken_from_every_audience.
 #[tokio::test]
 async fn max_age_is_taken_from_every_audience() {
@@ -703,7 +703,7 @@ async fn fetch_claims(
     serde_json::from_slice(&claims_bytes).expect("claims segment is not JSON")
 }
 
-// ── hire-ogiv: one observation, aged, put to two bounds ────────────────────
+// -- hire-ogiv: one observation, aged, put to two bounds --------------------
 
 /// Fetch one SVID for `audience`, returning the RPC result unchanged.
 async fn try_fetch(
@@ -725,16 +725,16 @@ async fn try_fetch(
 // MIGRATED (hire-5s4b.116). Before: `CachedProofAttestor` plus a real 2.2s
 // sleep aged one cached observation past `hire_max_age=1`, and the same
 // observation passed `hire_max_age=3600`. After: a genuinely fresh
-// observation, `hire_max_age=0` — documented at hire-core/src/audience.rs
-// as "accepts nothing" — denies, and `hire_max_age=3600` serves. Identical
+// observation, `hire_max_age=0` -- documented at hire-core/src/audience.rs
+// as "accepts nothing" -- denies, and `hire_max_age=3600` serves. Identical
 // assertions, identical code path, identical status code and message check, 2.2
 // seconds faster.
 //
 // What is lost and where it went: nothing can put a wall-clock-aged observation
 // in front of this gate any more, because `observed_at` is stamped when the
 // signature verifies and a replayed proof is now refused before it reaches here.
-// The arithmetic the sleep was exercising is unit-tested at its boundaries —
-// below, at and above a bound, and with no bound — in
+// The arithmetic the sleep was exercising is unit-tested at its boundaries --
+// below, at and above a bound, and with no bound -- in
 // hire-grpc/src/service.rs.
 #[tokio::test]
 async fn one_observation_fails_a_tight_bound_and_passes_a_loose_one() {
@@ -776,9 +776,9 @@ async fn one_observation_fails_a_tight_bound_and_passes_a_loose_one() {
 //   * "a fresh possession must not refresh a stale touch" is held at
 //     hire-attestors/src/claim.rs by
 //     `a_fresh_signature_does_not_refresh_a_stale_touch`;
-//   * the replay it was reaching for and could not state — under the old code
+//   * the replay it was reaching for and could not state -- under the old code
 //     the replayed proof was *served*, so the test could only check that
-//     serving it did not also extend the window — is now stated directly, by
+//     serving it did not also extend the window -- is now stated directly, by
 //     `a_replayed_proof_is_denied` below.
 //
 // One thing the old comment claimed is simply not reproducible any more and is
@@ -810,7 +810,7 @@ async fn a_replayed_proof_is_denied() {
     let _ = std::fs::remove_file(&socket_path);
 }
 
-// ── hire-yzl8: a token past its exp is past its exp ─────────────────────────
+// -- hire-yzl8: a token past its exp is past its exp -------------------------
 
 /// Mint an ES256 JWT-SVID with a chosen `exp`, signed by `signer`'s published
 /// key.
@@ -823,7 +823,7 @@ async fn a_replayed_proof_is_denied() {
 ///
 /// It is not an oracle for itself: the verifying side is `jsonwebtoken` inside
 /// the daemon, and the far-future control below is what proves a token built
-/// here validates at all — so a rejection can only be about the `exp`.
+/// here validates at all -- so a rejection can only be about the `exp`.
 fn token_expiring_at(signer: &SvidSigner, spiffe_id: &str, exp: u64) -> String {
     let b64 = |b: &[u8]| base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(b);
     let header = serde_json::json!({ "alg": "ES256", "typ": "JWT", "kid": signer.kid() });
@@ -887,7 +887,7 @@ async fn a_token_seconds_past_exp_is_refused() {
     let _ = std::fs::remove_file(&socket_path);
 }
 
-// ── hire-l879: pseudonyms are keyed on the consumer, not the audience ───────
+// -- hire-l879: pseudonyms are keyed on the consumer, not the audience -------
 
 /// The `sub` of an issued token, which is the per-consumer pseudonym.
 async fn sub_for(

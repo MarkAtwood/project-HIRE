@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 /// Probes all known identity sources and returns those that are available.
 ///
-/// Probe order (matches SPEC-HIRE.md §Platform Detection):
+/// Probe order (matches SPEC-HIRE.md section Platform Detection):
 /// 1. Tailscale socket
 /// 2. SSH agent (SSH_AUTH_SOCK)
 /// 3. OIDC cached tokens
@@ -17,10 +17,10 @@ use std::sync::Arc;
 /// 6. FIDO2 hardware keys
 /// 7. GNOME Online Accounts
 /// 8. PIV/smartcard
-/// 9. Unix account (not probed — see below)
+/// 9. Unix account (not probed -- see below)
 ///
 /// Each source is probed with a lightweight availability check before inclusion.
-/// A source that fails to probe is logged and skipped — never fatal.
+/// A source that fails to probe is logged and skipped -- never fatal.
 ///
 /// The Unix account source is not probed: it is available whenever the kernel
 /// is, so there is nothing to check. It goes last, and that position is
@@ -50,7 +50,7 @@ pub async fn probe_sources() -> Vec<Arc<dyn Attestor>> {
 
     // 3. OIDC cached tokens
     let oidc = OidcCachedAttestor::new();
-    // OidcCachedAttestor is always probed — it scans files lazily in enumerate()
+    // OidcCachedAttestor is always probed -- it scans files lazily in enumerate()
     active.push(Arc::new(oidc));
     tracing::debug!("oidc-cached: added (files scanned on demand)");
 
@@ -96,7 +96,7 @@ pub async fn probe_sources() -> Vec<Arc<dyn Attestor>> {
         tracing::debug!("piv: no smartcard found or pkcs11 feature not enabled, skipping");
     }
 
-    // 9. Unix account — always present, so it is pushed rather than probed.
+    // 9. Unix account -- always present, so it is pushed rather than probed.
     #[cfg(unix)]
     {
         active.push(Arc::new(UnixAttestor::new()));

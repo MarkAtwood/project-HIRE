@@ -15,7 +15,7 @@ use crate::consumer::ConsumerIdentity;
 use crate::pseudonym::derive_pseudonymous_id;
 use crate::spiffe_id::SpiffeId;
 
-// ── Error type ────────────────────────────────────────────────────────────────
+// -- Error type ----------------------------------------------------------------
 
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
@@ -30,7 +30,7 @@ pub enum SignerError {
     NotImplemented(String),
 }
 
-// ── JWT claims ────────────────────────────────────────────────────────────────
+// -- JWT claims ----------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
 struct JwtClaims {
@@ -42,7 +42,7 @@ struct JwtClaims {
     hire: serde_json::Value,
 }
 
-// ── SvidSigner ────────────────────────────────────────────────────────────────
+// -- SvidSigner ----------------------------------------------------------------
 
 /// Holds an ephemeral ECDSA P-256 keypair generated at daemon start.
 /// The keypair is never persisted; it is discarded when the process exits.
@@ -109,7 +109,7 @@ impl SvidSigner {
         // `to_encoded_point(false)` and never `to_sec1_bytes`: the latter is the
         // compressing accessor by contract, and a 33-byte point would silently
         // change the published trust bundle. The `try_into` is what makes
-        // "silently" impossible — a point that is not 65 uncompressed bytes
+        // "silently" impossible -- a point that is not 65 uncompressed bytes
         // fails here, at key setup, rather than producing a malformed JWK at
         // publication time.
         let public_key_sec1: [u8; 65] = signing_key
@@ -180,13 +180,13 @@ impl SvidSigner {
         derive_pseudonymous_id(&self.pseudonym_ikm, root, consumer)
     }
 
-    // ── JWT-SVID ──────────────────────────────────────────────────────────────
+    // -- JWT-SVID --------------------------------------------------------------
 
     /// Sign a JWT-SVID (ES256).  TTL: 5 minutes.
     ///
-    /// * `spiffe_id`   – full SPIFFE URI, e.g. `spiffe://example.org/workload`
-    /// * `audiences`   – one or more audience strings
-    /// * `hire_ext` – arbitrary hire claims serialised as JSON
+    /// * `spiffe_id`   - full SPIFFE URI, e.g. `spiffe://example.org/workload`
+    /// * `audiences`   - one or more audience strings
+    /// * `hire_ext` - arbitrary hire claims serialised as JSON
     pub fn sign_jwt_svid(
         &self,
         spiffe_id: &str,
@@ -214,7 +214,7 @@ impl SvidSigner {
         Ok(token)
     }
 
-    // ── X.509-SVID ────────────────────────────────────────────────────────────
+    // -- X.509-SVID ------------------------------------------------------------
 
     // ponytail: stub X.509 signer | upgrade path: x509-cert builder over the p256 SigningKey
     /// Sign an X.509-SVID with URI SAN = `spiffe_id`.  TTL: 1 hour.
@@ -224,10 +224,10 @@ impl SvidSigner {
         Err(SignerError::NotImplemented("x509_svid".into()))
     }
 
-    // ── Raw signing ──────────────────────────────────────────────────────────
+    // -- Raw signing ----------------------------------------------------------
 
     /// Sign arbitrary bytes with the ephemeral key: ECDSA P-256 over SHA-256,
-    /// fixed-width `r || s`, 64 bytes — the encoding ES256 uses. This is the
+    /// fixed-width `r || s`, 64 bytes -- the encoding ES256 uses. This is the
     /// primitive `sign_jwt_svid` signs through, and the one the known-answer
     /// vector in this module's tests pins.
     pub fn sign_raw(&self, message: &[u8]) -> Result<Vec<u8>, SignerError> {
@@ -239,11 +239,11 @@ impl SvidSigner {
     }
 }
 
-/// RFC 7638 §3.2 JWK thumbprint of a P-256 public key.
+/// RFC 7638 section 3.2 JWK thumbprint of a P-256 public key.
 ///
 /// The canonical form is written out literally rather than serialised from a
-/// `serde_json::Value`: RFC 7638 fixes the exact byte sequence — required
-/// members only, lexicographic order, no whitespace — while `serde_json::Map`
+/// `serde_json::Value`: RFC 7638 fixes the exact byte sequence -- required
+/// members only, lexicographic order, no whitespace -- while `serde_json::Map`
 /// preserves insertion order the moment any crate in the graph turns on its
 /// `preserve_order` feature. A thumbprint that changes because of a sibling
 /// crate's feature flag is a key rotation nobody asked for. `x` and `y` are
@@ -253,7 +253,7 @@ fn jwk_thumbprint(x: &str, y: &str) -> String {
     B64URL.encode(Sha256::digest(canonical.as_bytes()).as_slice())
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// -- Tests ---------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -358,7 +358,7 @@ mod tests {
     //   print(b(n.x), b(n.y))"
     const TEST_JWK_X: &str = "_j6QkwPqRBIeNZ7N7GfBZrv66QTZCEbo0LZwkD6UheU";
     const TEST_JWK_Y: &str = "zPgdSrdJAJJHPjtTyBWWZfV_qrVBvX7GE4Uwh9oH9Po";
-    // RFC 7638 §3.2 thumbprint of that JWK: SHA-256 over
+    // RFC 7638 section 3.2 thumbprint of that JWK: SHA-256 over
     // {"crv":"P-256","kty":"EC","x":"...","y":"..."}, base64url unpadded.
     // Regenerate with python3 json+hashlib, sort_keys=True, separators=(',',':').
     const TEST_JWK_KID: &str = "fdGIPrvovavwHlqBF_eSYE7EpaCnB7m3IPAOaQAgdT8";

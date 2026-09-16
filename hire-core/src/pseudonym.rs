@@ -59,7 +59,7 @@ pub(crate) fn derive_pseudonym(
 /// The SPIFFE ID a given consumer sees for a given root identity.
 ///
 /// `ikm` is the daemon's per-process pseudonym key. It is `&[u8; 32]` rather
-/// than `&[u8]` so that `ikm ‖ root_uri` is unambiguous by construction: a
+/// than `&[u8]` so that `ikm || root_uri` is unambiguous by construction: a
 /// variable-length prefix would let two different (key, root) pairs produce the
 /// same material. Binding the root matters because one daemon can hold claims
 /// for more than one root identity, and without it a consumer would receive the
@@ -292,7 +292,7 @@ mod tests {
 
     #[test]
     fn every_path_segment_is_a_legal_spiffe_segment() {
-        // Regression test for using `selector_key()` — which contains `:` — as a
+        // Regression test for using `selector_key()` -- which contains `:` -- as a
         // path component. Catches an illegal URI before it can be signed.
         let id = derive_pseudonymous_id(
             &[7u8; 32],

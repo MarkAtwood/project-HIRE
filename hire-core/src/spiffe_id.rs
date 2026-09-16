@@ -24,8 +24,8 @@ pub enum SpiffeIdError {
     /// The authority named no trust domain this daemon knows.
     ///
     /// Carries the authority as it appeared. It is attacker-supplied in the one
-    /// place a SPIFFE ID is parsed from outside — `ValidateJWTSVID` reads it
-    /// out of an unverified token — so it belongs in a log, never in a reply.
+    /// place a SPIFFE ID is parsed from outside -- `ValidateJWTSVID` reads it
+    /// out of an unverified token -- so it belongs in a log, never in a reply.
     #[error("unknown trust domain: {0}")]
     UnknownTrustDomain(String),
 
@@ -42,7 +42,7 @@ pub enum SpiffeIdError {
 /// hire-5s4b.37, `OrgOidc` displayed as the bare issuer domain and swallowed
 /// every authority that matched no other rule, so `OrgOidc("tailscale")` came
 /// back as `Tailscale` and an IdP at `piv.acme.example` minted SPIFFE IDs that
-/// anyone re-parsing read as a PIV smart-card domain — a different and
+/// anyone re-parsing read as a PIV smart-card domain -- a different and
 /// higher-trust source. The string goes into the SVID subject and into the
 /// trust-bundle key, so the collision was reachable from a cached token's `iss`.
 ///
@@ -50,7 +50,7 @@ pub enum SpiffeIdError {
 /// not parse. That is a constraint rather than a gap: hire has no bundle for a
 /// domain it did not mint, so the alternative is a value that parses and then
 /// fails at the next step. SPIFFE Federation, when it lands, adds a variant
-/// with its own reserved prefix — which is what `#[non_exhaustive]` is for.
+/// with its own reserved prefix -- which is what `#[non_exhaustive]` is for.
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(tag = "type", content = "value", rename_all = "snake_case")]
@@ -235,7 +235,7 @@ mod trust_domain_tests {
 
     /// Every variant, each with a remainder chosen to be another variant's
     /// namespace where one exists. Adding a variant without adding it here
-    /// leaves its string form untested — which is the failure this bead is
+    /// leaves its string form untested -- which is the failure this bead is
     /// about, so the list is written out rather than derived.
     fn every_variant() -> Vec<TrustDomain> {
         vec![

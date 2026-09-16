@@ -1,4 +1,4 @@
-//! hire-nmh — Chrome/Firefox Native Messaging host.
+//! hire-nmh -- Chrome/Firefox Native Messaging host.
 //!
 //! Reads Native Messaging frames (4-byte LE length + JSON) from stdin,
 //! forwards identity requests to hired, writes JSON responses to stdout.
@@ -91,7 +91,7 @@ fn send_response(output: &mut impl Write, resp: &BrowserResponse) -> Result<()> 
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Don't log to stderr — that would corrupt the Native Messaging framing.
+    // Don't log to stderr -- that would corrupt the Native Messaging framing.
     // Log to a file instead if needed.
 
     let mut input = std::io::stdin().lock();

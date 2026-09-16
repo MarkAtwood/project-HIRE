@@ -2,7 +2,7 @@
 //!
 //! Two rules are under test here and they are the same rule seen from both
 //! sides. Naming an identity is the consent to prove it, so a selector reaches
-//! a source that may prompt — and a selector that cannot be proved is
+//! a source that may prompt -- and a selector that cannot be proved is
 //! `NOT_FOUND` rather than a different identity with status OK.
 //!
 //! The substitution is what made this worth a test rather than a comment: the

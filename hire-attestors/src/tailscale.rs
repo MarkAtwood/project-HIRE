@@ -8,7 +8,7 @@
 //! so `prove()` re-reads the status and checks that the identity has not moved
 //! since the candidate was enumerated. hire believes the answer because the
 //! operator installed the daemon and it listens on a socket only their account
-//! reaches — the same basis on which `unix.rs` believes `getuid()`. Refusing to
+//! reaches -- the same basis on which `unix.rs` believes `getuid()`. Refusing to
 //! believe it would not make the identity local; it would make Tailscale
 //! unsupported.
 //!
@@ -128,7 +128,7 @@ fn dechunk(mut body: &[u8]) -> Result<Vec<u8>, AttestorError> {
 /// The SPIFFE path and display name tailscaled's status names, or an error if
 /// it names none.
 ///
-/// One function, because `enumerate` writes the path and `prove` compares it —
+/// One function, because `enumerate` writes the path and `prove` compares it --
 /// the same reason `ssh::spiffe_path` is one function. Two spellings that drift
 /// apart silently stop binding anything.
 fn identity_of(status: &serde_json::Value) -> Result<(String, String), AttestorError> {

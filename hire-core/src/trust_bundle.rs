@@ -60,7 +60,7 @@ impl TrustBundle {
     /// no key is a miss, not a reason to try the others.
     ///
     /// The coordinate lengths are checked here because
-    /// `DecodingKey::from_ec_components` does not check them — it concatenates
+    /// `DecodingKey::from_ec_components` does not check them -- it concatenates
     /// `0x04 || x || y` whatever their length, so a truncated coordinate in a
     /// bundle would yield a silently wrong key rather than an error. Today
     /// every bundle is built by `local` above; a federated bundle will not be.

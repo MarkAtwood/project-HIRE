@@ -2,11 +2,11 @@
 //!
 //! The epic constraint (hire-jl4j): this RPC is reachable by any attested
 //! consumer, so it may prove only what can be proved silently. A candidate
-//! declaring [`ProofCost::Interactive`] must not reach `prove()` at all — not
+//! declaring [`ProofCost::Interactive`] must not reach `prove()` at all -- not
 //! be proved and discarded, not be proved and refused, not reached.
 //!
 //! `TouchCounter` records whether `prove()` ran. The same attestor is started
-//! twice, once declaring each cost, and the two runs differ in nothing else —
+//! twice, once declaring each cost, and the two runs differ in nothing else --
 //! so the silent run is what proves the interactive run was skipped for the
 //! declared cost rather than for being broken.
 

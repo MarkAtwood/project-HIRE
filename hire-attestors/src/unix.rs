@@ -1,4 +1,4 @@
-//! Unix account attestor — the operating system as an identity source.
+//! Unix account attestor -- the operating system as an identity source.
 //!
 //! Every other attestor needs something extra to be running: an agent, a
 //! daemon, a card, a cached token. This one needs only the kernel, so it is the
@@ -178,7 +178,7 @@ impl Attestor for UnixAttestor {
         //   unique across machines, so two boxes issue the same SPIFFE ID for
         //   uid 1000 | upgrade path: a `unix.local` trust domain scoped by
         //   hostname, once hire-core grows the variant and hired seeds a
-        //   bundle for it — until then an unseeded domain would fail the
+        //   bundle for it -- until then an unseeded domain would fail the
         //   daemon's own ValidateJWTSVID.
         Ok(vec![Candidate::new(
             "unix",
@@ -198,7 +198,7 @@ impl Attestor for UnixAttestor {
         // The challenge goes unused, and that is the honest shape rather than an
         // omission: the kernel answers the same question however it is asked, so
         // there is nothing a nonce could bind. Re-reading the uid is the
-        // analogue of ssh's re-list — is this the account we run under *now*?
+        // analogue of ssh's re-list -- is this the account we run under *now*?
         let _ = challenge;
         let uid = current_uid();
         if candidate.path != spiffe_path(uid) {

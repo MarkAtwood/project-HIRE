@@ -51,11 +51,11 @@ impl ConsumerIdentity {
     /// `pseudonym::SCHEME` with it.
     ///
     /// Format per variant:
-    /// - `BinarySha256`  → `"binary_sha256:<hex>"`
-    /// - `MacosBundleId` → `"macos:bundle_id:<id>:team_id:<team>"`
-    /// - `FlatpakApp`    → `"flatpak:app:<id>"`
-    /// - `SnapName`      → `"snap:name:<name>"`
-    /// - `ChromeExtension` → `"chrome_extension:id:<id>"`
+    /// - `BinarySha256`  -> `"binary_sha256:<hex>"`
+    /// - `MacosBundleId` -> `"macos:bundle_id:<id>:team_id:<team>"`
+    /// - `FlatpakApp`    -> `"flatpak:app:<id>"`
+    /// - `SnapName`      -> `"snap:name:<name>"`
+    /// - `ChromeExtension` -> `"chrome_extension:id:<id>"`
     pub fn selector_key(&self) -> String {
         match self {
             ConsumerIdentity::BinarySha256(hash) => {
@@ -84,7 +84,7 @@ mod tests {
     fn binary_sha256_selector_key() {
         let hash = [0xabu8; 32];
         let key = ConsumerIdentity::BinarySha256(hash).selector_key();
-        // 32 bytes of 0xab → 64 lowercase hex chars
+        // 32 bytes of 0xab -> 64 lowercase hex chars
         assert_eq!(
             key,
             "binary_sha256:abababababababababababababababababababababababababababababababab"

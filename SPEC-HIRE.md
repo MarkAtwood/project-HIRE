@@ -5,8 +5,8 @@
 **Last updated:** 2026-09-14
 
 > This document absorbed `DESIGN.md`, which had been a reworded copy of the same
-> content. Sections describing delivery — the Zero Trust stack components, the build
-> order, the coverage map — are context rather than normative requirements, and would
+> content. Sections describing delivery -- the Zero Trust stack components, the build
+> order, the coverage map -- are context rather than normative requirements, and would
 > be dropped from any version submitted to a standards body.
 
 ---
@@ -17,7 +17,7 @@ SPIFFE/SPIRE solves workload identity: a daemon on the host that attests "this p
 
 There is no equivalent for human users.
 
-The question "who is the person operating this workstation, and how much should we believe it?" has no standard local API answer. Every application invents its own answer from whichever signals it happens to have access to — the OS login session, a browser cookie, a Tailscale node, a cached OIDC token — without a common format, provenance model, or consumer authentication discipline.
+The question "who is the person operating this workstation, and how much should we believe it?" has no standard local API answer. Every application invents its own answer from whichever signals it happens to have access to -- the OS login session, a browser cookie, a Tailscale node, a cached OIDC token -- without a common format, provenance model, or consumer authentication discipline.
 
 Where the machine can also establish that a human is physically present -- a FIDO2 touch, a PIV PIN, a Windows Hello gesture -- that is worth carrying and worth dating, and this document specifies how. It is a qualifier on the answer rather than the question: a desktop with no such hardware still has six or seven working answers to "who is this person", and the primary job is to give an application the best of them through one API. A reader who takes presence for the thesis will misread the priority of everything below.
 
@@ -40,7 +40,7 @@ Every SPIFFE component maps directly to something the human-identity problem alr
 
 Nothing in this design requires changes to the SPIFFE spec. The SPIFFE Workload API is implemented as-is; only the attestor plugins are new.
 
-This is a deliberate strategic choice. By presenting the standard SPIFFE Workload API — a CNCF standard with gRPC proto definitions, client libraries in Go/Java/Python/Rust, and production deployment in every major service mesh — `hired` inherits the entire SPIFFE ecosystem. Any SPIFFE-aware consumer works unmodified, and a platform that wants a different answer can implement the same API itself.
+This is a deliberate strategic choice. By presenting the standard SPIFFE Workload API -- a CNCF standard with gRPC proto definitions, client libraries in Go/Java/Python/Rust, and production deployment in every major service mesh -- `hired` inherits the entire SPIFFE ecosystem. Any SPIFFE-aware consumer works unmodified, and a platform that wants a different answer can implement the same API itself.
 
 ---
 
@@ -104,9 +104,9 @@ Stability is for the lifetime of the running daemon, not across restarts: the ps
 
 The derivation is keyed on the consumer application only, never on the JWT `aud`. One consumer therefore gets one pseudonym across every audience it ever requests.
 
-**What that does not promise, stated plainly.** The unlinkability is between *consumers* — the applications on this machine — and not between *audiences*. Two relying parties named in one token, or reached by the same application in separate requests, receive the same `sub` and can correlate the user at that application. A relying party reading "pseudonymous" as "this identifier is specific to me" is reading more than is offered.
+**What that does not promise, stated plainly.** The unlinkability is between *consumers* -- the applications on this machine -- and not between *audiences*. Two relying parties named in one token, or reached by the same application in separate requests, receive the same `sub` and can correlate the user at that application. A relying party reading "pseudonymous" as "this identifier is specific to me" is reading more than is offered.
 
-The alternative is audience-scoped pseudonyms, the OIDC pairwise-subject model, and it was weighed and not taken: a JWT carries one `sub`, so audience scoping means one SVID per audience, and `repeated string audience` is normative in the Workload API. The cost lands on every consumer that legitimately wants one token for two services. Consumer scoping is also the property the desktop threat model is about — several applications on one machine, each seeing a different user — which is the Sign-In-with-Apple analogy above. Tracked as hire-l879.
+The alternative is audience-scoped pseudonyms, the OIDC pairwise-subject model, and it was weighed and not taken: a JWT carries one `sub`, so audience scoping means one SVID per audience, and `repeated string audience` is normative in the Workload API. The cost lands on every consumer that legitimately wants one token for two services. Consumer scoping is also the property the desktop threat model is about -- several applications on one machine, each seeing a different user -- which is the Sign-In-with-Apple analogy above. Tracked as hire-l879.
 
 The pseudonym is derived via HKDF:
 ```
@@ -175,28 +175,28 @@ Each source implements a plugin interface: `enumerate()`, `prove(candidate, chal
 **tailscale**
 - Method: LocalAPI on `/var/run/tailscale/tailscaled.sock`
 - Returns: `UserProfile.LoginName` (email), display name, node name, tailnet
-- Assurance: `iaa2` — verified by Tailscale's IdP (Google/GitHub/OIDC)
+- Assurance: `iaa2` -- verified by Tailscale's IdP (Google/GitHub/OIDC)
 - Presence: none (network identity, not physical presence)
 - Notes: tailscaled must be running; automatic re-attest on `tailscale status` change
 
-**windows-hello** (Windows) — *(not implemented; no attestor exists, and `hired` does not run on Windows)*
+**windows-hello** (Windows) -- *(not implemented; no attestor exists, and `hired` does not run on Windows)*
 - Method: `Windows.Security.Credentials.KeyCredentialManager`
 - Returns: TPM-backed attestation that the user authenticated with Hello (PIN or biometric) and when
 - Assurance: `iaa3`, presence: `hardware`
 - Notes: presence expires on configurable TTL; re-challenge triggers Hello prompt
 
-**secure-enclave** (macOS) — *(not implemented; no attestor exists)*
+**secure-enclave** (macOS) -- *(not implemented; no attestor exists)*
 - Method: `LocalAuthentication` + `CryptoTokenKit`; TouchID or Face ID as platform FIDO2 authenticator
 - Returns: Secure Enclave-backed assertion with timestamp
 - Assurance: `iaa3`, presence: `hardware`
 
-**fido2** (Linux, cross-platform) — *(compiled out by default and `prove()` is unimplemented, so it establishes no presence today; `hire-attestors` declares no default features)*
+**fido2** (Linux, cross-platform) -- *(compiled out by default and `prove()` is unimplemented, so it establishes no presence today; `hire-attestors` declares no default features)*
 - Method: `libfido2`; USB/NFC hardware authenticator
 - Returns: authenticator data including UP bit, timestamp
 - Assurance: `iaa3`, presence: `hardware`
 - Notes: UP bit proves physical touch; UV bit (biometric on the key itself) optionally required
 
-**piv-smartcard** (cross-platform) — *(not implemented; `is_available()` returns false in both `cfg` arms, so it never activates even with `--features pkcs11`)*
+**piv-smartcard** (cross-platform) -- *(not implemented; `is_available()` returns false in both `cfg` arms, so it never activates even with `--features pkcs11`)*
 - Method: PKCS#11 via standard slot; PIV/CAC/YubiKey PIV application
 - Returns: X.509 certificate (may include UPN, email, DOD EDIPI); signed challenge
 - Assurance: `iaa3` if card is hardware-bound and PIN is required; presence depends on PIN mode
@@ -245,20 +245,20 @@ Each source implements a plugin interface: `enumerate()`, `prove(candidate, chal
 - Method: `getuid()` for the account, `getpwuid_r` for its name; no agent, no socket, no network
 - Returns: uid, username
 - Assurance: `iaa1` (self-asserted; the kernel names the account a process runs under, and nothing checks who holds it)
-- Presence: none (an account is not a seat — a uid says a process is running, not that a human is logged in)
+- Presence: none (an account is not a seat -- a uid says a process is running, not that a human is logged in)
 - Notes: available whenever the operating system is, so this is the one source that never degrades away and a Unix box always issues. The consumer gets the answer `getuid()` would have given it, plus provenance, a pseudonym and audience binding; a consumer that reads "holds a credential" as "is authenticated" gets a weaker answer than it did when the daemon declined, and has to read the assurance field instead. It publishes into `ssh.local` rather than a domain of its own, because `hired` seeds no bundle for a domain the table above does not list and an unseeded domain fails `ValidateJWTSVID`.
 
 ### Day-Two Sources
 
-**aws-sso** — active `aws sso login` session in `~/.aws/sso/cache`
-**gcloud** — `gcloud auth print-identity-token` for the active account
-**az** — `az account get-access-token` for the active subscription
-**bitwarden** — unlocked Bitwarden vault's identity item (requires Bitwarden CLI unlock)
-**kerberos** — valid TGT from `klist`; Kerberos principal as identity claim
+**aws-sso** -- active `aws sso login` session in `~/.aws/sso/cache`
+**gcloud** -- `gcloud auth print-identity-token` for the active account
+**az** -- `az account get-access-token` for the active subscription
+**bitwarden** -- unlocked Bitwarden vault's identity item (requires Bitwarden CLI unlock)
+**kerberos** -- valid TGT from `klist`; Kerberos principal as identity claim
 
 ### Explicitly Out of Scope (v1)
 
-Browser cookie jars — per-origin OIDC session extraction from a live browser. High privacy sensitivity; enumeration model is not well-defined. Deferred to v2; bridge via native messaging instead.
+Browser cookie jars -- per-origin OIDC session extraction from a live browser. High privacy sensitivity; enumeration model is not well-defined. Deferred to v2; bridge via native messaging instead.
 
 ---
 
@@ -270,11 +270,11 @@ On each `FetchJWTSVID` or `FetchX509SVID` call, `hired` attests the calling proc
 
 | Platform | Attestation mechanism | Consumer ID |
 |---|---|---|
-| Linux | `SO_PEERCRED` (uid/pid) → `/proc/{pid}/exe` → binary hash → AppArmor/SELinux label → Flatpak/Snap app ID | Binary hash or app ID |
-| macOS | `getpeereid` + `LOCAL_PEEREPID` (uid/pid) → `proc_pidpath` → binary hash | Binary hash |
-| macOS (planned) | `LOCAL_PEERTOKEN` → `audit_token_t` → `SecCodeCopyGuestWithAttributes` → signing identity | Bundle ID + Team ID |
-| Windows | *(not implemented)* — `GetNamedPipeClientProcessId` is the likely starting point, but the consumer identity is undecided and deliberately not specified here. An MSIX publisher CN was specified once and removed: it is shared by every application from one publisher, so all of them would derive the same pseudonym | *(undecided)* |
-| Browser (native messaging) | Chrome/Firefox native messaging — origin-bound; the declaring manifest extension specifies allowed origins | Extension ID + origin |
+| Linux | `SO_PEERCRED` (uid/pid) -> `/proc/{pid}/exe` -> binary hash -> AppArmor/SELinux label -> Flatpak/Snap app ID | Binary hash or app ID |
+| macOS | `getpeereid` + `LOCAL_PEEREPID` (uid/pid) -> `proc_pidpath` -> binary hash | Binary hash |
+| macOS (planned) | `LOCAL_PEERTOKEN` -> `audit_token_t` -> `SecCodeCopyGuestWithAttributes` -> signing identity | Bundle ID + Team ID |
+| Windows | *(not implemented)* -- `GetNamedPipeClientProcessId` is the likely starting point, but the consumer identity is undecided and deliberately not specified here. An MSIX publisher CN was specified once and removed: it is shared by every application from one publisher, so all of them would derive the same pseudonym | *(undecided)* |
+| Browser (native messaging) | Chrome/Firefox native messaging -- origin-bound; the declaring manifest extension specifies allowed origins | Extension ID + origin |
 
 The SPIFFE selector model (`unix:uid`, `unix:path`, `unix:sha256`, `k8s:ns`, ...) is extended with desktop selectors:
 
@@ -318,11 +318,11 @@ Register `hired` as a FedCM identity provider. The browser handles the trust UI;
 
 `hired` implements the SPIFFE Workload API (gRPC, proto definitions from `github.com/spiffe/spiffe/proto/spiffe/workload`):
 
-- `FetchX509SVIDs` — streaming; returns X.509-SVIDs, refreshes before expiry
-- `FetchX509Bundles` — trust bundles for all active trust domains
-- `FetchJWTSVID` — returns JWT-SVIDs for a given audience; refuses when `hire_require_presence` names a level no available source establishes, which today is any level above `none`. `spiffe_id` unset returns every identity provable **without prompting a human**; `spiffe_id` set names one identity to prove, and naming it is the consent to prompt for it
-- `FetchJWTBundles` — JWKS endpoints for all trust domains
-- `ValidateJWTSVID` — validates a JWT-SVID against the trust bundle
+- `FetchX509SVIDs` -- streaming; returns X.509-SVIDs, refreshes before expiry
+- `FetchX509Bundles` -- trust bundles for all active trust domains
+- `FetchJWTSVID` -- returns JWT-SVIDs for a given audience; refuses when `hire_require_presence` names a level no available source establishes, which today is any level above `none`. `spiffe_id` unset returns every identity provable **without prompting a human**; `spiffe_id` set names one identity to prove, and naming it is the consent to prompt for it
+- `FetchJWTBundles` -- JWKS endpoints for all trust domains
+- `ValidateJWTSVID` -- validates a JWT-SVID against the trust bundle
 
 No new wire protocol is invented. Any SPIFFE-aware consumer (envoy, ghostunnel, spiffe-helper, go-spiffe, rust-spiffe, java-spiffe) works against `hired` out of the box.
 
@@ -336,7 +336,7 @@ source=tailscale&identity_assurance=iaa2&presence=none&age=3
 
 **The tag is normative; the order is advisory.** `svids[0]` is a defensible cheap answer for a caller that reads no further, but no caller is ever required to depend on the order to be correct. A caller that needs a particular kind of identity reads the tag and chooses.
 
-The four fields do not reduce to one score, deliberately: a stale hardware touch and a live session have no honest ordering, so the daemon reports both axes and the caller decides. Every name in the tag is one the caller already meets elsewhere — `source` and `identity_assurance` are fields of the `hire` claim block, `presence` takes the same values as `hire_require_presence`, and `age` is in seconds like `hire_max_age`.
+The four fields do not reduce to one score, deliberately: a stale hardware touch and a live session have no honest ordering, so the daemon reports both axes and the caller decides. Every name in the tag is one the caller already meets elsewhere -- `source` and `identity_assurance` are fields of the `hire` claim block, `presence` takes the same values as `hire_require_presence`, and `age` is in seconds like `hire_max_age`.
 
 An unknown or repeated key in a tag is a parse error, never something to skip: the `hire_` audience namespace is closed for the same reason, and a caller gating on the tag must never be told yes by a daemon that carried a field the caller could not see.
 
@@ -363,20 +363,20 @@ A claim is served only if its observation is *strictly younger* than the bound,
 so `hire_max_age=0` accepts nothing; a non-integer, negative or overflowing
 value is `INVALID_ARGUMENT`, never a default. A repeat within one audience takes
 the smallest, and across audiences the daemon takes the smallest any of them
-names — for an age bound the strictest is the least, the mirror of
+names -- for an age bound the strictest is the least, the mirror of
 `hire_require_presence` and its strictest-wins maximum. Because the bound is
 folded with a minimum and an audience naming no bound contributes nothing, no
 audience an attacker appends can relax a bound another audience named.
 
 Independently of any caller bound, `hired` applies a fixed daemon-wide
 presence TTL of 300 seconds to the observation. Past it the claim asserts no
-presence at all, so it stops satisfying `hire_require_presence` — the decay
+presence at all, so it stops satisfying `hire_require_presence` -- the decay
 runs through the ordinary presence gate rather than through a second refusal
 path.
 
 If presence requirements are not met, the RPC returns `UNAUTHENTICATED`.
 
-*(The challenge path is not implemented.)* The design is that `hired` first triggers a presence challenge — a FIDO2 touch prompt, a Hello dialog — and refuses only if it cannot be satisfied within a timeout. No attestor can raise such a prompt today, so a request naming any presence level above `none` is refused outright rather than prompted for. Who owns that prompt is open question 4 below.
+*(The challenge path is not implemented.)* The design is that `hired` first triggers a presence challenge -- a FIDO2 touch prompt, a Hello dialog -- and refuses only if it cannot be satisfied within a timeout. No attestor can raise such a prompt today, so a request naming any presence level above `none` is refused outright rather than prompted for. Who owns that prompt is open question 4 below.
 
 ### CLI (hire)
 
@@ -433,12 +433,12 @@ The `hire` extension is non-standard but ignorable by consumers that do not unde
 | Method | Meaning |
 |---|---|
 | `key_possession` | A key the human controls signed this request's challenge. Possession, and nothing about who held it |
-| `hardware_key_possession` | The same, by a key on a device it cannot be copied off. Reported by the custodian — a smartcard serial in gpg's key listing — not proved to `hired` |
+| `hardware_key_possession` | The same, by a key on a device it cannot be copied off. Reported by the custodian -- a smartcard serial in gpg's key listing -- not proved to `hired` |
 | `idp_session` | An identity provider verified the human, as reported by a local daemon. The login may be months old |
 | `idp_token` | An identity provider verified the human, in a token `hired` checked itself. *(not implemented)* |
 | `user_presence` | A human touched an authenticator. *(not implemented)* |
 
-**Mechanisms, not sources, deliberately.** A consumer gating on `hardware_key_possession` does not need to know that gpg, PIV and FIDO2 exist or which of them is installed on this machine. A `{source}_{mechanism}` vocabulary — the earlier `tailscale_oidc`, `fido2_up` — makes every policy a list of sources, which is the field next door.
+**Mechanisms, not sources, deliberately.** A consumer gating on `hardware_key_possession` does not need to know that gpg, PIV and FIDO2 exist or which of them is installed on this machine. A `{source}_{mechanism}` vocabulary -- the earlier `tailscale_oidc`, `fido2_up` -- makes every policy a list of sources, which is the field next door.
 
 **An empty list is a real answer.** `getuid()` is not an authentication method, so an identity resting on the Unix account alone carries `sources: ["unix"]` and `auth_methods: []`. A consumer whose policy is "`auth_methods` must be non-empty" is therefore meaningful rather than unconditionally satisfied.
 
@@ -463,7 +463,7 @@ The `hire` extension is non-standard but ignorable by consumers that do not unde
 | `none` | No presence assertion |
 | `session` | Screen was unlocked by the user at session start; no recent confirmation |
 | `software` | Software authenticator (TOTP, password re-entry); weak recency |
-| `hardware` | FIDO2 UP, Windows Hello, TouchID/Face ID, PIV PIN — timestamped, hardware-backed |
+| `hardware` | FIDO2 UP, Windows Hello, TouchID/Face ID, PIV PIN -- timestamped, hardware-backed |
 
 ---
 
@@ -488,60 +488,60 @@ for human sources, the identity-assurance and presence vocabularies, per-consume
 pseudonymous SPIFFE IDs, and the audience-extension namespace. It would enter the SPIFFE
 standards process at **Proposed** and climb through Experimental and Incubating, which is
 the point at which the normative half of this document would be worth separating from the
-contextual half — the split [DESIGN.md](DESIGN.md) says is waiting for exactly that.
+contextual half -- the split [DESIGN.md](DESIGN.md) says is waiting for exactly that.
 
 ---
 
 ## Position in the Zero Trust Desktop Stack
 
-`hired` is the **identity leaf** of a Zero Trust desktop framework — roughly 20–25% of the total system. It is the necessary foundation: every other component depends on having a standard local API that answers "who is this human, and how much should we believe it." Several of those components additionally want to know that a human is present, and they get that where the hardware can produce it; none of them can start without the identity. Without `hired`, each enforcement point invents its own identity answer at varying quality.
+`hired` is the **identity leaf** of a Zero Trust desktop framework -- roughly 20-25% of the total system. It is the necessary foundation: every other component depends on having a standard local API that answers "who is this human, and how much should we believe it." Several of those components additionally want to know that a human is present, and they get that where the hardware can produce it; none of them can start without the identity. Without `hired`, each enforcement point invents its own identity answer at varying quality.
 
 The full ZT desktop stack has six distinct layers. `hired` owns one of them.
 
-**These sections describe consumers that do not exist yet, and several of them require hardware presence.** That requirement belongs to the component being described, not to `hired`: an SSH bouncer that wants a FIDO2 touch per connection is making a defensible choice for an SSH bouncer. Read them as designs for what those components would ask of `hired` on a machine with the hardware to answer. Against `hired` as it stands, every policy sample below that names `hardware` presence is unsatisfiable, because no source establishes presence at all — see Status in the README.
+**These sections describe consumers that do not exist yet, and several of them require hardware presence.** That requirement belongs to the component being described, not to `hired`: an SSH bouncer that wants a FIDO2 touch per connection is making a defensible choice for an SSH bouncer. Read them as designs for what those components would ask of `hired` on a machine with the hardware to answer. Against `hired` as it stands, every policy sample below that names `hardware` presence is unsatisfiable, because no source establishes presence at all -- see Status in the README.
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│  External Services                                               │
-│  (SaaS, 3P apps, external email — reached via password manager)  │
-└──────────────────────────────────────────────────────────────────┘
-                              ▲
-┌──────────────────────────────────────────────────────────────────┐
-│  Enforcement Points                                              │
-│                                                                  │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────┐  ┌──────────┐  │
-│  │ SSH Bouncer │  │ IMAP/SMTP GW │  │ API      │  │ ZT sudo  │  │
-│  │             │  │              │  │ Proxy    │  │ PAM      │  │
-│  └──────┬──────┘  └──────┬───────┘  └────┬─────┘  └────┬─────┘  │
-└─────────┼────────────────┼───────────────┼──────────────┼────────┘
-          │                │               │              │
-          └────────────────┴───────────────┴──────────────┘
-                                    │ validate grant / cert
-┌──────────────────────────────────────────────────────────────────┐
-│  ZT Control Plane                                                │
-│  (OPA policy engine + credential minting + audit log)            │
-│                                                                  │
-│  input: hired JWT-SVID + device posture                       │
-│  output: delegation grants, SSH certs, OAuth tokens, mTLS certs  │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │ FetchJWTSVID
-┌──────────────────────────▼───────────────────────────────────────┐
-│  hired  (this spec)                                           │
-│  SPIFFE Workload API — human identity, with provenance           │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │ identity sources
-         ┌─────────────────┼──────────────────────┐
++------------------------------------------------------------------+
+|  External Services                                               |
+|  (SaaS, 3P apps, external email -- reached via password manager) |
++------------------------------------------------------------------+
+                              ^
++------------------------------------------------------------------+
+|  Enforcement Points                                              |
+|                                                                  |
+|  +-------------+  +--------------+  +----------+  +----------+  |
+|  | SSH Bouncer |  | IMAP/SMTP GW |  | API      |  | ZT sudo  |  |
+|  |             |  |              |  | Proxy    |  | PAM      |  |
+|  +------+------+  +------+-------+  +----+-----+  +----+-----+  |
++---------+----------------+---------------+--------------+--------+
+          |                |               |              |
+          +----------------+---------------+--------------+
+                                    | validate grant / cert
++------------------------------------------------------------------+
+|  ZT Control Plane                                                |
+|  (OPA policy engine + credential minting + audit log)            |
+|                                                                  |
+|  input: hired JWT-SVID + device posture                       |
+|  output: delegation grants, SSH certs, OAuth tokens, mTLS certs  |
++--------------------------+---------------------------------------+
+                           | FetchJWTSVID
++--------------------------v---------------------------------------+
+|  hired  (this spec)                                           |
+|  SPIFFE Workload API -- human identity, with provenance          |
++--------------------------+---------------------------------------+
+                           | identity sources
+         +-----------------+----------------------+
     Tailscale         FIDO2 / Hello           SSH agent
     OIDC/IdP          TouchID / PIV           GPG / DID / GOA
-┌──────────────────────────────────────────────────────────────────┐
-│  Device Posture Agent                                            │
-│  (separate input to ZT control plane — not part of hired)     │
-│  disk encryption, patch level, MDM enrollment, binary integrity  │
-└──────────────────────────────────────────────────────────────────┘
-┌──────────────────────────────────────────────────────────────────┐
-│  Desktop Login (PAM / Windows Credential Provider)               │
-│  NIST SP 800-63B r4 + FIDO2-rooted; hired starts at login     │
-└──────────────────────────────────────────────────────────────────┘
++------------------------------------------------------------------+
+|  Device Posture Agent                                            |
+|  (separate input to ZT control plane -- not part of hired)    |
+|  disk encryption, patch level, MDM enrollment, binary integrity  |
++------------------------------------------------------------------+
++------------------------------------------------------------------+
+|  Desktop Login (PAM / Windows Credential Provider)               |
+|  NIST SP 800-63B r4 + FIDO2-rooted; hired starts at login     |
++------------------------------------------------------------------+
 ```
 
 ### Coverage Map
@@ -551,12 +551,12 @@ The full ZT desktop stack has six distinct layers. `hired` owns one of them.
 | Human identity | `hired` | **this spec** |
 | Workload identity | SPIFFE/SPIRE | exists |
 | Policy engine | OPA | exists |
-| Credential minting (SSH CA, delegation broker) | ZT control plane | **gap — to build** |
-| SSH bouncer | SSH enforcement point | **gap — to build; hardest piece** |
-| IMAP/SMTP gateway | Mail enforcement point | **gap — to build** |
+| Credential minting (SSH CA, delegation broker) | ZT control plane | **gap -- to build** |
+| SSH bouncer | SSH enforcement point | **gap -- to build; hardest piece** |
+| IMAP/SMTP gateway | Mail enforcement point | **gap -- to build** |
 | API proxy (HTTP/gRPC) | Envoy + OPA ext-authz | mostly exists; integration needed |
-| ZT sudo | PAM module | **gap — to build** |
-| Device posture | partial (various MDM tools) | **gap — no clean open-source** |
+| ZT sudo | PAM module | **gap -- to build** |
+| Device posture | partial (various MDM tools) | **gap -- no clean open-source** |
 | Password manager (external sites) | Bitwarden (open source) | exists; ZT integration needed |
 | Desktop login (FIDO2-rooted) | PAM config + FIDO2 PAM module | mostly exists; policy config needed |
 
@@ -577,7 +577,7 @@ The policy decision point sitting above `hired`. It consumes the `hired` JWT-SVI
 - Short-lived OAuth2 tokens (for internal applications)
 - Short-lived mTLS client certificates (for service mesh access)
 
-**What exists:** OPA is the policy engine and is production-grade. The gap is the credential-minting glue layer: a small service that accepts `(hired SVID + device posture + resource request)`, evaluates against OPA, and calls the appropriate CA or token issuer. This is the smallest of the missing components — probably 2–3 weeks of Rust work.
+**What exists:** OPA is the policy engine and is production-grade. The gap is the credential-minting glue layer: a small service that accepts `(hired SVID + device posture + resource request)`, evaluates against OPA, and calls the appropriate CA or token issuer. This is the smallest of the missing components -- probably 2-3 weeks of Rust work.
 
 **OPA policy example:**
 ```rego
@@ -599,14 +599,14 @@ allow_ssh_cert {
 The architecture:
 ```
 User workstation
-    ↓ SSH (with ephemeral cert signed by ZT CA)
+    v SSH (with ephemeral cert signed by ZT CA)
 SSH Bouncer (policy enforcement point)
-    ↓ validates cert against ZT trust bundle
-    ↓ calls OPA: is this cert + user + target + time allowed?
-    ↓ enforces command allowlist
-    ↓ records session
+    v validates cert against ZT trust bundle
+    v calls OPA: is this cert + user + target + time allowed?
+    v enforces command allowlist
+    v records session
 Target host
-    ↓ accepts cert from ZT SSH CA only; direct SSH disabled
+    v accepts cert from ZT SSH CA only; direct SSH disabled
 ```
 
 **What the bouncer must do:**
@@ -622,10 +622,10 @@ Target host
 
 **Scope:**
 - Command-level enforcement: `hire delegate ssh --commands "git,make,kubectl"` produces a cert whose extensions encode the allowed command set. The bouncer enforces this, not just logs it.
-- `sudo` escalation on the target can require a new cert with elevated scope — another FIDO2 touch.
-- CI/CD service accounts use SPIFFE workload SVIDs (not `hired`) — separate identity, separate cert path, no FIDO2 required, but also no human-presence claim.
+- `sudo` escalation on the target can require a new cert with elevated scope -- another FIDO2 touch.
+- CI/CD service accounts use SPIFFE workload SVIDs (not `hired`) -- separate identity, separate cert path, no FIDO2 required, but also no human-presence claim.
 
-**Build complexity:** similar to `hired`. A distinct Rust project, 4–6 weeks. The SSH wire protocol is the hardest part; `thrussh` or `russh` crate provides a base.
+**Build complexity:** similar to `hired`. A distinct Rust project, 4-6 weeks. The SSH wire protocol is the hardest part; `thrussh` or `russh` crate provides a base.
 
 ---
 
@@ -635,7 +635,7 @@ Covered in detail in the Delegated Access section. The gateway speaks real IMAP 
 
 **Key constraint:** unmodified open-source IMAP/SMTP clients (`mutt`, `notmuch`, `isync`, `msmtp`) must work against the gateway without modification. The gateway is a transparent protocol proxy from the client's perspective.
 
-**Build complexity:** 3–4 weeks. Dovecot plugin path is the fastest; standalone Rust proxy is cleaner but more work.
+**Build complexity:** 3-4 weeks. Dovecot plugin path is the fastest; standalone Rust proxy is cleaner but more work.
 
 ---
 
@@ -647,11 +647,11 @@ Policy (from OPA, via the ZT control plane) determines which commands require ha
 
 ```
 $ sudo systemctl restart nginx
-[hire] touch your security key... ✓
+[hire] touch your security key... ok
 [sudo] running as root: systemctl restart nginx
 ```
 
-**Build complexity:** 1–2 weeks. The PAM module interface is small; the complexity is in wiring the async FIDO2 challenge into a synchronous PAM flow (blocking call with timeout).
+**Build complexity:** 1-2 weeks. The PAM module interface is small; the complexity is in wiring the async FIDO2 challenge into a synchronous PAM flow (blocking call with timeout).
 
 ---
 
@@ -666,7 +666,7 @@ A separate daemon (not `hired`) that reports device health to the ZT control pla
 
 The ZT control plane combines the device posture report with the `hired` SVID when evaluating policy. A user with `iaa3` identity but an unpatched device may be denied high-privilege credentials.
 
-**What exists:** various MDM agents, Osquery. The gap is a clean open-source device posture agent that speaks a standard format to the ZT control plane and does not require a vendor MDM subscription. This is 2–3 weeks of Rust work but requires per-platform implementation (Linux, macOS, Windows each have different APIs for encryption state, patch level, etc.).
+**What exists:** various MDM agents, Osquery. The gap is a clean open-source device posture agent that speaks a standard format to the ZT control plane and does not require a vendor MDM subscription. This is 2-3 weeks of Rust work but requires per-platform implementation (Linux, macOS, Windows each have different APIs for encryption state, patch level, etc.).
 
 ---
 
@@ -681,7 +681,7 @@ The policy requires that external site authentication uses the company-managed p
 
 Bitwarden is open source (AGPL); the integration is a Bitwarden CLI plugin / SDK extension, not a fork. The `hired` JWT-SVID acts as the Bitwarden vault unlock credential.
 
-**Build complexity:** 1–2 weeks for the Bitwarden CLI plugin. The main work is Bitwarden's SDK API for custom unlock mechanisms.
+**Build complexity:** 1-2 weeks for the Bitwarden CLI plugin. The main work is Bitwarden's SDK API for custom unlock mechanisms.
 
 ---
 
@@ -689,33 +689,33 @@ Bitwarden is open source (AGPL); the integration is a Bitwarden CLI plugin / SDK
 
 `hired` is the right starting point because every other component depends on it. After that, priority by impact and dependency:
 
-1. **`hired`** (this spec) — 5–7 weeks — foundation; nothing else works without it
-2. **SSH Bouncer** — 4–6 weeks — highest security impact; the gap nobody else is filling; the "is this ZT real?" test
-3. **ZT Control Plane (minimal)** — 2–3 weeks — ties `hired` + OPA + SSH CA together; enables delegation grants
-4. **IMAP/SMTP Gateway** — 3–4 weeks — enables the delegated-access use case; unblocks engineers
-5. **ZT sudo PAM module** — 1–2 weeks — high visibility, low effort; engineers notice immediately
-6. **Device Posture Agent** — 2–3 weeks — required for full policy; can stub with static "posture ok" initially
-7. **Bitwarden integration** — 1–2 weeks — completes the external-site policy requirement
+1. **`hired`** (this spec) -- 5-7 weeks -- foundation; nothing else works without it
+2. **SSH Bouncer** -- 4-6 weeks -- highest security impact; the gap nobody else is filling; the "is this ZT real?" test
+3. **ZT Control Plane (minimal)** -- 2-3 weeks -- ties `hired` + OPA + SSH CA together; enables delegation grants
+4. **IMAP/SMTP Gateway** -- 3-4 weeks -- enables the delegated-access use case; unblocks engineers
+5. **ZT sudo PAM module** -- 1-2 weeks -- high visibility, low effort; engineers notice immediately
+6. **Device Posture Agent** -- 2-3 weeks -- required for full policy; can stub with static "posture ok" initially
+7. **Bitwarden integration** -- 1-2 weeks -- completes the external-site policy requirement
 
-Total: roughly 20–28 weeks of focused Rust work (one person). Parallelizable once `hired` and the ZT control plane are stable: SSH bouncer, IMAP gateway, and device posture can be developed concurrently.
+Total: roughly 20-28 weeks of focused Rust work (one person). Parallelizable once `hired` and the ZT control plane are stable: SSH bouncer, IMAP gateway, and device posture can be developed concurrently.
 
 ### What Does Not Need to Be Built
 
-**Policy engine** — OPA exists, is production-grade, and is the right choice. Write Rego policies, do not write a policy engine.
+**Policy engine** -- OPA exists, is production-grade, and is the right choice. Write Rego policies, do not write a policy engine.
 
-**Workload identity** — SPIFFE/SPIRE exists. `hired` federates with it via SPIFFE trust bundles; no replacement needed.
+**Workload identity** -- SPIFFE/SPIRE exists. `hired` federates with it via SPIFFE trust bundles; no replacement needed.
 
-**API proxy** — Envoy with OPA ext-authz covers HTTP/gRPC enforcement. Write the OPA policy, not a new proxy.
+**API proxy** -- Envoy with OPA ext-authz covers HTTP/gRPC enforcement. Write the OPA policy, not a new proxy.
 
-**Desktop login** — FIDO2 PAM modules exist (`pam-u2f`, `pam-fido2`). The work is configuration and policy, not new software. `hired` starts as a user session service launched at login, after FIDO2 PAM has already authenticated the desktop session.
+**Desktop login** -- FIDO2 PAM modules exist (`pam-u2f`, `pam-fido2`). The work is configuration and policy, not new software. `hired` starts as a user session service launched at login, after FIDO2 PAM has already authenticated the desktop session.
 
-**Password manager** — Bitwarden exists and is open source. The work is integration, not replacement.
+**Password manager** -- Bitwarden exists and is open source. The work is integration, not replacement.
 
 ---
 
 ## Delegated Access
 
-The hardest integration case is software that the user has authorized to act on their behalf, but which cannot itself perform FIDO2 authentication — and must not require it for every operation. The canonical examples are IMAP/SMTP clients: `mutt`, `notmuch`, `offlineimap`, `isync`, `fetchmail`, `msmtp`.
+The hardest integration case is software that the user has authorized to act on their behalf, but which cannot itself perform FIDO2 authentication -- and must not require it for every operation. The canonical examples are IMAP/SMTP clients: `mutt`, `notmuch`, `offlineimap`, `isync`, `fetchmail`, `msmtp`.
 
 These tools need real protocol access (RFC-compliant IMAP and SMTP, not a webmail approximation), must send mail as the user's actual identity, and must work unattended in the background. They cannot be required to touch a FIDO2 key on every mail poll.
 
@@ -761,9 +761,9 @@ A delegation grant is a signed, short-lived cryptographic object:
 ```
 
 **Key properties:**
-- The grant is bound to the grantee's **public key** — not a bearer token. Stealing the grant without the corresponding private key does nothing.
+- The grant is bound to the grantee's **public key** -- not a bearer token. Stealing the grant without the corresponding private key does nothing.
 - Scope is explicit: which protocol, which mailbox, which permissions, which folders, whether SMTP send-as is permitted and to what scope.
-- The grant carries the **presence level at issuance** — downstream systems can decide whether `hardware` presence at delegation time is sufficient for the operation.
+- The grant carries the **presence level at issuance** -- downstream systems can decide whether `hardware` presence at delegation time is sufficient for the operation.
 - TTL is hours (for mail access), not months. Re-issuance requires another FIDO2 touch.
 
 ### Software Identity
@@ -780,9 +780,9 @@ The enforcement point is a protocol gateway that speaks real IMAP and SMTP but v
 
 ```
 mutt / isync
-     ↓ real IMAP (TLS)
+     v real IMAP (TLS)
 ZT IMAP/SMTP Gateway
-     ↓ validates: grant + client key + scope + TTL
+     v validates: grant + client key + scope + TTL
 Mail server (Dovecot / Postfix)
 ```
 
@@ -867,9 +867,9 @@ hire delegate revoke dg-abc123  # immediately revoke a grant
 
 ## Platform Support
 
-The consumer API is **identical on every platform** — the SPIFFE Workload API gRPC socket. An application calls `FetchJWTSVID`, gets back a signed identity document. It does not care whether that identity came from Tailscale WhoIs on Linux, Windows Hello on Windows, TouchID on macOS, or a ServiceAccount token in Kubernetes.
+The consumer API is **identical on every platform** -- the SPIFFE Workload API gRPC socket. An application calls `FetchJWTSVID`, gets back a signed identity document. It does not care whether that identity came from Tailscale WhoIs on Linux, Windows Hello on Windows, TouchID on macOS, or a ServiceAccount token in Kubernetes.
 
-The per-platform work is entirely in the attestor plugins — the "how do I discover identity on this OS" layer. The consumer-facing API, the pseudonymity model, the presence levels, the trust domain schema — all platform-independent.
+The per-platform work is entirely in the attestor plugins -- the "how do I discover identity on this OS" layer. The consumer-facing API, the pseudonymity model, the presence levels, the trust domain schema -- all platform-independent.
 
 Implementation: a single Rust binary with `#[cfg]` feature flags per platform, compiling to a static binary on each target. The SPIFFE gRPC socket is the universal interface. Applications write to the socket API once and run everywhere.
 
@@ -885,18 +885,18 @@ meant to federate, not what it currently federates.
 |---|---|---|---|
 | Linux (systemd: Fedora, RHEL, Ubuntu, Debian) | Tailscale, OIDC cached, SSH agent, GPG, `did:key`, Unix account; GNOME Online Accounts *(not implemented)*, KDE Wallet *(not implemented)*, PIV *(not implemented)*, Kerberos *(not implemented)*, `did:web` *(not implemented)* | libfido2 (USB/NFC) behind `--features fido2`; PAM *(not implemented)* | `$XDG_RUNTIME_DIR/hire/workload.sock`, normally `/run/user/{uid}/hire/workload.sock` (user systemd unit) |
 | Linux (non-systemd: Gentoo, Void, Alpine) | Same as above minus GNOME/KDE-specific sources | libfido2 behind `--features fido2` | `$XDG_RUNTIME_DIR/hire/workload.sock`, or `/tmp/hire-{uid}/workload.sock` if that is unset (started via init script or user session) |
-| macOS | OIDC cached, SSH agent, GPG, `did:key`, Unix account; Keychain *(not implemented)*, PIV *(not implemented)*; Tailscale *(not implemented here — the attestor probes `/var/run/tailscale/tailscaled.sock`, which the macOS client does not create)* | TouchID (CryptoTokenKit) *(not implemented)*; libfido2 behind `--features fido2` | `<darwin-user-temp>/hire/workload.sock` (LaunchAgent) |
-| Windows | *(not implemented — `hired` does not run on Windows; the named-pipe transport is the gate.)* Designed: Tailscale, WAM (Web Account Manager), OIDC cached, SSH agent, PIV | Windows Hello, WebAuthn API, libfido2 — all *(not implemented)* | `\\.\pipe\hired\public\api` (user-mode service) *(not implemented)* |
+| macOS | OIDC cached, SSH agent, GPG, `did:key`, Unix account; Keychain *(not implemented)*, PIV *(not implemented)*; Tailscale *(not implemented here -- the attestor probes `/var/run/tailscale/tailscaled.sock`, which the macOS client does not create)* | TouchID (CryptoTokenKit) *(not implemented)*; libfido2 behind `--features fido2` | `<darwin-user-temp>/hire/workload.sock` (LaunchAgent) |
+| Windows | *(not implemented -- `hired` does not run on Windows; the named-pipe transport is the gate.)* Designed: Tailscale, WAM (Web Account Manager), OIDC cached, SSH agent, PIV | Windows Hello, WebAuthn API, libfido2 -- all *(not implemented)* | `\\.\pipe\hired\public\api` (user-mode service) *(not implemented)* |
 | FreeBSD / OpenBSD / NetBSD | SSH agent, GPG, `did:key`, OIDC cached, Unix account; Kerberos *(not implemented)*, PIV *(not implemented)* | libfido2 behind `--features fido2` | `$XDG_RUNTIME_DIR/hire/workload.sock`, or `/tmp/hire-{uid}/workload.sock` if that is unset |
-| Kubernetes | ServiceAccount projected token, node attestation via kubelet — all *(not implemented)* | none (workload identity, not human) | Projected volume socket (SPIFFE CSI driver pattern) *(not implemented)* |
-| Container (Docker / Podman) | Host `hired` socket bind-mounted into container — needs no code, so this works today | Inherited from host | Bind-mount host socket to `/run/hire/workload.sock` |
+| Kubernetes | ServiceAccount projected token, node attestation via kubelet -- all *(not implemented)* | none (workload identity, not human) | Projected volume socket (SPIFFE CSI driver pattern) *(not implemented)* |
+| Container (Docker / Podman) | Host `hired` socket bind-mounted into container -- needs no code, so this works today | Inherited from host | Bind-mount host socket to `/run/hire/workload.sock` |
 | WSL2 | Native Linux `hired` works as on any Linux; `AF_UNIX` interop with a Windows `hired` *(not implemented)* | Host Windows Hello via named-pipe bridge *(not implemented)*; libfido2 native behind `--features fido2` | `/run/user/{uid}/hire/workload.sock` (native); the bridged Windows pipe *(not implemented)* |
 
 ### Platform detection and graceful degradation
 
 `hired` probes available identity sources at startup and activates only those present on the current platform. A minimal deployment (SSH agent only) works everywhere; a rich deployment (Tailscale + FIDO2 + OIDC) uses whatever the platform offers. Missing sources are logged and skipped, never fatal.
 
-The Unix account source is the floor: it needs only a running process, so no Unix platform probes to nothing. The rich case is still partly design — PIV has no working `is_available()`, and FIDO2 is compiled out unless `--features fido2` is set.
+The Unix account source is the floor: it needs only a running process, so no Unix platform probes to nothing. The rich case is still partly design -- PIV has no working `is_available()`, and FIDO2 is compiled out unless `--features fido2` is set.
 
 The startup probe order, as `hire-attestors/src/registry.rs` actually performs
 it. This list is normative and the order is load-bearing for the reason given
@@ -904,14 +904,14 @@ below, so it must match the code rather than describe an intention:
 
 1. Tailscale socket (`/var/run/tailscale/tailscaled.sock`)
 2. SSH agent (`SSH_AUTH_SOCK`)
-3. OIDC token cache (`~/.config/gcloud/`, `~/.azure/`) — registered
+3. OIDC token cache (`~/.config/gcloud/`, `~/.azure/`) -- registered
    unconditionally; it scans lazily in `enumerate()` rather than probing
 4. DID keys (`HIRE_DID_KEYS`)
 5. GPG agent (gpgconf socket)
-6. FIDO2 devices (`libfido2` enumeration) — only with `--features fido2`
-7. GNOME Online Accounts (DBus) — *(not implemented; the `goa` feature is a
+6. FIDO2 devices (`libfido2` enumeration) -- only with `--features fido2`
+7. GNOME Online Accounts (DBus) -- *(not implemented; the `goa` feature is a
    placeholder and is Linux-only besides)*
-8. PIV/smartcard slots (PKCS#11) — *(not implemented; `is_available()` returns
+8. PIV/smartcard slots (PKCS#11) -- *(not implemented; `is_available()` returns
    false in both cfg arms, so it never activates)*
 
 Designed, with no position yet because nothing probes them: platform keychain
@@ -932,12 +932,12 @@ The Unix account source is absent from that list because there is nothing to pro
 | **macOS Keychain / Windows Credential Manager** | Platform-specific identity and credential store | No cross-platform API, no SPIFFE, no pseudonymity. Applications must code to each platform separately. |
 | **pam-u2f / pam-fido2** | FIDO2 at the PAM authentication layer | Answers "is a human present" but not "who are they" beyond Unix UID. No daemon, no API for applications, no identity metadata. |
 | **Hashicorp Vault Agent** | Injects secrets and short-lived certs into workloads | Closer to SPIRE than hired. No human identity and no desktop integration. |
-| **ssh-agent** | Holds keys, signs challenges on demand via socket API | No identity metadata and no multi-source federation: it answers about keys, not about people. But it is the closest UX analog — a daemon that applications talk to over a socket for cryptographic operations. |
-| **1Password / Bitwarden CLI** | Password storage and credential population | Password managers, not identity providers. No SPIFFE and no attestation model — they hold what you know, not what you are. |
+| **ssh-agent** | Holds keys, signs challenges on demand via socket API | No identity metadata and no multi-source federation: it answers about keys, not about people. But it is the closest UX analog -- a daemon that applications talk to over a socket for cryptographic operations. |
+| **1Password / Bitwarden CLI** | Password storage and credential population | Password managers, not identity providers. No SPIFFE and no attestation model -- they hold what you know, not what you are. |
 | **Platform SSO (Windows SSPI, macOS ASAuth)** | OS-level single sign-on for platform-native apps | Platform-locked, and one identity source each. No cross-platform API: SSPI is Windows-only, ASAuth is macOS-only. |
-| **WebAuthn / Passkeys** | FIDO2-based authentication to web services | Browser-only. No local daemon API. No identity federation — each relying party gets an independent credential. |
+| **WebAuthn / Passkeys** | FIDO2-based authentication to web services | Browser-only. No local daemon API. No identity federation -- each relying party gets an independent credential. |
 
-The gap: **nobody built "SPIRE but for the human at the keyboard."** The SPIFFE community scoped the project to workloads as a deployable beachhead, not because they thought workloads were the only use case. The desktop agent is the natural completion — same API, same trust model, different attestation sources.
+The gap: **nobody built "SPIRE but for the human at the keyboard."** The SPIFFE community scoped the project to workloads as a deployable beachhead, not because they thought workloads were the only use case. The desktop agent is the natural completion -- same API, same trust model, different attestation sources.
 
 ---
 
@@ -955,17 +955,17 @@ They are complementary:
 
 Mapping from `hired` `identity_assurance` to `uild` `identity_assurance`:
 ```
-iaa1 → iaa1
-iaa2 → iaa2
-iaa3 → iaa3
+iaa1 -> iaa1
+iaa2 -> iaa2
+iaa3 -> iaa3
 ```
 
 Mapping from `hired` `presence_level` to `uild` `auth_strength`:
 ```
-none     → password
-session  → password
-software → mfa
-hardware → hardware_key | biometric
+none     -> password
+session  -> password
+software -> mfa
+hardware -> hardware_key | biometric
 ```
 
 ---
@@ -978,7 +978,7 @@ kith (Tailnet-native JMAP Chat) is the first application designed to consume `hi
 2. The JWT-SVID's `spiffe_id` becomes the `Identity.user_id`
 3. The `hire.presence` claim enables presence-gated features (e.g., broadcast mentions could require `hardware` presence)
 4. kith's pluggable identity provider trait (`kith-core::IdentityProvider`) implements the hire socket as its canonical backend, with Tailscale WhoIs as a fallback when `hired` is absent
-5. Federation between kith instances across different trust domains uses SPIFFE trust bundle federation — no custom trust negotiation needed
+5. Federation between kith instances across different trust domains uses SPIFFE trust bundle federation -- no custom trust negotiation needed
 
 This also means kith works without Tailscale: on a machine with `hired` and any identity source (OIDC, PIV, Kerberos), kith can authenticate peers via the hire socket over any transport (DNS+mTLS, Tor, local network).
 
@@ -992,14 +992,14 @@ This also means kith works without Tailscale: on a machine with `hired` and any 
 
 3. **Daemon privilege for FIDO2**: USB FIDO2 access on Linux requires either `udev` rules (60-fido.rules) or a privileged helper. The daemon should run as the user and rely on `udev` rules for hardware access. Installation should set up the rules.
 
-4. **Presence challenge UX**: when a consumer requests `hardware` presence and none is available, who owns the prompt? A `hired`-owned tray notification or polkit dialog is cleanest — it avoids requiring every consumer to build its own FIDO2 touch UI.
+4. **Presence challenge UX**: when a consumer requests `hardware` presence and none is available, who owns the prompt? A `hired`-owned tray notification or polkit dialog is cleanest -- it avoids requiring every consumer to build its own FIDO2 touch UI.
 
-5. **Presence decay** — *the arithmetic is implemented; it has never had a live presence claim to decay*: `present_until` is a fixed 300-second TTL measured from the observation the claim rests on, not from the clock at request time, so re-requesting cannot extend it. Nothing a caller does extends the window; soft presence signals do not exist and could not extend a hardware-presence claim if they did. What remains open is whether the TTL should be per-attestor rather than daemon-wide.
+5. **Presence decay** -- *the arithmetic is implemented; it has never had a live presence claim to decay*: `present_until` is a fixed 300-second TTL measured from the observation the claim rests on, not from the clock at request time, so re-requesting cannot extend it. Nothing a caller does extends the window; soft presence signals do not exist and could not extend a hardware-presence claim if they did. What remains open is whether the TTL should be per-attestor rather than daemon-wide.
 
-6. **Cross-machine presence propagation**: if Alice's `kithd` sends a message, can Bob's `kithd` verify that Alice was hardware-present at send time? Options: (a) include a signed HVID attachment in the message envelope; (b) Alice's `hired` issues a per-message presence assertion. The SPIFFE JWT-SVID shape already handles this — the JWT is the signed assertion, the audience is the message ID.
+6. **Cross-machine presence propagation**: if Alice's `kithd` sends a message, can Bob's `kithd` verify that Alice was hardware-present at send time? Options: (a) include a signed HVID attachment in the message envelope; (b) Alice's `hired` issues a per-message presence assertion. The SPIFFE JWT-SVID shape already handles this -- the JWT is the signed assertion, the audience is the message ID.
 
 7. **Trust bundle sync**: the user's `hired` on their laptop and `hired` on their server need to share trust bundles if the server is running SPIFFE-aware services. SPIFFE Federation handles this; the question is what the bootstrap looks like for a personal deployment (probably: tailscale + a well-known path under the user's `did:web`).
 
 8. **SASL mechanism for delegation grants**: the IMAP/SMTP gateway needs a SASL mechanism that accepts (delegation-grant, challenge-signature). Options: (a) a custom `GSSAPI`-shaped mechanism registered with IANA; (b) repurpose `OAUTHBEARER` with a non-bearer signed credential; (c) use the existing `EXTERNAL` mechanism with mTLS where the client cert is derived from the delegation grant. Option (c) requires the gateway to issue a short-lived client cert from the grant, which Dovecot/Postfix can validate via `ssl_cert_verifier`. This is the path of least resistance for compatibility with unmodified IMAP clients.
 
-9. **Delegation grant revocation propagation**: if the user revokes a delegation grant (`hire delegate revoke`), gateways that have cached the grant must be notified. Options: (a) short TTL makes revocation eventual (gaps up to TTL); (b) gateway polls a revocation endpoint; (c) push notification via SPIFFE-authenticated webhook. A 15-minute TTL on delegation grants makes option (a) acceptable for most cases; SSH certs should use ≤10 minute TTL for the same reason.
+9. **Delegation grant revocation propagation**: if the user revokes a delegation grant (`hire delegate revoke`), gateways that have cached the grant must be notified. Options: (a) short TTL makes revocation eventual (gaps up to TTL); (b) gateway polls a revocation endpoint; (c) push notification via SPIFFE-authenticated webhook. A 15-minute TTL on delegation grants makes option (a) acceptable for most cases; SSH certs should use <=10 minute TTL for the same reason.

@@ -9,7 +9,7 @@
 //! The oracle is the `id` utility. It is a separate binary reached through a
 //! separate code path from the `getpwuid_r` call under test, but both
 //! ultimately consult the same NSS or Open Directory backend, so this is a
-//! cross-path check and not an externally sourced vector — the same caveat, for
+//! cross-path check and not an externally sourced vector -- the same caveat, for
 //! the same reason, as `hire-grpc/src/consumer_attest.rs:273-275`. There is
 //! no external vector for what this machine's account is called: the fact is
 //! local by definition, so the best available oracle is a second implementation
@@ -46,8 +46,8 @@ fn oracle_uid() -> u32 {
 ///
 /// Two answers rather than one, and neither is a skip: when `id -un` resolves a
 /// name, that name is what the passwd database holds and the attestor must
-/// report it; when `id -un` fails, no entry maps the uid — a container with no
-/// `/etc/passwd` — and the documented fallback is what the attestor must
+/// report it; when `id -un` fails, no entry maps the uid -- a container with no
+/// `/etc/passwd` -- and the documented fallback is what the attestor must
 /// report. The oracle decides which case this machine is in.
 fn oracle_display_name(uid: u32) -> String {
     let out = Command::new("id")
@@ -181,7 +181,7 @@ async fn a_unix_account_is_iaa1_with_no_presence_because_a_uid_is_not_a_seat() {
         claim.presence(),
         PresenceLevel::None,
         "getuid() says a process runs under an account. It does not say a human \
-         is at a seat, so this must never become Session — that would let \
+         is at a seat, so this must never become Session -- that would let \
          hire_require_presence be satisfied by a cron job. Reading logind or \
          utmp is a different claim and a separate bead."
     );

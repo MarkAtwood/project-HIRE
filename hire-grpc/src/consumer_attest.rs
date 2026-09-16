@@ -59,9 +59,9 @@ pub fn attest_peer(cred: UCred) -> Result<ConsumerIdentity, AttestError> {
     // ponytail: the consumer is its executable's content hash, so an application
     //   update rotates its pseudonym | ceiling: two applications shipping the same
     //   launcher binary are indistinguishable, and PRFAQ.md already concedes the
-    //   update case | upgrade path: a signing identity — Flatpak app id from
+    //   update case | upgrade path: a signing identity -- Flatpak app id from
     //   /proc/{pid}/environ on Linux, LOCAL_PEERTOKEN -> audit_token_t ->
-    //   SecCodeCopyGuestWithAttributes on macOS — each of which yields a richer
+    //   SecCodeCopyGuestWithAttributes on macOS -- each of which yields a richer
     //   ConsumerIdentity variant and changes nothing above this function
     Ok(ConsumerIdentity::BinarySha256(hash_file(
         &exe_path_for_pid(pid)?,
@@ -81,7 +81,7 @@ fn exe_path_for_pid(pid: libc::pid_t) -> Result<PathBuf, AttestError> {
     use std::os::unix::ffi::OsStrExt as _;
 
     // ponytail: proc_pidpath hands back a path string, which we then reopen by
-    //   name | ceiling: strictly weaker than Linux's magic link — the file at that
+    //   name | ceiling: strictly weaker than Linux's magic link -- the file at that
     //   path is substitutable between attesting and hashing | upgrade path:
     //   LOCAL_PEERTOKEN -> audit_token_t -> SecCodeCopyGuestWithAttributes, which
     //   asks the kernel about the running code rather than about a path
@@ -188,7 +188,7 @@ impl AttestedStream {
     ///
     // ponytail: the peer's executable is hashed synchronously on the accept path
     //   | ceiling: one accept blocks a runtime worker for one SHA-256 over the
-    //     consumer's binary — roughly 150ms for a 200 MB Electron main binary, and
+    //     consumer's binary -- roughly 150ms for a 200 MB Electron main binary, and
     //     it serialises with the next accept | upgrade path: tokio_stream's
     //     StreamExt::then plus spawn_blocking in server::serve; `Then` is still a
     //     Stream, so the serve_with_incoming bound still holds and this signature

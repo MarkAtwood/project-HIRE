@@ -25,7 +25,7 @@
 //!
 //! `source` NAMES THE ATTESTOR, not the authentication method. `Claim::source()`
 //! is what the daemon actually has, and `auth_methods` in the claim block is
-//! today the same single-element expression as `sources` — hire-5s4b.129 is the
+//! today the same single-element expression as `sources` -- hire-5s4b.129 is the
 //! bead that separates them. This tag deliberately does not race that: when
 //! `auth_methods` becomes a distinct thing, adding it here is a new key, not a
 //! change to the meaning of this one.
@@ -105,7 +105,7 @@ impl FromStr for SvidHint {
     /// An unknown key is an error rather than something to skip, for the reason
     /// the `hire_` audience namespace is closed: a caller gating on this tag
     /// must never be told yes by a daemon that carried a field the caller could
-    /// not see. A repeated key is an error for the same reason — first-wins and
+    /// not see. A repeated key is an error for the same reason -- first-wins and
     /// last-wins are both defensible, which is what makes silently picking one
     /// indefensible.
     ///

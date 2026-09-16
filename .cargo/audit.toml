@@ -1,12 +1,12 @@
 # cargo-audit configuration.
 #
-# RUSTSEC-2023-0071 — Marvin Attack, timing sidechannel in `rsa` 0.9.x.
+# RUSTSEC-2023-0071 -- Marvin Attack, timing sidechannel in `rsa` 0.9.x.
 # No fixed version exists upstream.
 #
 # Reachability: not reachable in this workspace. `rsa` is linked only because
 # jsonwebtoken 11's `rust_crypto` feature declares `dep:rsa` unconditionally,
 # with no per-algorithm opt-out (see its [features] table). hire never
-# performs an RSA operation — the only algorithm used is ES256, at exactly two
+# performs an RSA operation -- the only algorithm used is ES256, at exactly two
 # call sites:
 #   hire-core/src/signer.rs:155   Header::new(Algorithm::ES256)
 #   hire-grpc/src/service.rs:308  Validation::new(Algorithm::ES256)

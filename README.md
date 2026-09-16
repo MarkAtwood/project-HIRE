@@ -135,17 +135,17 @@ question from whether it substantiates its assurance row.
 
 ## Using it from an application
 
-`hired` is a Workload API endpoint, so a SPIFFE client library finds it the standard way — point `SPIFFE_ENDPOINT_SOCKET` at the socket and use whatever client you already have:
+`hired` is a Workload API endpoint, so a SPIFFE client library finds it the standard way -- point `SPIFFE_ENDPOINT_SOCKET` at the socket and use whatever client you already have:
 
 ```sh
 export SPIFFE_ENDPOINT_SOCKET=unix://$XDG_RUNTIME_DIR/hire/workload.sock
 ```
 
-Nothing about the client is hire-specific. `hire-grpc/tests/stock_client.rs` is the proof: it drives the third-party `spiffe` crate — its own protobuf copy, its own endpoint parsing, its own SVID types and its own JWT verifier — against `hired`, fetches a JWT-SVID, reads the `hint`, fetches the trust bundle and validates the token against it. No code of this workspace takes part in the verification.
+Nothing about the client is hire-specific. `hire-grpc/tests/stock_client.rs` is the proof: it drives the third-party `spiffe` crate -- its own protobuf copy, its own endpoint parsing, its own SVID types and its own JWT verifier -- against `hired`, fetches a JWT-SVID, reads the `hint`, fetches the trust bundle and validates the token against it. No code of this workspace takes part in the verification.
 
 The `hire` claim block is an extra a hire-aware application can read; a client that ignores it sees an ordinary JWT-SVID.
 
-**JWT-SVIDs only so far.** `FetchX509SVID` is unimplemented, so a consumer that wants X.509 — envoy, ghostunnel and spiffe-helper among them — does not yet work against `hired`. That is `persona-apyr`.
+**JWT-SVIDs only so far.** `FetchX509SVID` is unimplemented, so a consumer that wants X.509 -- envoy, ghostunnel and spiffe-helper among them -- does not yet work against `hired`. That is `persona-apyr`.
 
 ## Platform Support
 
@@ -235,10 +235,10 @@ another local user.
 
 Two licenses apply, by file type:
 
-- **Code** — Apache-2.0. All Rust sources, `Cargo.toml` manifests, build scripts,
+- **Code** -- Apache-2.0. All Rust sources, `Cargo.toml` manifests, build scripts,
   protobuf definitions, and service/config files. See [LICENSE](LICENSE).
   Each crate carries `license = "Apache-2.0"` in its manifest.
-- **Documentation** — CC-BY-4.0. `MOTIVATIONS.md`, `SPEC-HIRE.md`, `DESIGN.md`,
+- **Documentation** -- CC-BY-4.0. `MOTIVATIONS.md`, `SPEC-HIRE.md`, `DESIGN.md`,
   `PRFAQ.md`, `UPSTREAM.md`, `CONTRIBUTING.md`, `GOVERNANCE.md`,
   `CODE_OF_CONDUCT.md`, `MAINTAINERS.md`, `SECURITY.md` and this README. See [LICENSE-CC-BY-4.0](LICENSE-CC-BY-4.0). Each carries an SPDX
   identifier on its first line.

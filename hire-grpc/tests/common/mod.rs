@@ -8,7 +8,7 @@
 //! One module rather than a copy per test binary. The SSH key blob and the
 //! signature blob have to agree byte for byte with
 //! `ChallengeSignature::verify_ssh_ed25519`, and three copies of that framing
-//! are three copies free to drift apart — the same failure `spiffe_path()`
+//! are three copies free to drift apart -- the same failure `spiffe_path()`
 //! exists to prevent one layer up.
 
 use base64::Engine as _;
@@ -26,7 +26,7 @@ const SEED: u8 = 7;
 ///
 /// A second key exists because a second *identity* does: tests about returning
 /// several SVIDs cannot be written with one, and a candidate whose path did not
-/// come from a real key would not verify — the verifying constructor binds the
+/// come from a real key would not verify -- the verifying constructor binds the
 /// signature to the key the candidate names.
 pub struct TestKey {
     seed: u8,

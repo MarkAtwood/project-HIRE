@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
-# PRFAQ: hired — SPIFFE Identity for Humans
+# PRFAQ: hired -- SPIFFE Identity for Humans
 
 ---
 
@@ -7,15 +7,15 @@
 
 ### hired Brings Zero Trust Identity to the Developer Desktop
 
-**A user-session daemon that federates human identity sources behind the SPIFFE Workload API — the first FIPS-validated SPIRE-compatible agent.**
+**A user-session daemon that federates human identity sources behind the SPIFFE Workload API -- the first FIPS-validated SPIRE-compatible agent.**
 
-**Seattle, WA — June 13, 2026** — Today marks the release of hired, an open-source identity daemon that answers a question no existing tool addresses: "Who is the human at this keyboard, and how much should we believe it?" hired federates heterogeneous identity sources — Tailscale, FIDO2, PIV smartcards, OIDC, SSH agent, GPG, and DIDs — behind the standard SPIFFE Workload API socket. Applications call `FetchJWTSVID` on a local Unix socket and receive a signed, short-lived identity credential. They never need to know which identity source backed the assertion.
+**Seattle, WA -- June 13, 2026** -- Today marks the release of hired, an open-source identity daemon that answers a question no existing tool addresses: "Who is the human at this keyboard, and how much should we believe it?" hired federates heterogeneous identity sources -- Tailscale, FIDO2, PIV smartcards, OIDC, SSH agent, GPG, and DIDs -- behind the standard SPIFFE Workload API socket. Applications call `FetchJWTSVID` on a local Unix socket and receive a signed, short-lived identity credential. They never need to know which identity source backed the assertion.
 
-Every desktop application that needs to know who the user is currently invents its own answer. A chat app reads Tailscale WhoIs. A terminal reads SSH keys. A browser extension reads a cached OIDC token. Each uses a different format, a different trust model, and a different level of assurance. hired eliminates this fragmentation by presenting all identity sources through SPIFFE — a CNCF standard already deployed in every major service mesh for workload identity. The API is not new; the attestation sources are. Any SPIFFE-aware consumer (Envoy, ghostunnel, spiffe-helper, or any application using go-spiffe, rust-spiffe, java-spiffe) works against hired without modification.
+Every desktop application that needs to know who the user is currently invents its own answer. A chat app reads Tailscale WhoIs. A terminal reads SSH keys. A browser extension reads a cached OIDC token. Each uses a different format, a different trust model, and a different level of assurance. hired eliminates this fragmentation by presenting all identity sources through SPIFFE -- a CNCF standard already deployed in every major service mesh for workload identity. The API is not new; the attestation sources are. Any SPIFFE-aware consumer (Envoy, ghostunnel, spiffe-helper, or any application using go-spiffe, rust-spiffe, java-spiffe) works against hired without modification.
 
-hired introduces three capabilities absent from every existing identity tool: multi-source federation, per-consumer pseudonymity, and -- where the hardware is there to support it -- hardware presence attestation. Each consumer application receives a stable but opaque pseudonym derived from the (app-identity, root-identity) pair — the Apple Sign-In-with-Apple model lifted into SPIFFE ID paths. Consumers cannot correlate identities across applications without explicit user consent. On a machine with a FIDO2 key, a PIV card or Windows Hello, hired additionally attests that a human was present, with a timestamped claim that decays on a fixed TTL -- an upgrade to the answer on the desktops that can produce it, not a precondition for the rest. Identity sources from different trust domains — a work IdP, a personal DID, a Tailscale tailnet — coexist without conflation.
+hired introduces three capabilities absent from every existing identity tool: multi-source federation, per-consumer pseudonymity, and -- where the hardware is there to support it -- hardware presence attestation. Each consumer application receives a stable but opaque pseudonym derived from the (app-identity, root-identity) pair -- the Apple Sign-In-with-Apple model lifted into SPIFFE ID paths. Consumers cannot correlate identities across applications without explicit user consent. On a machine with a FIDO2 key, a PIV card or Windows Hello, hired additionally attests that a human was present, with a timestamped claim that decays on a fixed TTL -- an upgrade to the answer on the desktops that can produce it, not a precondition for the rest. Identity sources from different trust domains -- a work IdP, a personal DID, a Tailscale tailnet -- coexist without conflation.
 
-"SPIFFE solved workload identity. The same API shape solves human identity — same trust model, same consumer libraries, different attestation sources," said Mark Atwood, project lead. "hired is the identity leaf of a Zero Trust desktop stack. Every enforcement point downstream — SSH bouncer, mail gateway, sudo PAM module — depends on a standard local API that answers 'who is this human.' Without it, each one invents its own answer at varying quality."
+"SPIFFE solved workload identity. The same API shape solves human identity -- same trust model, same consumer libraries, different attestation sources," said Mark Atwood, project lead. "hired is the identity leaf of a Zero Trust desktop stack. Every enforcement point downstream -- SSH bouncer, mail gateway, sudo PAM module -- depends on a standard local API that answers 'who is this human.' Without it, each one invents its own answer at varying quality."
 
 The project runs on Linux (systemd and non-systemd), macOS, Windows, FreeBSD, and WSL2, with platform-specific attestor plugins that activate based on what hardware and software are available at startup. The first production consumer is kith, a Tailnet-native JMAP Chat system that uses hired to authenticate peers across trust domains without hardcoding any single identity provider.
 
@@ -37,7 +37,7 @@ No. Tailscale is one identity source among many. hired works with any combinatio
 
 ### What platforms does hired support?
 
-Linux (systemd: Fedora, RHEL, Ubuntu, Debian; non-systemd: Gentoo, Void, Alpine), macOS, Windows, FreeBSD, OpenBSD, NetBSD, WSL2, and containers (via bind-mounted host socket). The consumer API is identical on every platform — applications call `FetchJWTSVID` on the SPIFFE Workload API socket and get back a signed credential regardless of which platform-specific attestor plugins produced it. A single Rust binary compiles per target with `#[cfg]` feature flags.
+Linux (systemd: Fedora, RHEL, Ubuntu, Debian; non-systemd: Gentoo, Void, Alpine), macOS, Windows, FreeBSD, OpenBSD, NetBSD, WSL2, and containers (via bind-mounted host socket). The consumer API is identical on every platform -- applications call `FetchJWTSVID` on the SPIFFE Workload API socket and get back a signed credential regardless of which platform-specific attestor plugins produced it. A single Rust binary compiles per target with `#[cfg]` feature flags.
 
 ### How does per-consumer pseudonymity work?
 
@@ -45,7 +45,7 @@ By default, each consumer application receives a stable opaque pseudonym, not th
 
 ### Can I use hired without the full Zero Trust stack?
 
-Yes. hired is useful standalone. Any application that calls the SPIFFE Workload API gets signed identity credentials. You do not need the SSH bouncer, the ZT control plane, or the IMAP gateway to benefit from hired. Those components consume hired's SVIDs, but hired produces them independently. A developer who installs hired on their laptop immediately gets `hire whoami`, `hire fetch-jwt`, and `hire prove` — useful for scripting, CLI authentication, and local development against SPIFFE-aware services.
+Yes. hired is useful standalone. Any application that calls the SPIFFE Workload API gets signed identity credentials. You do not need the SSH bouncer, the ZT control plane, or the IMAP gateway to benefit from hired. Those components consume hired's SVIDs, but hired produces them independently. A developer who installs hired on their laptop immediately gets `hire whoami`, `hire fetch-jwt`, and `hire prove` -- useful for scripting, CLI authentication, and local development against SPIFFE-aware services.
 
 ---
 
@@ -57,7 +57,7 @@ SPIFFE is a CNCF standard with gRPC proto definitions, client libraries in Go, J
 
 ### Why Rust?
 
-Two reasons. First, hired is a security-critical daemon running in user session scope on every developer workstation — memory safety is non-negotiable. Second, Rust compiles to a single static binary per platform with no runtime dependency, which simplifies distribution across Linux, macOS, Windows, and BSDs.
+Two reasons. First, hired is a security-critical daemon running in user session scope on every developer workstation -- memory safety is non-negotiable. Second, Rust compiles to a single static binary per platform with no runtime dependency, which simplifies distribution across Linux, macOS, Windows, and BSDs.
 
 ### How long will this take to build?
 
@@ -65,15 +65,15 @@ hired itself is 5-7 weeks of focused work. The full ZT desktop stack (SSH bounce
 
 ### What is the hardest technical risk?
 
-Consumer attestation — reliably identifying which application is calling the socket. On macOS, code signing and bundle IDs provide strong attestation. On Windows, EXE signing certificates and MSIX Package Family Names work. On Linux, the story is weaker: `SO_PEERCRED` gives pid/uid, `/proc/{pid}/exe` gives the binary path, and AppArmor/SELinux labels or Flatpak/Snap app IDs provide additional signal, but a native Linux binary without confinement is harder to attest reliably. Weak attestation does not break issuance: a poorly-attested consumer still gets a pseudonym, keyed off its binary hash. But that hash changes on every update, so the user has to re-enroll the app, and that flow needs careful design.
+Consumer attestation -- reliably identifying which application is calling the socket. On macOS, code signing and bundle IDs provide strong attestation. On Windows, EXE signing certificates and MSIX Package Family Names work. On Linux, the story is weaker: `SO_PEERCRED` gives pid/uid, `/proc/{pid}/exe` gives the binary path, and AppArmor/SELinux labels or Flatpak/Snap app IDs provide additional signal, but a native Linux binary without confinement is harder to attest reliably. Weak attestation does not break issuance: a poorly-attested consumer still gets a pseudonym, keyed off its binary hash. But that hash changes on every update, so the user has to re-enroll the app, and that flow needs careful design.
 
 ### Why build hired before the SSH bouncer?
 
-The SSH bouncer needs to validate identity credentials. Without hired, the bouncer would need to implement its own identity federation, presence attestation, and credential issuance — duplicating everything hired does. Building hired first means the SSH bouncer (and every other enforcement point) calls `FetchJWTSVID` on the hire socket and gets a signed credential. The bouncer validates the credential against the SPIFFE trust bundle. The alternative — each enforcement point implementing its own identity stack — is the fragmentation hired exists to eliminate.
+The SSH bouncer needs to validate identity credentials. Without hired, the bouncer would need to implement its own identity federation, presence attestation, and credential issuance -- duplicating everything hired does. Building hired first means the SSH bouncer (and every other enforcement point) calls `FetchJWTSVID` on the hire socket and gets a signed credential. The bouncer validates the credential against the SPIFFE trust bundle. The alternative -- each enforcement point implementing its own identity stack -- is the fragmentation hired exists to eliminate.
 
 ### What if the SPIFFE community rejects the human-identity proposal?
 
-hired ships regardless. The proposal is a two-page discussion document circulated to the SPIFFE TSC, not a gate on implementation. hired implements the existing SPIFFE Workload API without modifications — no spec changes are required. The proposal asks the community to acknowledge human identity as a valid use case and to consider desktop attestation selectors (binary hash, bundle ID, Flatpak app ID) alongside existing workload selectors. If the TSC says no, hired continues as a conformant but unofficial SPIFFE agent. The API compatibility means consumers work either way. Community endorsement would accelerate adoption; its absence does not block shipping.
+hired ships regardless. The proposal is a two-page discussion document circulated to the SPIFFE TSC, not a gate on implementation. hired implements the existing SPIFFE Workload API without modifications -- no spec changes are required. The proposal asks the community to acknowledge human identity as a valid use case and to consider desktop attestation selectors (binary hash, bundle ID, Flatpak app ID) alongside existing workload selectors. If the TSC says no, hired continues as a conformant but unofficial SPIFFE agent. The API compatibility means consumers work either way. Community endorsement would accelerate adoption; its absence does not block shipping.
 
 ---
 

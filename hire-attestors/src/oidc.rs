@@ -1,4 +1,4 @@
-//! OIDC cached-token attestor — enumerates identity candidates from local token
+//! OIDC cached-token attestor -- enumerates identity candidates from local token
 //! caches (gcloud ADC, Azure MSAL) without network I/O.
 //!
 // ponytail: manual JWT payload parsing without signature validation |
@@ -53,7 +53,7 @@ fn now_unix() -> u64 {
 /// Returns true if the token's `exp` claim is in the future.
 ///
 /// Reads the raw token every time. This is an unauthenticated field and is
-/// treated as a hint about staleness only — never as an assurance signal.
+/// treated as a hint about staleness only -- never as an assurance signal.
 fn token_is_unexpired(raw_token: &str) -> bool {
     parse_jwt_payload(raw_token)
         .and_then(|p| p.get("exp").and_then(|v| v.as_u64()))

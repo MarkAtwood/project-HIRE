@@ -32,7 +32,7 @@ pub struct HireClaims {
     pub identity_assurance: IdentityAssurance,
     /// Presence attestation detail.
     pub presence: PresenceInfo,
-    /// How the human authenticated. Empty is a real answer — see [`AuthMethod`].
+    /// How the human authenticated. Empty is a real answer -- see [`AuthMethod`].
     pub auth_methods: Vec<AuthMethod>,
 }
 
@@ -44,7 +44,7 @@ impl HireClaims {
     /// (`"key_possession"`, `"idp_session"`).
     ///
     /// They used to be two adjacent `Vec<String>` parameters, which meant
-    /// transposing them compiled — a hazard that was unobservable only because
+    /// transposing them compiled -- a hazard that was unobservable only because
     /// the call site passed the same expression to both (hire-5s4b.129). They
     /// are different types now, so the compiler refuses the swap.
     pub fn new(

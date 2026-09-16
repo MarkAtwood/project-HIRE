@@ -28,7 +28,7 @@ pub struct AudienceExtensions {
     /// accepts. `None` names no bound.
     ///
     /// `None` is the identity element of the across-audience `min` fold, so an
-    /// audience naming no bound can never relax one another audience named —
+    /// audience naming no bound can never relax one another audience named --
     /// the mirror of [`AudienceExtensions::require_presence`] and its `max`.
     pub max_age: Option<Duration>,
 }
@@ -120,7 +120,7 @@ impl AudienceExtensions {
                     let named = Duration::from_secs(secs);
                     // A repeat tightens and never relaxes, the same within-string
                     // rule as require_presence. For an age bound the strictest is
-                    // the smallest — `min`, not `max`. Backwards here is a silent
+                    // the smallest -- `min`, not `max`. Backwards here is a silent
                     // fail-open.
                     max_age = Some(max_age.map_or(named, |cur: Duration| cur.min(named)));
                 } else if param.starts_with("hire_") {

@@ -97,7 +97,7 @@ def check(pk: bytes, msg: bytes, sig: bytes) -> str:
 def main() -> None:
     rfc = parse_rfc8032(sys.argv[1])
 
-    print("// ── RFC 8032 section 7.1, transcribed from the RFC text ──────────────")
+    print("// -- RFC 8032 section 7.1, transcribed from the RFC text --------------")
     for name, pk, msg, sig in rfc:
         assert check(pk, msg, sig) == "Ok", f"pyca rejects RFC vector {name}"
         print(f"// TEST {name}: pyca/cryptography agrees this signature is valid.")
@@ -109,7 +109,7 @@ def main() -> None:
         print("),")
 
     print()
-    print("// ── pyca/cryptography, signing challenges of our own shape ───────────")
+    print("// -- pyca/cryptography, signing challenges of our own shape -----------")
     challenge = bytes(range(32))
     for label in ("A", "B"):
         sk = Ed25519PrivateKey.from_private_bytes(bytes([ord(label)]) * 32)

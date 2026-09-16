@@ -1,4 +1,4 @@
-//! GPG attestor — enumerates keys whose secret half the operator holds, via
+//! GPG attestor -- enumerates keys whose secret half the operator holds, via
 //! `gpg --list-secret-keys --with-colons`, and proves one by having gpg-agent
 //! sign the daemon's challenge.
 //!
@@ -8,7 +8,7 @@
 //! compiled in: a Yubikey or Nitrokey holding a PGP key is reached through the
 //! gpg already installed, with no new dependency and no new feature flag.
 //!
-//! Proof is possession and nothing else — `Iaa1`, no presence. pinentry may
+//! Proof is possession and nothing else -- `Iaa1`, no presence. pinentry may
 //! well have appeared, and that is deliberately not read as a human being
 //! present: gpg-agent signs silently for a key already cached, so the same key
 //! proves with or without anybody there. What a prompt proves is not knowable
@@ -16,15 +16,15 @@
 //! nothing observed.
 //!
 //! The signature is verified IN-PROCESS, against the key gpg exports. What
-//! hire trusts the gpg binary for is therefore exactly one thing — that
-//! `--export <fingerprint>` returns the key that fingerprint names — and it is
+//! hire trusts the gpg binary for is therefore exactly one thing -- that
+//! `--export <fingerprint>` returns the key that fingerprint names -- and it is
 //! trusted for it once per proof rather than for the verdict itself.
 //!
 // ponytail: the exported public key is trusted, the signature is not | ceiling:
 //   a gpg compromised after the operator enrolled a key can still answer
 //   `--export` with a key of its own, and hire has nothing earlier to compare
 //   it against | upgrade path: hire-08sz, where enrollment records a source's
-//   trust basis — pin the public key there and this last piece goes too.
+//   trust basis -- pin the public key there and this last piece goes too.
 
 use async_trait::async_trait;
 use std::path::Path;
@@ -64,7 +64,7 @@ const LIST_SECRET_KEYS: [&str; 3] = ["--list-secret-keys", "--with-colons", "--f
 /// The gpg to run, from a fixed list rather than from `PATH`.
 ///
 /// `PATH` is inherited from whatever started the daemon, so resolving through
-/// it would let anything earlier on it answer for the operator's keyring — and
+/// it would let anything earlier on it answer for the operator's keyring -- and
 /// this binary is the verifier as well as the signer.
 pub(crate) fn which_gpg() -> Option<std::path::PathBuf> {
     for p in &["/usr/bin/gpg", "/usr/local/bin/gpg", "/usr/bin/gpg2"] {
@@ -97,7 +97,7 @@ fn gnupg_home() -> std::path::PathBuf {
 /// raising its own pinentry, and nothing here should: that dialog belongs to
 /// the operator, and how long they take to answer it is their business, so
 /// there is no timeout on this call. It is reached only from an explicitly
-/// requested proof — `FetchJWTSVID` never gets here, because gpg candidates
+/// requested proof -- `FetchJWTSVID` never gets here, because gpg candidates
 /// declare [`ProofCost::Interactive`].
 ///
 /// The write runs in its own task rather than ahead of the read. gpg's output
@@ -279,7 +279,7 @@ impl Attestor for GpgAttestor {
 
         let output = run(&gpg, &LIST_SECRET_KEYS, &[]).await?;
         if !output.status.success() {
-            // No keys or gpg not configured — not an error.
+            // No keys or gpg not configured -- not an error.
             return Ok(vec![]);
         }
 
@@ -437,7 +437,7 @@ uid:u::::1789437609::7708B404760C34E3AEFB2FC069C86D79AA921DD5::HIRE Current <cur
         // The subkey's `fpr` follows the primary's; pairing it with the
         // primary's uid names a key the uid does not describe.
         assert!(!uri.contains(HELD_SUBKEY_FP), "subkey fingerprint: {uri}");
-        // The 32-bit short key ID of the subkey — collidable, so never an
+        // The 32-bit short key ID of the subkey -- collidable, so never an
         // authorization subject.
         assert!(!uri.contains("f2c940fa"), "short key ID: {uri}");
     }

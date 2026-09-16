@@ -1,4 +1,4 @@
-//! DID attestor — discovers did:key identifiers from environment configuration
+//! DID attestor -- discovers did:key identifiers from environment configuration
 //! and proves one through whichever local agent holds the matching secret.
 //!
 //! No network I/O. Reads HIRE_DID_KEYS (whitespace-separated did:key URIs).
@@ -16,7 +16,7 @@
 //! Second is [`crate::keystore`], the drop directory. That exists because the
 //! first choice is unreachable for the person `did:key` is actually for: a DID
 //! holder's key is a file, `ssh-add` refuses a PKCS#8 PEM ed25519 key outright,
-//! and OpenSSH stores ed25519 private keys only in its own format — so "put it
+//! and OpenSSH stores ed25519 private keys only in its own format -- so "put it
 //! in your agent" was advice nobody could follow. The keystore owns the disk,
 //! the permission rules and the format, so this attestor does not.
 //!
@@ -27,9 +27,9 @@
 //!
 //! HIRE_DID_KEYS STILL NAMES PUBLIC IDENTIFIERS. A DID configured there and
 //! held nowhere local enumerates and does not prove, which is the model
-//! working — some other attestor may yet be able to prove it.
+//! working -- some other attestor may yet be able to prove it.
 //!
-//! One physical key can therefore answer as two identities — `key/<fingerprint>`
+//! One physical key can therefore answer as two identities -- `key/<fingerprint>`
 //! from ssh-agent and `did/<hash>` from here. That is what a naming layer is;
 //! the two SPIFFE IDs are distinct subjects and a consumer authorises whichever
 //! it was given.
@@ -91,7 +91,7 @@ impl Default for DidKeyAttestor {
 /// check: a longer identifier carries out of the buffer and a shorter one
 /// leaves leading zeros where the multicodec prefix has to be, so both fail
 /// without a separate rule. Nothing here accepts a `did:key` for another curve
-/// — the prefix comparison is the one place that decides, and a P-256 key
+/// -- the prefix comparison is the one place that decides, and a P-256 key
 /// (`0x12 0x00`) is refused there rather than verified against the wrong
 /// algorithm later.
 pub(crate) fn ed25519_point(did: &str) -> Option<[u8; 32]> {
@@ -156,7 +156,7 @@ pub(crate) fn did_key_of(point: &[u8; 32]) -> String {
 /// The SPIFFE path a DID maps to.
 ///
 /// One function, because `enumerate` writes it and
-/// [`ChallengeSignature::verify_did_key_ed25519`] checks it — the same reason
+/// [`ChallengeSignature::verify_did_key_ed25519`] checks it -- the same reason
 /// `ssh::spiffe_path` is one function. Two spellings that drift apart silently
 /// stop binding anything.
 pub(crate) fn spiffe_path(did: &str) -> String {
@@ -309,7 +309,7 @@ impl Attestor for DidKeyAttestor {
 mod tests {
     use super::*;
 
-    // ── did:key decoding ──────────────────────────────────────────────────
+    // -- did:key decoding --------------------------------------------------
     //
     // Oracle: an independent base58 implementation in Python, run in both
     // directions over the same bytes, not the decoder below. The first vector
