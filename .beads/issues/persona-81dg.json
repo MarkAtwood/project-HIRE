@@ -1,0 +1,26 @@
+{
+  "id": "persona-81dg",
+  "title": "cloudflare-access: the enrolled user's email from a cached Access token",
+  "description": "THE ONE VIABLE CLOUDFLARE SURFACE, found while surveying overlay networks (see the overlay survey bead). Cloudflare has two and only the second is useful:\n\n- The WARP daemon at /run/cloudflare-warp/warp_service gives device registration, account type and the team name. Organisational, not personal. Not this.\n- Cloudflare ACCESS issues a JWT -- the CF_Authorization token -- that carries an EMAIL CLAIM for the human the IdP authenticated. That is a human identity, and it is verifiable.\n\nWHY IT FITS HIRE ALMOST FOR FREE. The verification machinery is the machinery persona-qbnm.7 is already building for cached OIDC tokens: fetch a JWKS, check a signature, read an identity out of verified claims. Cloudflare publishes a per-team JWKS at https://\u003cteam\u003e.cloudflareaccess.com/cdn-cgi/access/certs, and there is also a get-identity endpoint for the fuller record. A cached token in a known local path, verified against a published key set, is structurally the same source as oidc-cached -- a different issuer and a different cache location, not a different design.\n\nTHE auth_time QUESTION IS ALREADY DECIDED and it lands the same way here: an Access token carries iat, exp, email, sub, aud, iss and identity_nonce, and auth_time is not among them. Under the 2026-09-16 decision that means Iaa2 with NO presence, dated at the instant hire checked the signature. Nothing new to decide.\n\nWHAT NEEDS CHECKING ON A REAL TENANT, because it could not be confirmed from documentation: the exact cache path that `cloudflared access login` and `cloudflared access token` write to (under ~/.cloudflared/), and the precise claim set of a current Access token. Do not write the attestor before reading one.\n\nTHE CAVEAT WORTH RECORDING: an Access token's aud is the AUD tag of one Access APPLICATION, so the token proves \"this human is authorised to app X\" rather than being a general-purpose identity assertion. It still names the human. Decide deliberately whether that scoping matters for the SPIFFE ID and the trust domain, or whether the email alone is what is being attested.\n\nSPECULATIVE UNTIL SOMEBODY HAS A TENANT. Priority reflects that, not the quality of the fit.",
+  "acceptance_criteria": "On a machine with a cached Access token, the attestor enumerates the email the token names and proves it by verifying the signature against the team JWKS.",
+  "status": "open",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T18:49:07.640880786Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T18:49:07.640880786Z",
+  "labels": [
+    "attestor cloudflare oidc"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "persona-81dg",
+      "depends_on_id": "persona-qbnm.7.5",
+      "type": "blocks",
+      "created_at": "2026-09-16T18:49:07.706710898Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    }
+  ]
+}

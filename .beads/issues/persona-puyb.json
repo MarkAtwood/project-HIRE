@@ -1,0 +1,16 @@
+{
+  "id": "persona-puyb",
+  "title": "Overlay networks other than Tailscale do not expose a human identity",
+  "description": "SURVEYED 2026-09-16 so nobody re-investigates. The question was whether other overlay networks carry an identity HIRE could attest, the way tailscale.rs reads LoginName out of tailscaled's LocalAPI. The answer for every one examined is no, and the reason is structural rather than incidental.\n\nTHE DISCRIMINATOR IS NOT \"is it an overlay\". It is whether the local daemon RETAINS the human identity after enrolment and exposes it locally. Most of these authenticate a person once, to enrol a device, and thereafter track only the device. That is a device-posture signal, which belongs in the device-posture box of the Zero Trust stack rather than in a source answering \"who is this human\".\n\nWHAT WAS CHECKED:\n- NetBird. The closest Tailscale analogue and it authenticates users through OIDC, so it looked like the best candidate. Checked client/proto/daemon.proto directly rather than inferring: LocalPeerState carries IP, pubKey, kernelInterface, fqdn, rosenpassEnabled, networks, ipv6, wgPort. StatusResponse adds status, daemonVersion and sessionExpiresAt. No email, no user id, no IdP subject anywhere -- a session that expires without saying whose.\n- ZeroTier. Local JSON API on 127.0.0.1:9993 behind authtoken.secret, which is the right SHAPE. What it returns is the node address: ten hex digits naming a machine. Users exist in ZeroTier Central; the daemon does not know about them.\n- Nebula and plain WireGuard. Certificate- and key-based. No user concept in the local data at all.\n- Cloudflare WARP. Has a Unix socket at /run/cloudflare-warp/warp_service, structurally like tailscaled. What warp-cli surfaces is device registration, account type and the team/organisation name. Organisational identity, not personal. NOTE the separate finding on Cloudflare ACCESS tokens, which is a different surface and IS viable.\n\nWHY NOT BUILD THEM ANYWAY: an attestor for any of these would enumerate candidates that can never prove a human, which is exactly the defect persona-qbnm exists to clean up. Do not add more of it.\n\nWHERE THE WORK ACTUALLY IS, and it is not here: for NetBird in particular the ask is upstream. \"Expose the enrolled user's identity on the local socket\" is a small feature, and nobody has asked because there is no standard consumer for it. That is an argument FOR the SPIFFE work in UPSTREAM.md rather than against these overlays -- a standard gives them something to implement against. Revisit this bead if any of them ships such a field.\n\nTAILSCALE IS THE EXCEPTION, and that is why it is the only iaa2 source that can prove today: Self.UserID indexes a User map carrying LoginName, an identity an IdP verified.",
+  "acceptance_criteria": "A decision record. Close it only by building one of these, or by recording that an overlay has started exposing a human identity locally.",
+  "status": "open",
+  "priority": 3,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T18:49:07.587159035Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T18:49:07.587159035Z",
+  "labels": [
+    "attestor research design"
+  ]
+}

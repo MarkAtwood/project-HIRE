@@ -936,6 +936,7 @@ The Unix account source is absent from that list because there is nothing to pro
 | **1Password / Bitwarden CLI** | Password storage and credential population | Password managers, not identity providers. No SPIFFE and no attestation model -- they hold what you know, not what you are. |
 | **Platform SSO (Windows SSPI, macOS ASAuth)** | OS-level single sign-on for platform-native apps | Platform-locked, and one identity source each. No cross-platform API: SSPI is Windows-only, ASAuth is macOS-only. |
 | **WebAuthn / Passkeys** | FIDO2-based authentication to web services | Browser-only. No local daemon API. No identity federation -- each relying party gets an independent credential. |
+| **AWS Verified Access / IAM Identity Center** | Cloud-side zero trust access to applications, combining workforce identity with device posture | A reverse proxy in front of applications, not an API an application calls. Identity comes from IAM Identity Center and the device signal from a browser extension plus third-party device-trust providers -- so even here the endpoint half is delegated rather than built, and a desktop program that simply wants to know who the user is has nothing to call. |
 
 The gap: **nobody built "SPIRE but for the human at the keyboard."** The SPIFFE community scoped the project to workloads as a deployable beachhead, not because they thought workloads were the only use case. The desktop agent is the natural completion -- same API, same trust model, different attestation sources.
 
