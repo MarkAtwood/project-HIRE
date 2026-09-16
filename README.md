@@ -127,7 +127,7 @@ question from whether it substantiates its assurance row.
 | Windows Hello | iaa3 | hardware | Windows | no -- no attestor exists |
 | Secure Enclave (TouchID) | iaa3 | hardware | macOS | no -- no attestor exists |
 | GNOME Online Accounts | iaa2 | session | Linux (GNOME) | no -- `goa` is a placeholder feature with no D-Bus dependency |
-| OIDC cached | iaa2/iaa1 | session | cross-platform | yes -- always registered, scans gcloud and Azure caches |
+| OIDC cached | iaa2/iaa1 | session only when the token dates the authentication | cross-platform | enumerates, and cannot prove -- no verifier for an issuer signature exists yet |
 | SSH agent | iaa1 | none | cross-platform | yes -- `prove()` is ed25519 only |
 | GPG | iaa1 | none | cross-platform | yes, when a `gpg` binary is present -- `prove()` signs the challenge through gpg-agent and verifies the signature in-process |
 | DID | iaa1/iaa2 | none | cross-platform | `did:key` yes -- from `HIRE_DID_KEYS` or a key dropped in `~/.config/hire/identities`. A dropped key signs in-process and is silently provable; an agent-held one signs through the agent; `did:web` no |

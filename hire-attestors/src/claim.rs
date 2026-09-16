@@ -549,28 +549,77 @@ fn hex(bytes: &[u8]) -> String {
 
 /// An identity token whose signature was checked against the issuer's key.
 ///
+/// TWO CLAIMS, NOT ONE, and separating them is the whole design of this type.
+/// The signature proves an identity provider issued this token for this
+/// subject, which is an ASSURANCE claim. The token's `auth_time` proves a human
+/// authenticated at a particular moment, which is a PRESENCE claim. hire-3tly
+/// holds that those are independent axes, and this is where that stops being
+/// theory: a token carries the first always and the second only sometimes.
+///
+/// WHY IT MATTERS THAT auth_time IS OPTIONAL. `auth_time` is REQUIRED in OIDC
+/// Core only when the client asked for `max_age` or requested it as an
+/// essential claim. hire does not mint these tokens — gcloud and the Azure CLI
+/// do — so whether it is present was decided by somebody else's authorization
+/// request. An earlier contract here said the constructor must REFUSE a token
+/// without it. That closed hire-ogiv's bug and also made the whole OIDC source
+/// dead on any cache that omits the claim, which is the common case. Decided by
+/// Mark 2026-09-16: split the claim instead of refusing it.
+///
+/// So the tier follows [`authenticated_at`](Self::authenticated_at):
+///
+/// * `Some` — `Iaa2` with `PresenceLevel::Session`, dated at the instant the
+///   issuer says the human authenticated.
+/// * `None` — `Iaa2` with `PresenceLevel::None`, dated at
+///   [`verified_at`](Self::verified_at), which dates the CHECK and not the
+///   human. That is the same shape [`DaemonIdentity`] already has and for the
+///   same reason: an identity provider vouched for this person at some past
+///   moment, and nothing here says they are at the keyboard now.
+///
+/// hire-ogiv's bug stays closed because no path claims presence without
+/// `auth_time`. What changed is that the absence costs the presence claim
+/// rather than the whole identity.
+///
+/// STILL A BEARER ARTIFACT. A verified signature proves the issuer issued it,
+/// not that whoever holds it is the subject. hire reads it out of the user's
+/// own cache while running as that user, which is the basis on which it reads
+/// their keyring — worth stating rather than assuming.
+///
 /// There is deliberately no public constructor: nothing in this workspace can
 /// verify a token signature yet, so nothing may claim it did. The unit tests in
 /// this module build one by struct literal, because they are a descendant of
 /// this module — that is the only construction path today.
 ///
 /// ponytail: no verifying constructor until there is a verifier | ceiling: Iaa2
-/// and issuer-anchored trust domains are unreachable, so oidc contributes at the
-/// floor at best | upgrade path: add
+/// and issuer-anchored trust domains are unreachable, so oidc contributes
+/// nothing at all today | upgrade path: add
 /// `pub fn verify(raw: &str, key: &DecodingKey, v: &Validation) -> Result<Self, _>`
-/// here, next to the JWKS cache that makes it possible — and nowhere else.
+/// here, next to the JWKS cache that makes it possible — and nowhere else. It
+/// must also decide what `Evidence::binds_to` does with a cached token, which
+/// today returns `true` unconditionally: the nonce in such a token comes from
+/// somebody else's login flow, not from this request's challenge.
 #[derive(Debug, Clone)]
 pub struct VerifiedToken {
     issuer_domain: String,
+    /// When the daemon checked the signature.
+    ///
+    /// Stamped by the verifying constructor, so it dates an event that really
+    /// happened inside the request that consumes it. It is what an undated
+    /// token is dated by, and it is NOT a statement about a human: read
+    /// [`PlatformIdentity::asked_at`], which says the same thing at greater
+    /// length and means it here too.
+    verified_at: SystemTime,
     /// When the issuer says the human authenticated — never when the daemon
     /// read the token.
     ///
-    /// A verifying constructor must build this from the token's `auth_time`,
-    /// and must refuse to build a `VerifiedToken` at all when `auth_time` is
-    /// absent. Stamping `SystemTime::now()` here would make every cached token
-    /// permanently session-fresh, which is hire-ogiv's bug restored on the
-    /// OIDC path, beside a type that looks like it prevents exactly that.
-    authenticated_at: SystemTime,
+    /// A verifying constructor must build this from the token's `auth_time`
+    /// and must leave it `None` when that claim is absent. Substituting
+    /// `SystemTime::now()`, or the token's `iat`, would make a cached token
+    /// report a fresher authentication than happened — `auth_time <= iat`
+    /// always, so `iat` claims the human authenticated more recently than they
+    /// did, and a token minted from a refresh token an hour ago can stand for
+    /// an authentication from a month ago. That is hire-ogiv's bug restored on
+    /// the OIDC path, beside a type that looks like it prevents exactly that.
+    authenticated_at: Option<SystemTime>,
 }
 
 impl VerifiedToken {
@@ -579,8 +628,16 @@ impl VerifiedToken {
         &self.issuer_domain
     }
 
-    /// When the issuer says the human authenticated.
-    pub fn authenticated_at(&self) -> SystemTime {
+    /// When the daemon checked the signature.
+    pub fn verified_at(&self) -> SystemTime {
+        self.verified_at
+    }
+
+    /// When the issuer says the human authenticated, if it says so at all.
+    ///
+    /// `None` is a real answer and not a gap: the token proved an identity
+    /// without dating an authentication.
+    pub fn authenticated_at(&self) -> Option<SystemTime> {
         self.authenticated_at
     }
 }
@@ -779,12 +836,21 @@ impl Evidence {
                 PresenceLevel::None,
                 s.observed_at(),
             ),
-            // A verified token names a human, and dates the session it opened.
-            Evidence::IdpVerified(t) => (
-                IdentityAssurance::Iaa2,
-                PresenceLevel::Session,
-                t.authenticated_at(),
-            ),
+            // A verified token names a human. Whether it also DATES an
+            // authentication is up to the issuer, and the two halves are
+            // reported separately rather than collapsed -- see `VerifiedToken`.
+            Evidence::IdpVerified(t) => match t.authenticated_at() {
+                Some(authenticated_at) => (
+                    IdentityAssurance::Iaa2,
+                    PresenceLevel::Session,
+                    authenticated_at,
+                ),
+                None => (
+                    IdentityAssurance::Iaa2,
+                    PresenceLevel::None,
+                    t.verified_at(),
+                ),
+            },
             // A touch proves a human was present at a moment, but not which human.
             Evidence::HardwarePresence(h) => (
                 IdentityAssurance::Iaa1,
@@ -1063,7 +1129,18 @@ mod tests {
     fn verified_token(issuer: &str, at: SystemTime) -> Evidence {
         Evidence::IdpVerified(VerifiedToken {
             issuer_domain: issuer.to_owned(),
-            authenticated_at: at,
+            verified_at: at,
+            authenticated_at: Some(at),
+        })
+    }
+
+    /// A token whose issuer did not say when the human authenticated, which is
+    /// the common case: `auth_time` is optional unless the client asked for it.
+    fn undated_token(issuer: &str, verified_at: SystemTime) -> Evidence {
+        Evidence::IdpVerified(VerifiedToken {
+            issuer_domain: issuer.to_owned(),
+            verified_at,
+            authenticated_at: None,
         })
     }
 
@@ -1430,6 +1507,55 @@ mod tests {
         )
         .unwrap();
         assert_eq!(c.auth_methods(), [AuthMethod::IdpSession]);
+    }
+
+    #[test]
+    fn a_token_that_dates_no_authentication_is_iaa2_without_presence() {
+        // The decision of 2026-09-16: the signature is an assurance claim and
+        // auth_time is a presence claim, so a token missing the second keeps
+        // the first. Refusing the whole token instead made the OIDC source dead
+        // on every cache that omits auth_time, which is the common case.
+        let c = Claim::derive(
+            &candidate(),
+            TEST_CHALLENGE,
+            &[undated_token("example.com", epoch_plus(1_000))],
+        )
+        .unwrap();
+        assert_eq!(c.assurance(), IdentityAssurance::Iaa2);
+        assert_eq!(
+            c.presence(),
+            PresenceLevel::None,
+            "a token that dates no authentication must claim no presence"
+        );
+        // Dated by the check, not by a human. hire-ogiv's bug is that a cached
+        // artifact reports a live session; what this reports is that the daemon
+        // looked at it, which is true and is not a presence claim.
+        assert_eq!(c.attested_at(), epoch_plus(1_000));
+        // The identity is still IdP-verified, so it still re-anchors the trust
+        // domain -- the whole reason the token is worth verifying.
+        assert_eq!(
+            c.spiffe_id().trust_domain,
+            hire_core::TrustDomain::OrgOidc("example.com".into())
+        );
+        assert_eq!(c.auth_methods(), [AuthMethod::IdpToken]);
+    }
+
+    #[test]
+    fn an_undated_token_never_raises_presence_for_another_claim() {
+        // The fold takes the strongest presence. An undated token contributes
+        // None, so pairing it with possession leaves presence where it was and
+        // cannot re-date it -- the failure mode the fold comment warns about.
+        let c = Claim::derive(
+            &candidate(),
+            TEST_CHALLENGE,
+            &[
+                possession(),
+                undated_token("example.com", epoch_plus(9_000)),
+            ],
+        )
+        .unwrap();
+        assert_eq!(c.assurance(), IdentityAssurance::Iaa2);
+        assert_eq!(c.presence(), PresenceLevel::None);
     }
 
     #[test]

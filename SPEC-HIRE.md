@@ -207,8 +207,11 @@ Each source implements a plugin interface: `enumerate()`, `prove(candidate, chal
 **oidc-cached**
 - Method: OIDC ID token from OS keychain (stored by prior browser login, `gcloud`, `az`, etc.)
 - Returns: `sub`, `email`, `iss`, `exp` from cached token
-- Assurance: `iaa2` if token is non-expired; `iaa1` if expired (identity only, unverified freshness)
-- Notes: staleness is explicit in the claim; the token is not refreshed on behalf of the consumer
+- Assurance: `iaa2` once the issuer's signature is checked against its JWKS; the signature is what makes it `iaa2` and it is *(not implemented)*, so this source enumerates and cannot prove
+- **Presence depends on `auth_time`, and the two are separate claims.** The signature proves an identity provider issued this token for this subject, which is an assurance claim. The token's `auth_time` proves a human authenticated at a particular moment, which is a presence claim. `auth_time` is REQUIRED in OIDC Core only when the client asked for `max_age` or requested it as an essential claim, and `hired` does not mint these tokens -- so a cache written by `gcloud` or `az` may well omit it
+  - `auth_time` present: `iaa2` with `session` presence, dated at the instant the issuer says the human authenticated
+  - `auth_time` absent: `iaa2` with **no** presence, dated at the instant `hired` checked the signature. That dates the check, not the human
+- Notes: staleness is explicit in the claim; the token is not refreshed on behalf of the consumer. A cached token is a bearer artifact -- a verified signature proves the issuer issued it, not that whoever holds it is the subject
 
 **ssh-agent**
 - Method: SSH agent protocol via `SSH_AUTH_SOCK`; sign a challenge with each key in the agent
