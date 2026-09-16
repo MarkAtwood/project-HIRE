@@ -19,6 +19,77 @@ pub enum AssuranceError {
     UnknownPresence(String),
 }
 
+/// How the human authenticated, as opposed to where the identity came from.
+///
+/// `sources` in the issued token names the attestor; this names the mechanism,
+/// and the two answer different questions. Until hire-5s4b.129 they were the
+/// same single-element expression in every token hired issued, so a consumer
+/// reading `auth_methods` to decide whether a hardware authenticator was
+/// involved read an attestor name instead.
+///
+/// THE VOCABULARY IS MECHANISMS, NOT SOURCES, and that is the point of having
+/// it. A consumer gating on `hardware_key_possession` does not need to know
+/// that gpg, PIV and FIDO2 exist, or which of them is installed here — whereas
+/// a `{source}_{mechanism}` vocabulary makes every policy a list of sources,
+/// which is the field next door. SPEC-HIRE's illustrative `tailscale_oidc` and
+/// `fido2_up` were the source-shaped form and are replaced by this one.
+///
+/// DERIVED FROM EVIDENCE, NEVER DECLARED. `Claim::derive` reads these off the
+/// evidence variants exactly as it reads the tier, so an attestor cannot state
+/// an authentication that did not happen. An empty list is a real answer: the
+/// kernel naming the account a process runs under is not an authentication
+/// method, so a claim resting on it alone carries none (hire-ouo5.7).
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AuthMethod {
+    /// A key the human controls signed this request's challenge.
+    ///
+    /// Possession of a key, and nothing about who held it: an agent key with no
+    /// passphrase signs with no human in the loop.
+    KeyPossession,
+
+    /// The same, by a key on a device it cannot be copied off.
+    ///
+    /// Reported by the custodian rather than proved to hire — a smartcard
+    /// serial in gpg's key listing, say. It is recorded because a relying party
+    /// in a paranoid environment wants to know, and it deliberately does not
+    /// raise the assurance tier: `Iaa3` means hardware-bound *and* IdP-verified,
+    /// and a self-asserted PGP key is not IdP-verified however good the card is.
+    HardwareKeyPossession,
+
+    /// An identity provider verified the human, as reported by a local daemon.
+    ///
+    /// Hearsay with a clock attached to the wrong instant: the daemon is
+    /// believed because it was installed here, and the login it reports may be
+    /// months old. That is why it is a separate method from [`IdpToken`].
+    ///
+    /// [`IdpToken`]: Self::IdpToken
+    IdpSession,
+
+    /// An identity provider verified the human, in a token hire checked itself.
+    ///
+    /// Not reachable yet: no attestor can verify an issuer signature.
+    IdpToken,
+
+    /// A human touched an authenticator.
+    ///
+    /// Not reachable yet: no attestor can drive one.
+    UserPresence,
+}
+
+impl fmt::Display for AuthMethod {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AuthMethod::KeyPossession => f.write_str("key_possession"),
+            AuthMethod::HardwareKeyPossession => f.write_str("hardware_key_possession"),
+            AuthMethod::IdpSession => f.write_str("idp_session"),
+            AuthMethod::IdpToken => f.write_str("idp_token"),
+            AuthMethod::UserPresence => f.write_str("user_presence"),
+        }
+    }
+}
+
 /// Identity assurance level, roughly aligned with NIST SP 800-63 AAL tiers.
 ///
 /// Ordered `Iaa1 < Iaa2 < Iaa3`.

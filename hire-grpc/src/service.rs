@@ -169,7 +169,7 @@ impl WorkloadApiService {
                 attested_at,
                 present_until,
             },
-            vec![claim.source().to_owned()],
+            claim.auth_methods().to_vec(),
         ))
         .expect("HireClaims serialises as JSON");
 

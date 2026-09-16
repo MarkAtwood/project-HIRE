@@ -13,7 +13,7 @@
 use std::time::{Duration, SystemTime};
 
 use ed25519_dalek::{Signature, VerifyingKey};
-use hire_core::{IdentityAssurance, PresenceLevel, SpiffeId, TrustDomain};
+use hire_core::{AuthMethod, IdentityAssurance, PresenceLevel, SpiffeId, TrustDomain};
 
 use crate::ssh::{read_string, spiffe_path, SSH_ED25519};
 use crate::{AttestorError, SignedAssertion};
@@ -193,7 +193,7 @@ impl Candidate {
 /// print `+` for a local key — and hire recorded it. A relying party in a
 /// paranoid environment wants that recorded; a relying party that reads it as
 /// proof of a certified authenticator is reading more than is offered, which is
-/// why whatever is recorded from it must be documented in the same terms.
+/// why [`AuthMethod::HardwareKeyPossession`] is documented in the same terms.
 ///
 /// TRIPWIRE: this must never reach [`Evidence::tier`]. `Iaa3` is hardware-bound
 /// *and* IdP-verified, and a self-asserted key on a very good card is still not
@@ -806,6 +806,29 @@ impl Evidence {
         }
     }
 
+    /// How the human authenticated, if they did.
+    ///
+    /// Private and exhaustive, for the same reasons as [`Evidence::tier`]: no
+    /// caller can supply the mapping, and adding a variant without deciding its
+    /// answer is a compile error.
+    ///
+    /// `None` is a real answer and not a gap. The kernel naming the account a
+    /// process runs under is not an authentication: nobody proved anything to
+    /// anyone, and a claim resting on it alone must say so rather than name a
+    /// method (hire-ouo5.7).
+    fn auth_method(&self) -> Option<AuthMethod> {
+        match self {
+            Evidence::Possession(s) => Some(match s.custody() {
+                KeyCustody::Software => AuthMethod::KeyPossession,
+                KeyCustody::HardwareToken => AuthMethod::HardwareKeyPossession,
+            }),
+            Evidence::IdpVerified(_) => Some(AuthMethod::IdpToken),
+            Evidence::HardwarePresence(_) => Some(AuthMethod::UserPresence),
+            Evidence::DaemonAssertion(_) => Some(AuthMethod::IdpSession),
+            Evidence::PlatformAssertion(_) => None,
+        }
+    }
+
     /// Whether this evidence answers the challenge that opened this request.
     ///
     /// Exhaustive, so a new variant forces the question rather than defaulting
@@ -850,6 +873,7 @@ pub struct Claim {
     source: String,
     assurance: IdentityAssurance,
     presence: PresenceLevel,
+    auth_methods: Vec<AuthMethod>,
     spiffe_id: SpiffeId,
     display_name: String,
     attested_at: SystemTime,
@@ -920,10 +944,21 @@ impl Claim {
         // verified token is present | ceiling: a verified subject cannot yet
         // correct a self-asserted path | upgrade path: carry `sub` on
         // `VerifiedToken` and prefer it here once a verifying constructor exists.
+        // Read off the same filtered evidence as the tier, so an attestor can no
+        // more state an authentication than it can state a level. Sorted and
+        // deduplicated rather than kept in evidence order: the list is a set a
+        // consumer tests membership in, and two daemons seeing the same
+        // evidence should emit the same bytes.
+        let mut auth_methods: Vec<AuthMethod> =
+            evidence.iter().filter_map(|e| e.auth_method()).collect();
+        auth_methods.sort_unstable();
+        auth_methods.dedup();
+
         Some(Claim {
             source: candidate.source.clone(),
             assurance,
             presence,
+            auth_methods,
             spiffe_id: SpiffeId::new(trust_domain, candidate.path.clone()),
             display_name: candidate.display_name.clone(),
             attested_at,
@@ -943,6 +978,15 @@ impl Claim {
     /// Derived presence level.
     pub fn presence(&self) -> PresenceLevel {
         self.presence
+    }
+
+    /// How the human authenticated, derived from the evidence.
+    ///
+    /// Empty is a real answer: an identity resting on the operating system's
+    /// word about which account a process runs under involved no authentication
+    /// at all, and says so rather than naming the attestor (hire-ouo5.7).
+    pub fn auth_methods(&self) -> &[AuthMethod] {
+        &self.auth_methods
     }
 
     /// The SPIFFE ID this claim corresponds to.
@@ -1302,6 +1346,90 @@ mod tests {
             &[daemon_assertion_for("user/someone-else", epoch_plus(1_000))],
         )
         .is_none());
+    }
+
+    #[test]
+    fn the_kernel_naming_an_account_is_not_an_authentication_method() {
+        // hire-ouo5.7: a consumer whose policy is "auth_methods must be
+        // non-empty" -- the cheapest plausible reading of the field name --
+        // used to pass unconditionally on any Unix box, because the field was
+        // populated from the attestor's name.
+        let c = Claim::derive(
+            &candidate(),
+            TEST_CHALLENGE,
+            &[platform_assertion(epoch_plus(1_000))],
+        )
+        .unwrap();
+        assert_eq!(c.source(), "test", "the source is still recorded");
+        assert!(
+            c.auth_methods().is_empty(),
+            "getuid() is not an authentication method"
+        );
+    }
+
+    #[test]
+    fn auth_methods_are_read_off_the_evidence() {
+        let c = Claim::derive(&candidate(), TEST_CHALLENGE, &[possession()]).unwrap();
+        assert_eq!(c.auth_methods(), [AuthMethod::KeyPossession]);
+
+        let c = Claim::derive(
+            &candidate(),
+            TEST_CHALLENGE,
+            &[daemon_assertion(epoch_plus(1_000))],
+        )
+        .unwrap();
+        assert_eq!(c.auth_methods(), [AuthMethod::IdpSession]);
+
+        // Several kinds of evidence for one candidate yield several methods,
+        // sorted and deduplicated so the list is a set rather than a history.
+        let c = Claim::derive(
+            &candidate(),
+            TEST_CHALLENGE,
+            &[
+                possession(),
+                daemon_assertion(epoch_plus(1_000)),
+                possession(),
+                platform_assertion(epoch_plus(1_000)),
+            ],
+        )
+        .unwrap();
+        assert_eq!(
+            c.auth_methods(),
+            [AuthMethod::KeyPossession, AuthMethod::IdpSession]
+        );
+    }
+
+    #[test]
+    fn a_hardware_held_key_is_a_different_method_and_not_a_higher_tier() {
+        let hardware = Evidence::Possession(ChallengeSignature {
+            assertion: SignedAssertion::new(b"sig".to_vec(), "application/test"),
+            challenge: TEST_CHALLENGE.to_vec(),
+            observed_at: SystemTime::now(),
+            custody: KeyCustody::HardwareToken,
+        });
+        let c = Claim::derive(&candidate(), TEST_CHALLENGE, &[hardware]).unwrap();
+        assert_eq!(c.auth_methods(), [AuthMethod::HardwareKeyPossession]);
+        // The tripwire on KeyCustody, asserted rather than only documented:
+        // iaa3 is hardware-bound AND IdP-verified, and a key on a very good
+        // card is still self-asserted.
+        assert_eq!(c.assurance(), IdentityAssurance::Iaa1);
+        assert_eq!(c.presence(), PresenceLevel::None);
+    }
+
+    #[test]
+    fn evidence_that_does_not_bind_contributes_no_auth_method() {
+        // The filter runs before the fold, so a replayed signature cannot add a
+        // method any more than it can add a tier.
+        let c = Claim::derive(
+            &candidate(),
+            TEST_CHALLENGE,
+            &[
+                daemon_assertion(epoch_plus(1_000)),
+                possession_over(b"some other challenge"),
+            ],
+        )
+        .unwrap();
+        assert_eq!(c.auth_methods(), [AuthMethod::IdpSession]);
     }
 
     #[test]

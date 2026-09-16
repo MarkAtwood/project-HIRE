@@ -227,3 +227,21 @@ async fn the_order_follows_the_proof_and_not_the_declaration() {
         "a tier nobody proved must not order the list"
     );
 }
+
+#[tokio::test]
+async fn sources_and_auth_methods_answer_different_questions() {
+    // hire-5s4b.129: both fields used to carry the identical single-element
+    // expression in every token hired issued, so a consumer reading
+    // auth_methods to decide whether a hardware authenticator was involved read
+    // an attestor name instead.
+    let svids = fetch_all(vec![source("a-source-name", 4)]).await;
+    let claims = hire_claims(&svids[0].svid);
+
+    assert_eq!(claims["sources"], serde_json::json!(["a-source-name"]));
+    assert_eq!(
+        claims["auth_methods"],
+        serde_json::json!(["key_possession"]),
+        "the mechanism, not the attestor"
+    );
+    assert_ne!(claims["sources"], claims["auth_methods"]);
+}

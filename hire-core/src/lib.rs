@@ -10,7 +10,7 @@ pub mod signer;
 pub mod spiffe_id;
 pub mod trust_bundle;
 
-pub use assurance::{AssuranceError, IdentityAssurance, PresenceLevel};
+pub use assurance::{AssuranceError, AuthMethod, IdentityAssurance, PresenceLevel};
 pub use audience::{AudienceExtensions, AudienceParseError};
 pub use consumer::ConsumerIdentity;
 pub use hint::{HintParseError, SvidHint};

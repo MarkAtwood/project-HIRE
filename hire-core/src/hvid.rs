@@ -1,6 +1,6 @@
 //! JWT-SVID `hire` extension claims.
 
-use crate::IdentityAssurance;
+use crate::{AuthMethod, IdentityAssurance};
 use serde::{Deserialize, Serialize};
 
 /// Presence attestation info embedded in a JWT-SVID.
@@ -32,23 +32,27 @@ pub struct HireClaims {
     pub identity_assurance: IdentityAssurance,
     /// Presence attestation detail.
     pub presence: PresenceInfo,
-    /// Authentication methods used (e.g. `["fido2", "totp"]`).
-    pub auth_methods: Vec<String>,
+    /// How the human authenticated. Empty is a real answer — see [`AuthMethod`].
+    pub auth_methods: Vec<AuthMethod>,
 }
 
 impl HireClaims {
     /// Builds the `hire` extension object.
     ///
-    /// `sources` and `auth_methods` are both `Vec<String>` and sit next to each
-    /// other in meaning, so transposing them compiles. `sources` names where the
-    /// identity came from (`"tailscale"`, `"piv-smartcard"`); `auth_methods`
-    /// names how the user authenticated (`"tailscale_oidc"`, `"fido2_up"`).
+    /// `sources` names where the identity came from (`"tailscale"`, `"gpg"`);
+    /// `auth_methods` names how the human authenticated
+    /// (`"key_possession"`, `"idp_session"`).
+    ///
+    /// They used to be two adjacent `Vec<String>` parameters, which meant
+    /// transposing them compiled — a hazard that was unobservable only because
+    /// the call site passed the same expression to both (hire-5s4b.129). They
+    /// are different types now, so the compiler refuses the swap.
     pub fn new(
         root_trust_domain: String,
         sources: Vec<String>,
         identity_assurance: IdentityAssurance,
         presence: PresenceInfo,
-        auth_methods: Vec<String>,
+        auth_methods: Vec<AuthMethod>,
     ) -> Self {
         Self {
             root_trust_domain,
@@ -82,7 +86,7 @@ mod tests {
                 attested_at: 1_745_999_640,
                 present_until: 1_745_999_940,
             },
-            vec!["tailscale_oidc".into(), "fido2_up".into()],
+            vec![AuthMethod::IdpSession, AuthMethod::HardwareKeyPossession],
         ))
         .unwrap();
 
@@ -108,7 +112,7 @@ mod tests {
         assert_eq!(obj["identity_assurance"], serde_json::json!("iaa3"));
         assert_eq!(
             obj["auth_methods"],
-            serde_json::json!(["tailscale_oidc", "fido2_up"])
+            serde_json::json!(["idp_session", "hardware_key_possession"])
         );
 
         let presence = obj["presence"]
@@ -142,7 +146,7 @@ mod tests {
                 attested_at: 1_750_291_200,
                 present_until: 1_750_291_500,
             },
-            auth_methods: vec!["fido2".into()],
+            auth_methods: vec![AuthMethod::UserPresence],
         };
 
         let json = serde_json::to_string(&claims).unwrap();
