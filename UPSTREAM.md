@@ -6,10 +6,9 @@ smallest thing first, and the smallest thing is not a donation -- it is attendan
 donation is worth preparing for and worth being patient about, because the one asset that
 makes the case is adoption, and HIRE has none yet.
 
-This document records what SPIFFE actually requires, what HIRE would be asking for, what
-we control today, and the sequence. It replaces the older sketch in SPEC-HIRE.md, which
-was wrong in two ways: it said "before code" when the code now exists, and it addressed
-the "SPIFFE TSC", which is not the body that decides.
+This document holds the plan. **It states no engineering status of its own:** what works
+is the Status table in [README.md](README.md), what is queued is the bead tracker, and
+this document points at both rather than repeating them.
 
 ---
 
@@ -87,36 +86,17 @@ easier document to say yes to.
 
 ---
 
-## What we control, and should fix regardless
+## What we control
 
-These are table stakes for any CNCF-adjacent project. All of them are now done, as of
-2026-09-16, and none of them was expensive.
+The CNCF hygiene items are done: [CONTRIBUTING.md](CONTRIBUTING.md),
+[GOVERNANCE.md](GOVERNANCE.md), [MAINTAINERS.md](MAINTAINERS.md),
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [SECURITY.md](SECURITY.md) are in the tree,
+every commit carries a DCO sign-off under a single author identity, and both license
+texts are in every commit from the root.
 
-| Item | State | Note |
-|---|---|---|
-| **DCO sign-off** | **done** | Every commit carries `Signed-off-by`, added by rewriting the history while there was one author. |
-| `CODE_OF_CONDUCT.md` | done | CNCF Community Code of Conduct v1.3 by reference. Reports go to the maintainer, because `conduct@cncf.io` has no standing over a project CNCF has not accepted. |
-| `CONTRIBUTING.md` | done | DCO, the licensing term for contributions, commit conventions, and the test-integrity rules. |
-| `GOVERNANCE.md` | done | One maintainer decides. Says so rather than inventing a committee. |
-| `MAINTAINERS.md` | done | One name, and it names the succession risk. |
-| `SECURITY.md` | done | Reporting address, an honest expectation rather than a service level, and a scope that excludes attackers who are already root. |
-| License | **done** | Apache-2.0 on code, CC-BY-4.0 on docs. Both license texts are in every commit from the root. Not to be changed. |
-
-**The DCO gap was closed by rewriting rather than squashing**, on 2026-09-16, while there
-was one human author and a history nobody else had pulled. The reasoning is worth keeping:
-a squash and a rewrite produce identical provenance, so a squash buys nothing on the goal
-and destroys 124 substantive commit bodies whose distinctive content is the alternatives
-that were rejected. The same pass removed the AI co-author trailers, normalised two author
-identities to one so each sign-off matches the author it certifies, and wrote both license
-texts into every commit from the root: a sole author may state the terms under which his
-own work was always contributed.
-
-**Attribution is settled:** agents do not take credit -- not in a `Co-Authored-By` trailer,
-not in source comments, not on GitHub. The rule is in AGENTS.md. The maintainer is the
-author and the one who certifies the work, which is what a DCO sign-off means anyway.
-
-The 79 trailers that predated the rule are gone, removed in the same pass that added the
-sign-offs.
+**Keep it that way.** A sign-off that does not match its author, or a commit landing
+without one, is cheap to prevent and expensive to fix once anyone else has pulled.
+[CONTRIBUTING.md](CONTRIBUTING.md) states the requirement.
 
 **Name and trademark.** Donation means assigning the trademark to the Linux Foundation, so
 the name has to be one we can give away. `hire`/`HiRE` is taken on crates.io and
@@ -125,51 +105,62 @@ accumulate brand equity in a name that cannot be assigned.
 
 ---
 
-## The evidence that actually decides it
+## What the community weights
 
-The SSC composition rule -- 40% from organizations running SPIFFE in production -- says what
-this community weights. Not design quality. Deployment.
+The SSC composition rule -- 40% from organizations running SPIFFE in production -- says
+what this community weights. Not design quality. Deployment.
 
-What HIRE can put on the table today:
+**Lead with the conformance result, not the conformance claim.**
+`hire-grpc/tests/stock_client.rs` drives a third-party SPIFFE client library through
+connect, fetch, hint, bundle fetch and cryptographic validation against `hired`,
+unmodified. It is the strongest artifact this project has, it is checkable by anyone in
+under a minute, and it is an argument no specification can make.
 
-- **A conformance result rather than a conformance claim.** The stock-client test is the
-  strongest artifact this project has and should lead every conversation.
-- Five identity sources that actually prove: Unix account, Tailscale, ssh-agent, GPG,
-  `did:key`.
-- A design that separates discovery from proof, so a source cannot assert a tier it did
-  not establish.
+Four questions will be asked, and the answer to each lives somewhere that stays current:
 
-What is missing, in the order it will be asked about:
+| Question | Where the answer is |
+|---|---|
+| What actually works? | The Status table in [README.md](README.md) |
+| What is queued, and why is it not done? | The tracker: `bd ready`, and the bead named in each phase below |
+| Who maintains it? | [MAINTAINERS.md](MAINTAINERS.md) |
+| How many users? | Nowhere -- nothing tracks this. Count it honestly at the time, and expect zero to be the answer for a while |
 
-- **Users.** Zero. One named future consumer (kith).
-- **X.509-SVID issuance** (`persona-apyr`). Until it exists, "any SPIFFE-aware consumer
-  works" is true only of the JWT-speaking subset -- and envoy, ghostunnel and spiffe-helper
-  are the consumers a SPIFFE audience will name first.
-- **The work IdP** (`persona-qbnm.7`). On a corporate desktop the answer an application
-  most wants is the Google or Microsoft account, and it is the source that cannot answer.
-- **A second maintainer.** A one-person project is a succession risk, and a foundation
-  will treat it as one.
+The two that will hurt are the last two. A one-person project is a succession risk and a
+foundation treats it as one; and adoption is the thing this plan cannot manufacture by
+being well written.
 
 ---
+
 
 ## Sequence
 
 Each phase has an exit criterion. Do not start the next one early; the cost of asking too
 soon is a "no" that is expensive to reverse.
 
+**These phases name no engineering status.** They name the bead that gates them, and the
+tracker says whether it is done.
+
 **Phase 0 -- be a participant.** Join `spiffe.slack.com`, the `spiffe-dev` and
 `spiffe-users` lists, and the weekly community call. Attend SIG-Spec. Answer other
 people's questions. Ask, without proposing anything, how the project thinks about human
 identity on the Workload API -- it may already have an opinion, and if it has a bad
 experience with this idea it is far cheaper to learn that now.
-*Exit: known by name to SIG-Spec, and an answer to whether human identity is welcome in
-scope.*
 
-**Phase 1 -- make the demo undeniable.** Land X.509-SVID issuance and the OIDC verifier, so
-a stock consumer of either flavour works and the identity most enterprises care about is
-one of the sources. Add the governance files. Fix the DCO.
-*Exit: `spiffe-helper` or `ghostunnel` runs against `hired` unmodified, and the repository
-passes a CNCF-style hygiene review.*
+Lead with the origin story rather than the design. It is the first section of
+[MOTIVATIONS.md](MOTIVATIONS.md): an application that used Tailscale as its identity
+service, and the question of whether a standard API existed for that. Several people in
+that room arrived at SPIFFE by the same route from the workload side, and a story they
+recognise buys more attention than a specification does. It also answers the "why not
+just SPIRE" question below before anyone has to ask it, because it starts from a human
+at a keyboard rather than from a cluster.
+*Gated by nothing. Exit: known by name to SIG-Spec, and an answer to whether human
+identity is welcome in scope.*
+
+**Phase 1 -- make the demo undeniable.** A stock consumer of either credential flavour
+should work, and the identity most enterprises actually care about should be one of the
+sources.
+*Gated by `persona-apyr` (X.509-SVID issuance) and `persona-qbnm.7` (the OIDC verifier).
+Exit: `spiffe-helper` or `ghostunnel` runs against `hired` unmodified.*
 
 **Phase 2 -- ask the small question.** Offer a SIG-Spec demo or a community-call talk. Ask
 about an ecosystem listing on spiffe.io. This is a request for attention, not for
@@ -190,6 +181,7 @@ Without users, skip it: the extensions are ignorable and the implementation stan
 *Exit: Experimental or Incubating status, or a deliberate decision not to standardize.*
 
 ---
+
 
 ## What we would be giving up
 
@@ -221,8 +213,8 @@ Signs the plan is not working, and what each one means:
 - **"Why is this not just SPIRE with a different attestor?"** Have the answer ready: SPIRE
   attests processes against a server-side registry; HIRE aggregates local human-identity
   custodians with no server and no registration, and a human is not a workload because a
-  human can be absent. If that answer does not land, the positioning is wrong, not the
-  audience.
+  human can be absent. The origin story makes the same point without argument. If neither
+  lands, the positioning is wrong, not the audience.
 - **Someone else ships it first.** The correct response is to help them, not to race. The
   goal is a standard local API for "who is this human", not our implementation of it.
 
