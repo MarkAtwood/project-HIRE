@@ -12,12 +12,12 @@ SPIFFE/SPIRE solved this for workloads and graduated in the CNCF. Nobody did it 
 | System | Stops at |
 |---|---|
 | SPIRE | "what process is this," not who runs it |
-| Kerberos | one identity source, no presence model |
+| Kerberos | one identity source, and no local API for an application to ask |
 | pam-fido2 | proves a human is present, not which human |
 | WebAuthn | browser only; every relying party gets an unlinked credential |
 | Windows SSPI, macOS ASAuth | one OS each |
 
-`hired` answers "who is the human at this keyboard, and are they present right now?" over the SPIFFE Workload API, which already exists and has clients. The longer argument is in [MOTIVATIONS.md](MOTIVATIONS.md); the full comparison table is in [SPEC-HIRE.md](SPEC-HIRE.md#prior-art-and-why-nothing-existing-solves-this).
+`hired` answers "who is the human at this keyboard?" over the SPIFFE Workload API, which already exists and has clients. It answers with the best identity the machine can actually establish, and says how it knows: which source, which authentication method, which assurance tier. Where the environment can also establish that a human is *present* -- a FIDO2 touch, a PIV PIN -- `hired` carries that and dates it. Where it cannot, the answer is still an answer. Presence qualifies the answer; it is not the question. The longer argument is in [MOTIVATIONS.md](MOTIVATIONS.md); the full comparison table is in [SPEC-HIRE.md](SPEC-HIRE.md#prior-art-and-why-nothing-existing-solves-this).
 
 ## Status
 

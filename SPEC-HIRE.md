@@ -17,7 +17,9 @@ SPIFFE/SPIRE solves workload identity: a daemon on the host that attests "this p
 
 There is no equivalent for human users.
 
-The question "who is the person operating this workstation, and how confident are we that they are physically present right now?" has no standard local API answer. Every application invents its own answer from whichever signals it happens to have access to — the OS login session, a browser cookie, a Tailscale node, a cached OIDC token — without a common format, provenance model, or consumer authentication discipline.
+The question "who is the person operating this workstation, and how much should we believe it?" has no standard local API answer. Every application invents its own answer from whichever signals it happens to have access to — the OS login session, a browser cookie, a Tailscale node, a cached OIDC token — without a common format, provenance model, or consumer authentication discipline.
+
+Where the machine can also establish that a human is physically present -- a FIDO2 touch, a PIV PIN, a Windows Hello gesture -- that is worth carrying and worth dating, and this document specifies how. It is a qualifier on the answer rather than the question: a desktop with no such hardware still has six or seven working answers to "who is this person", and the primary job is to give an application the best of them through one API. A reader who takes presence for the thesis will misread the priority of everything below.
 
 **SPIFFE/SPIRE for humans** is the missing piece: a user-session daemon that federates heterogeneous human-identity sources behind the existing SPIFFE Workload API socket. Apps stop caring whether the user's identity comes from Tailscale, Windows Hello, a work IdP, a DID, or a PIV smartcard. They call `FetchJWTSVID` on the local socket, they get a verifiable credential, and they can reason about provenance and assurance without knowing anything about the source.
 
