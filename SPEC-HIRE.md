@@ -213,11 +213,11 @@ Each source implements a plugin interface: `enumerate()`, `prove(candidate, chal
 - Notes: useful for developer tooling that trusts SSH keys
 
 **gpg**
-- Method: the installed `gpg` binary, which reaches `gpg-agent` itself; sign the daemon's challenge inline, then verify the result with `gpg --decrypt --status-fd` and match `VALIDSIG` against the candidate's fingerprint
+- Method: the installed `gpg` binary, which reaches `gpg-agent` itself; take a **detached** signature over the daemon's challenge, export the candidate's public key, and verify the signature **in-process** against it. The exported key's own self-signatures and subkey bindings are checked first, so a subkey is one the primary actually adopted
 - Returns: primary key fingerprint, UID, signed challenge
 - Assurance: `iaa1` (self-asserted)
 - Presence: none. pinentry may appear, and a key already cached in the agent signs with nobody there, so a prompt is not evidence of a human and is not read as one
-- Notes: the candidate names the **primary** key; the signature may be made by a signing subkey, which is the smartcard shape -- a certify-only primary delegating to a subkey on the card. `VALIDSIG` carries both fingerprints and either may match. An offline-primary stub (`#` in field 15 of `sec`) is not enrolled even though gpg could sign with its subkeys
+- Notes: the candidate names the **primary** key; the signature may be made by a signing subkey, which is the smartcard shape -- a certify-only primary delegating to a subkey on the card. The primary and every subkey it bound are tried, so the signature never selects its own verifier. An offline-primary stub (`#` in field 15 of `sec`) is not enrolled even though gpg could sign with its subkeys
 
 **did-self** (`did:key`, `did:ipfs`, `did:web`)
 - Method: for `did:key` there is no resolution step -- the identifier encodes the verification method, so the challenge is signed by the key the identifier names. hire holds no key material of its own, so the secret half is looked for in the local ssh agent; a `did:key` no local agent can answer for enumerates and does not prove. `did:web` and `did:ipfs` are not implemented

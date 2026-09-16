@@ -127,7 +127,7 @@ question from whether it substantiates its assurance row.
 | GNOME Online Accounts | iaa2 | session | Linux (GNOME) | no -- `goa` is a placeholder feature with no D-Bus dependency |
 | OIDC cached | iaa2/iaa1 | session | cross-platform | yes -- always registered, scans gcloud and Azure caches |
 | SSH agent | iaa1 | none | cross-platform | yes -- `prove()` is ed25519 only |
-| GPG | iaa1 | none | cross-platform | yes, when a `gpg` binary is present -- `prove()` signs the challenge through gpg-agent |
+| GPG | iaa1 | none | cross-platform | yes, when a `gpg` binary is present -- `prove()` signs the challenge through gpg-agent and verifies the signature in-process |
 | DID | iaa1/iaa2 | none | cross-platform | `did:key` yes, via `HIRE_DID_KEYS` -- `prove()` signs through whichever local agent holds the key the identifier encodes; `did:web` no |
 | Unix account | iaa1 | none | Linux, macOS, BSD | yes -- always available |
 
