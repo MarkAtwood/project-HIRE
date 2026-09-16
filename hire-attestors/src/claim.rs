@@ -360,48 +360,49 @@ impl ChallengeSignature {
         })
     }
 
-    /// Check an OpenPGP signed message, and witness it only if every part holds.
+    /// Check a detached OpenPGP signature, and witness it only if every part
+    /// holds.
     ///
-    /// The second verifying constructor, and like the first it is the trust
-    /// boundary rather than a step an attestor may choose to take. Three
-    /// checks, and dropping any one makes the other two prove nothing:
+    /// Four checks, and dropping any one makes the other three prove nothing:
     ///
-    /// 1. gpg verifies the signature and reports `VALIDSIG` — without this the
-    ///    message is a bag of bytes;
-    /// 2. the `VALIDSIG` line names the key the candidate names, in the signing
-    ///    or the primary position, so the proof is not of *some* key in the
-    ///    keyring;
-    /// 3. the data the signature covers is byte-for-byte *this* challenge.
+    /// 1. the exported key's primary fingerprint is the one the candidate names
+    ///    — without this, the proof is of *some* key in the keyring;
+    /// 2. the key's own self-signatures and subkey bindings verify, so a subkey
+    ///    is one this primary actually adopted and, where it can sign, carries
+    ///    the embedded back-signature that proves it agreed to be adopted;
+    /// 3. the signature verifies over *this* challenge, under the primary or
+    ///    one of those bound subkeys;
+    /// 4. nothing else in the message can move: a detached signature covers the
+    ///    bytes it is verified against and carries no data of its own.
     ///
-    /// Check 3 is why the signature is inline rather than detached. gpg writes
-    /// the covered data back out on stdout, so comparing it here needs no
-    /// second file and no trust in what the caller says it asked to be signed.
+    /// Check 4 is why this takes a DETACHED signature. An inline signed message
+    /// would make the daemon compare the data gpg echoed back against the
+    /// challenge, and the correspondence between *which* signature was reported
+    /// good and *which* bytes came out is then something the caller reasons
+    /// about rather than something the structure forbids. Here the verifier is
+    /// handed the challenge directly, so there is no second copy of the data to
+    /// disagree with the first.
     ///
-    /// THE VERIFIER IS THE LOCALLY INSTALLED `gpg`, AND THAT IS THE WHOLE
-    /// TRUST DECISION. Verifying the packets in-process would not shrink the
-    /// trust set by one member: the public key would still come from the same
-    /// binary's keyring (`gpg --export`), and the key is what a verifier is
-    /// verifying against. What in-process parsing would buy is independence
-    /// from gpg's *verifier* while keeping the dependence on gpg's *exporter* —
-    /// a distinction with no attacker behind it. So hire asserts trust in the
-    /// installed gpg, exactly as `unix.rs` asserts trust in the kernel and for
-    /// the same reason: whoever can replace `/usr/bin/gpg` can replace `hired`.
-    /// The binary is resolved from a fixed list in [`crate::gpg`], never from
-    /// `PATH` and never from an argument, so no caller can point this at a
-    /// verifier of its own.
+    /// THE PUBLIC KEY IS FETCHED HERE, NOT PASSED IN. `gpg --export` runs
+    /// inside this constructor, using the binary resolved from a fixed list in
+    /// [`crate::gpg`], so an attestor cannot choose the key its own signature
+    /// will be verified against. What hire trusts gpg for is therefore exactly
+    /// one thing — that `--export <fingerprint>` returns the key that
+    /// fingerprint names — and the cryptography is done here. Pinning that key
+    /// at enrollment (hire-08sz) is what would remove the last of it.
     ///
-    /// The instant is stamped after gpg returns, as in
+    /// The instant is stamped after verification, as in
     /// [`verify_ssh_ed25519`](Self::verify_ssh_ed25519): the signature was
     /// produced during the request that consumes it.
     ///
     /// ## Errors
     /// Returns [`AttestorError::ChallengeFailed`] if any check fails, and
-    /// [`AttestorError::Unavailable`] if no gpg binary can be run. No variant
+    /// [`AttestorError::Unavailable`] if the key cannot be exported. No variant
     /// of failure yields evidence.
     pub async fn verify_openpgp(
         candidate: &Candidate,
         challenge: &[u8],
-        signed_message: &[u8],
+        signature: &[u8],
     ) -> Result<Self, AttestorError> {
         let fingerprint = candidate
             .path
@@ -410,31 +411,75 @@ impl ChallengeSignature {
 
         let gpg = crate::gpg::which_gpg()
             .ok_or_else(|| AttestorError::Unavailable("gpg binary not found".into()))?;
-        // Status lines go to stderr, mixed with gpg's human diagnostics and
-        // told apart by their `[GNUPG:] ` prefix, because stdout is carrying
-        // the signed data that check 3 compares. `--decrypt` rather than
-        // `--verify`: the two run the same check, and only `--decrypt` writes
-        // the covered data back out.
-        let output =
-            crate::gpg::run(&gpg, &["--status-fd", "2", "--decrypt"], signed_message).await?;
-
-        let status = String::from_utf8_lossy(&output.stderr);
-        if !output.status.success() || !names_key(&status, fingerprint) {
+        let exported = crate::gpg::run(&gpg, &["--export", fingerprint], &[]).await?;
+        if !exported.status.success() || exported.stdout.is_empty() {
             return Err(AttestorError::ChallengeFailed(format!(
-                "gpg did not report a valid signature by {fingerprint}"
+                "gpg holds no public key for {fingerprint}"
             )));
         }
-        if output.stdout != challenge {
-            return Err(AttestorError::ChallengeFailed(
-                "gpg signature covers data that is not this challenge".into(),
-            ));
+
+        Self::verify_openpgp_against(candidate, challenge, signature, &exported.stdout)
+    }
+
+    /// The cryptography of [`verify_openpgp`](Self::verify_openpgp), over a key
+    /// already exported.
+    ///
+    /// Private, and that is the whole reason the split is safe: the public
+    /// constructor is the only way in from outside this module, so no attestor
+    /// can hand over a key of its own choosing. What the split buys is a
+    /// verifier that can be tested against committed fixtures on a machine with
+    /// no gpg installed — the four checks are exercised offline, and the live
+    /// test then covers the part that needs a real agent.
+    fn verify_openpgp_against(
+        candidate: &Candidate,
+        challenge: &[u8],
+        signature: &[u8],
+        exported_key: &[u8],
+    ) -> Result<Self, AttestorError> {
+        use pgp::composed::{Deserializable as _, DetachedSignature, SignedPublicKey};
+        use pgp::types::KeyDetails as _;
+
+        let fingerprint = candidate
+            .path
+            .strip_prefix("gpg/")
+            .ok_or_else(|| AttestorError::ChallengeFailed("not a gpg candidate".into()))?;
+        let failed = |what: &str| AttestorError::ChallengeFailed(what.to_owned());
+
+        let key = SignedPublicKey::from_bytes(std::io::Cursor::new(exported_key))
+            .map_err(|_| failed("gpg exported a key hire cannot parse"))?;
+        if hex(key.primary_key.fingerprint().as_bytes()) != fingerprint.to_ascii_lowercase() {
+            return Err(failed("gpg exported a key the candidate does not name"));
+        }
+        key.verify_bindings()
+            .map_err(|_| failed("the exported key's own signatures do not verify"))?;
+
+        let detached = DetachedSignature::from_bytes(std::io::Cursor::new(signature))
+            .map_err(|_| failed("gpg produced a signature hire cannot parse"))?;
+
+        // The primary and every subkey it bound, tried in turn. The set is
+        // exactly this candidate's keys, because the export was by the
+        // candidate's own fingerprint and check 2 has already refused any
+        // subkey the primary did not adopt — so a signature by any of them is a
+        // signature by the key that was asked. Selecting by the signature's
+        // stated issuer instead would let the signature choose its own verifier.
+        //
+        // A key that cannot sign cannot verify a signature, so capability needs
+        // no separate check: an X25519 encryption subkey fails here, and an
+        // RSA encryption subkey that did not carry the embedded back-signature
+        // never reached this point.
+        let verified = detached.verify(&key.primary_key, challenge).is_ok()
+            || key
+                .public_subkeys
+                .iter()
+                .any(|subkey| detached.verify(&subkey.key, challenge).is_ok());
+        if !verified {
+            return Err(failed("the signature does not verify over this challenge"));
         }
 
         Ok(Self {
-            assertion: SignedAssertion::new(
-                signed_message.to_vec(),
-                "application/vnd.hire.openpgp-signed-message",
-            ),
+            // The bytes gpg produced, kept rather than re-serialised from the
+            // parsed form: what is witnessed is what was verified.
+            assertion: SignedAssertion::new(signature.to_vec(), "application/pgp-signature"),
             challenge: challenge.to_vec(),
             observed_at: SystemTime::now(),
         })
@@ -456,43 +501,13 @@ impl ChallengeSignature {
     }
 }
 
-/// Whether gpg's status output reports a good signature by `fingerprint`.
+/// Lowercase hex, for comparing a fingerprint against the one a candidate names.
 ///
-/// The `VALIDSIG` line is the cryptographic verdict; `GOODSIG` is about whether
-/// a uid is trusted, and is deliberately not consulted. gpg prints `EXPKEYSIG`
-/// instead of `GOODSIG` for a key past its expiry while still printing
-/// `VALIDSIG`, and the enrolment rule keeps expired keys on purpose — the
-/// operator holds the secret half, only the declared window lapsed.
-///
-/// Its arguments are:
-///
-/// ```text
-/// VALIDSIG <signing-key-fpr> <date> <sig-timestamp> <expire-timestamp>
-///          <sig-version> <reserved> <pubkey-algo> <hash-algo> <sig-class>
-///          [<primary-key-fpr>]
-/// ```
-///
-/// Either fingerprint position is accepted, because a candidate names a primary
-/// key and gpg signs with whichever subkey that key prefers — the common
-/// hardware case, where a certify-only primary delegates signing to a subkey on
-/// the card. Accepting both is not a widening: fingerprints do not collide
-/// across the primary/subkey distinction, so a match in either position is a
-/// match on the key that was asked for, and older gpg that omits the primary
-/// position still verifies a signature by the primary itself.
-fn names_key(status: &str, fingerprint: &str) -> bool {
-    status
-        .lines()
-        .filter_map(|l| l.strip_prefix("[GNUPG:] VALIDSIG "))
-        .any(|args| {
-            let mut fields = args.split_whitespace();
-            let signing = fields.next();
-            // Nine more along from the signing key: the optional primary.
-            let primary = fields.nth(8);
-            [signing, primary]
-                .into_iter()
-                .flatten()
-                .any(|f| f.eq_ignore_ascii_case(fingerprint))
-        })
+// ponytail: a fifth hand-rolled hex encoder in this workspace | ceiling: five
+//   spellings of the same four lines | upgrade path: hire-5s4b.95, which is the
+//   bead for collapsing all of them at once
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 /// An identity token whose signature was checked against the issuer's key.
@@ -989,78 +1004,6 @@ mod tests {
     /// constants the test chose rather than over a clock it read.
     fn epoch_plus(secs: u64) -> SystemTime {
         SystemTime::UNIX_EPOCH + Duration::from_secs(secs)
-    }
-
-    // ── gpg status parsing (hire-qbnm.1) ──────────────────────────────────
-    //
-    // Captured verbatim from `gpg --status-fd 2 --decrypt` on GnuPG 2.4.4,
-    // signing 32 random bytes with a throwaway key. The oracle is gpg itself:
-    // these lines were produced by the implementation this parser has to agree
-    // with, not written by hand to match the parser.
-
-    /// A signature by a sign-capable primary key, which names itself in both
-    /// fingerprint positions.
-    const PRIMARY_STATUS: &str = "\
-[GNUPG:] PLAINTEXT 62 1789521390 
-[GNUPG:] PLAINTEXT_LENGTH 32
-[GNUPG:] NEWSIG
-[GNUPG:] KEY_CONSIDERED 20DCA9F2E1B7C47E06A538BB88517BBD78C58B5B 0
-[GNUPG:] SIG_ID cMBTR7s3PmAtiDTLwRir+asEc4k 2026-09-16 1789521390
-[GNUPG:] GOODSIG 88517BBD78C58B5B HIRE Live <live@example.invalid>
-[GNUPG:] VALIDSIG 20DCA9F2E1B7C47E06A538BB88517BBD78C58B5B 2026-09-16 1789521390 0 4 0 22 10 00 20DCA9F2E1B7C47E06A538BB88517BBD78C58B5B
-[GNUPG:] TRUST_ULTIMATE 0 pgp
-";
-
-    const PRIMARY_FPR: &str = "20DCA9F2E1B7C47E06A538BB88517BBD78C58B5B";
-
-    /// The hardware shape: a certify-only primary that delegates signing to a
-    /// subkey. The signing position holds the subkey; the candidate's
-    /// fingerprint appears only in the last position.
-    const SUBKEY_STATUS: &str = "\
-[GNUPG:] GOODSIG F226257F32E27917 HIRE Sub <sub@example.invalid>
-[GNUPG:] VALIDSIG A13119992BE42992574A25B0F226257F32E27917 2026-09-16 1789521400 0 4 0 22 10 00 9167765339732645FAC5E0E1BA6F7EB235577CCC
-";
-
-    const SUBKEY_PRIMARY_FPR: &str = "9167765339732645FAC5E0E1BA6F7EB235577CCC";
-    const SUBKEY_SIGNING_FPR: &str = "A13119992BE42992574A25B0F226257F32E27917";
-
-    #[test]
-    fn validsig_names_the_signing_primary() {
-        assert!(names_key(PRIMARY_STATUS, PRIMARY_FPR));
-        // The candidate path is lowercased; gpg prints uppercase.
-        assert!(names_key(PRIMARY_STATUS, &PRIMARY_FPR.to_lowercase()));
-    }
-
-    #[test]
-    fn validsig_names_the_primary_of_a_signing_subkey() {
-        // The case a Yubikey produces. A parser reading only the first
-        // fingerprint refuses every card-held key with a certify-only primary,
-        // which is the configuration this attestor exists for.
-        assert!(names_key(SUBKEY_STATUS, SUBKEY_PRIMARY_FPR));
-        assert!(names_key(SUBKEY_STATUS, SUBKEY_SIGNING_FPR));
-    }
-
-    #[test]
-    fn a_fingerprint_in_neither_position_is_refused() {
-        assert!(!names_key(PRIMARY_STATUS, SUBKEY_PRIMARY_FPR));
-        // The 64-bit key ID gpg prints on the GOODSIG line is a substring of
-        // the fingerprint. A parser matching on `contains` would accept it, and
-        // short IDs collide on demand (Evil32, 2016).
-        assert!(!names_key(PRIMARY_STATUS, "88517BBD78C58B5B"));
-    }
-
-    #[test]
-    fn goodsig_without_validsig_is_not_a_verdict() {
-        let goodsig = PRIMARY_STATUS
-            .lines()
-            .filter(|l| !l.starts_with("[GNUPG:] VALIDSIG"))
-            .collect::<Vec<_>>()
-            .join("\n");
-        assert!(
-            !names_key(&goodsig, PRIMARY_FPR),
-            "GOODSIG is about uid trust; VALIDSIG is the cryptographic verdict"
-        );
-        assert!(!names_key("", PRIMARY_FPR));
     }
 
     fn daemon_assertion(at: SystemTime) -> Evidence {

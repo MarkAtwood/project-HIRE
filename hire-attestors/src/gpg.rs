@@ -15,11 +15,16 @@
 //! from this side of it, and guessing would put a presence claim on a JWT that
 //! nothing observed.
 //!
-// ponytail: the verifier is the locally installed gpg | ceiling: hire believes
-//   what `/usr/bin/gpg` reports about a signature | upgrade path: none worth
-//   taking — see ChallengeSignature::verify_openpgp, where in-process packet
-//   parsing is shown to shrink the trust set by nothing, because the public key
-//   it would verify against comes from the same binary's keyring.
+//! The signature is verified IN-PROCESS, against the key gpg exports. What
+//! hire trusts the gpg binary for is therefore exactly one thing — that
+//! `--export <fingerprint>` returns the key that fingerprint names — and it is
+//! trusted for it once per proof rather than for the verdict itself.
+//!
+// ponytail: the exported public key is trusted, the signature is not | ceiling:
+//   a gpg compromised after the operator enrolled a key can still answer
+//   `--export` with a key of its own, and hire has nothing earlier to compare
+//   it against | upgrade path: hire-08sz, where enrollment records a source's
+//   trust basis — pin the public key there and this last piece goes too.
 
 use async_trait::async_trait;
 use std::path::Path;
@@ -274,16 +279,22 @@ impl Attestor for GpgAttestor {
                 ))
             })?;
 
-        // Inline rather than detached, so the verifier can compare the data the
-        // signature actually covers against the challenge instead of being told
-        // what was signed. `--local-user <fingerprint>` without a trailing `!`:
-        // the `!` would force the primary key itself, and the hardware case
-        // this exists for is a certify-only primary that delegates signing to a
-        // subkey on the card. The primary is named in gpg's VALIDSIG output and
-        // that is where the candidate is matched.
+        // Detached, so the signature covers the bytes the verifier is handed
+        // and carries no data of its own to disagree with them.
+        // `--local-user <fingerprint>` without a trailing `!`: the `!` would
+        // force the primary key itself, and the hardware case this exists for
+        // is a certify-only primary that delegates signing to a subkey on the
+        // card. The verifier accepts the primary or any subkey the primary
+        // bound, so the candidate is still matched on its own fingerprint.
         let signed = run(
             &gpg,
-            &["--local-user", &fingerprint, "--sign", "--output", "-"],
+            &[
+                "--local-user",
+                &fingerprint,
+                "--detach-sign",
+                "--output",
+                "-",
+            ],
             challenge,
         )
         .await?;
