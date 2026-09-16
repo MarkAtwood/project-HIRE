@@ -1006,6 +1006,209 @@ mod tests {
         SystemTime::UNIX_EPOCH + Duration::from_secs(secs)
     }
 
+    // ── OpenPGP verification (hire-qbnm.1) ────────────────────────────────
+    //
+    // Every byte below came out of GnuPG 2.4.4: `gpg --export <fpr>` and
+    // `gpg --detach-sign` over CHALLENGE, for two throwaway keys. The oracle is
+    // gpg, and nothing here was produced by the code under test -- which is the
+    // point of testing the verifier rather than a round trip through our own
+    // signer. No gpg is needed to run them.
+
+    /// The 32 bytes both fixture signatures were made over.
+    const GPG_CHALLENGE: [u8; 32] = [0xa5; 32];
+
+    /// A key whose primary is sign-capable, exported by its fingerprint.
+    const PRIMARY_KEY: &str = "\
+        9833046aa9ede916092b06010401da470f010107403e8e4c40a90b87192b0675ee7ac385\
+        aee5d8bbc947cb4c03c7647b0342bd17f6b42048495245204c697665203c6c6976654065\
+        78616d706c652e696e76616c69643e88930413160a003b16210420dca9f2e1b7c47e06a5\
+        38bb88517bbd78c58b5b05026aa9ede9021b03050b0908070202220206150a09080b0204\
+        16020301021e07021780000a091088517bbd78c58b5b4e1800fe38d6214a722631e5e882\
+        b99083d6247845f32cf59395596af07a2c498c2d1dad0100b700812d60e8f6fed902ade9\
+        9de4c99f3fbf8c1997407d92effe644110c3e207\
+    ";
+
+    /// That primary's detached signature over [`GPG_CHALLENGE`].
+    const PRIMARY_SIG: &str = "\
+        88750400160a001d16210420dca9f2e1b7c47e06a538bb88517bbd78c58b5b05026aa9f9\
+        33000a091088517bbd78c58b5b175000ff7dc5b0da32625b1d37c66732a6e0b1b77391ce\
+        96ecac799d8856e2a29dd7edbf00fb063ce53c9a1656165db36ba0ee64d53c88800dbf7d\
+        58c5ad212abe57e8d41506\
+    ";
+
+    const PRIMARY_FPR: &str = "20dca9f2e1b7c47e06a538bb88517bbd78c58b5b";
+
+    /// The hardware shape: a CERTIFY-ONLY primary with a signing subkey.
+    /// This is the configuration a kernel-developer Yubikey uses, and the one a
+    /// verifier that only ever tried the primary would refuse.
+    const SUBKEY_KEY: &str = "\
+        9833046aa9edf816092b06010401da470f01010740d06977f6e5af0cb177b0d191032cff\
+        9f7bc36f77c401818c7d9a2c2093537860b41e4849524520537562203c73756240657861\
+        6d706c652e696e76616c69643e88930413160a003b1621049167765339732645fac5e0e1\
+        ba6f7eb235577ccc05026aa9edf8021b01050b0908070202220206150a09080b02041602\
+        0301021e07021780000a0910ba6f7eb235577cccfa7000ff55bcda7da7c438924c75f98a\
+        22a412062c8ef0b2b6deaed8646872f7a30bdc5801008eae675177a057bafd899d577ce2\
+        d7f9d2a945cad787d1e9a001fa293fc2fd00b833046aa9edf816092b06010401da470f01\
+        0107406e8a68582a279d7c424a61b8fdff9a4021668f74a8b1f5818902675324e490cc88\
+        ef0418160a00201621049167765339732645fac5e0e1ba6f7eb235577ccc05026aa9edf8\
+        021b0200810910ba6f7eb235577ccc76200419160a001d162104a13119992be42992574a\
+        25b0f226257f32e2791705026aa9edf8000a0910f226257f32e27917073000fa027093a0\
+        57025ca4cb4b126615aff4400a1ef0693ac4e9695adaf2e13c546ccd0100c9999c2b720a\
+        354a7d0d76032800dfdf48b16a381f0005cb93025d26cf330f0189ed00fe292fe46e0812\
+        438bcf2ae09e6ece4ac9aa4b16a6e2a9fae462dc0785d25fafcf00fd1b1c769d4bcf7e0c\
+        9b7066e2a2fda1caccb55ab2d090aa47b5738075315cff05\
+    ";
+
+    /// The SUBKEY's detached signature over [`GPG_CHALLENGE`].
+    const SUBKEY_SIG: &str = "\
+        88750400160a001d162104a13119992be42992574a25b0f226257f32e2791705026aa9f9\
+        33000a0910f226257f32e279178b2500ff497581548c6dff4a5c5863ec6d829a4d6ef20a\
+        447962e9b0ced3b667cc1b107000fd1011b39b3a15f44d7b201361a39e728c61c12e6052\
+        c14900d76f074cf5c44401\
+    ";
+
+    const SUBKEY_FPR: &str = "9167765339732645fac5e0e1ba6f7eb235577ccc";
+
+    fn unhex(s: &str) -> Vec<u8> {
+        let s: String = s.chars().filter(|c| !c.is_whitespace()).collect();
+        (0..s.len())
+            .step_by(2)
+            .map(|i| u8::from_str_radix(&s[i..i + 2], 16).expect("hex fixture"))
+            .collect()
+    }
+
+    fn gpg_candidate(fingerprint: &str) -> Candidate {
+        Candidate::new(
+            "gpg",
+            SelfAssertedDomain::SshLocal,
+            format!("gpg/{fingerprint}"),
+            "Fixture",
+        )
+    }
+
+    fn verify_fixture(
+        fingerprint: &str,
+        challenge: &[u8],
+        sig: &str,
+        key: &str,
+    ) -> Result<ChallengeSignature, AttestorError> {
+        ChallengeSignature::verify_openpgp_against(
+            &gpg_candidate(fingerprint),
+            challenge,
+            &unhex(sig),
+            &unhex(key),
+        )
+    }
+
+    #[test]
+    fn a_primary_key_signature_verifies() {
+        let witnessed = verify_fixture(PRIMARY_FPR, &GPG_CHALLENGE, PRIMARY_SIG, PRIMARY_KEY)
+            .expect("gpg's own signature over the challenge must verify");
+        assert_eq!(witnessed.challenge(), GPG_CHALLENGE);
+    }
+
+    #[test]
+    fn a_signing_subkey_of_a_certify_only_primary_verifies() {
+        // The candidate names the PRIMARY; the signature is by the subkey. A
+        // verifier that tried only the primary would refuse every card-held key
+        // in the configuration this attestor exists for.
+        verify_fixture(SUBKEY_FPR, &GPG_CHALLENGE, SUBKEY_SIG, SUBKEY_KEY)
+            .expect("a bound signing subkey must verify for its primary");
+    }
+
+    #[test]
+    fn another_challenge_does_not_verify() {
+        let mut other = GPG_CHALLENGE;
+        other[0] ^= 1;
+        assert!(verify_fixture(PRIMARY_FPR, &other, PRIMARY_SIG, PRIMARY_KEY).is_err());
+        // And the empty challenge, which is what a verifier that ignored its
+        // argument would accept.
+        assert!(verify_fixture(PRIMARY_FPR, &[], PRIMARY_SIG, PRIMARY_KEY).is_err());
+    }
+
+    #[test]
+    fn a_key_the_candidate_does_not_name_does_not_verify() {
+        // The exported key is real and the signature is really by it; only the
+        // fingerprint the candidate names is another key's. Without check 1 the
+        // proof would be of some key in the keyring rather than of this one.
+        assert!(verify_fixture(SUBKEY_FPR, &GPG_CHALLENGE, PRIMARY_SIG, PRIMARY_KEY).is_err());
+        assert!(verify_fixture(PRIMARY_FPR, &GPG_CHALLENGE, SUBKEY_SIG, SUBKEY_KEY).is_err());
+    }
+
+    #[test]
+    fn a_signature_by_another_key_does_not_verify() {
+        // Both halves real, and paired wrongly: the subkey's signature offered
+        // against the primary-only key, and the reverse. This is the case a
+        // single-key fixture cannot make.
+        assert!(verify_fixture(PRIMARY_FPR, &GPG_CHALLENGE, SUBKEY_SIG, PRIMARY_KEY).is_err());
+        assert!(verify_fixture(SUBKEY_FPR, &GPG_CHALLENGE, PRIMARY_SIG, SUBKEY_KEY).is_err());
+    }
+
+    #[test]
+    fn a_subkey_the_primary_did_not_bind_does_not_verify() {
+        // The attack the binding check exists for: append your own subkey to
+        // somebody's exported public key and sign with it. The primary
+        // fingerprint still matches, the subkey's signature still verifies
+        // under the subkey, and only the binding signature says the primary
+        // never adopted it.
+        //
+        // Simulated by corrupting the last byte of the exported key, which sits
+        // inside the subkey's binding signature: the packet structure and the
+        // subkey itself survive, so the fixture reaches the binding check
+        // rather than failing to parse.
+        let mut key = unhex(SUBKEY_KEY);
+        let last = key.len() - 1;
+        key[last] ^= 1;
+        assert!(ChallengeSignature::verify_openpgp_against(
+            &gpg_candidate(SUBKEY_FPR),
+            &GPG_CHALLENGE,
+            &unhex(SUBKEY_SIG),
+            &key,
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn a_tampered_signature_does_not_verify() {
+        let mut sig = unhex(PRIMARY_SIG);
+        let last = sig.len() - 1;
+        sig[last] ^= 1;
+        assert!(ChallengeSignature::verify_openpgp_against(
+            &gpg_candidate(PRIMARY_FPR),
+            &GPG_CHALLENGE,
+            &sig,
+            &unhex(PRIMARY_KEY),
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn a_tampered_key_does_not_verify() {
+        // Flipping a byte of the exported key breaks either the parse or the
+        // self-signature check, and both are refusals.
+        let mut key = unhex(PRIMARY_KEY);
+        key[40] ^= 1;
+        assert!(ChallengeSignature::verify_openpgp_against(
+            &gpg_candidate(PRIMARY_FPR),
+            &GPG_CHALLENGE,
+            &unhex(PRIMARY_SIG),
+            &key,
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn a_candidate_from_another_source_is_not_a_gpg_candidate() {
+        let ssh = Candidate::new("ssh-agent", SelfAssertedDomain::SshLocal, "key/abc", "x");
+        assert!(ChallengeSignature::verify_openpgp_against(
+            &ssh,
+            &GPG_CHALLENGE,
+            &unhex(PRIMARY_SIG),
+            &unhex(PRIMARY_KEY),
+        )
+        .is_err());
+    }
+
     fn daemon_assertion(at: SystemTime) -> Evidence {
         daemon_assertion_for(candidate().path, at)
     }
