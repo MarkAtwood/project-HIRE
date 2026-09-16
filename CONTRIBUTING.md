@@ -49,16 +49,22 @@ and the one who signs off. [AGENTS.md](AGENTS.md) has the full rule.
 ## Before you open a pull request
 
 ```sh
-make ci     # fmt-check, clippy -D warnings, tests, cargo audit, cross-target checks
+make ci     # fmt-check, clippy -D warnings, tests, cargo audit,
+            # dependency policy, cross-target checks
 ```
 
-All of it must pass. Two further rules that are not negotiable:
+All of it must pass. Three further rules that are not negotiable:
 
 - **Never weaken a test to make it pass.** Fix the code, or say the code cannot
   be fixed in scope and leave the test failing with an explanation.
 - **A test may not be its own oracle.** Encrypting with a function and
   decrypting with the same function proves nothing. Use published test vectors,
   a second implementation, or a byte-exact comparison against a reference.
+- **Cryptography is reached through the RustCrypto traits, and `ring`,
+  `aws-lc-rs` and `aws-lc-sys` are not used.** `deny.toml` enforces it and
+  `make bans` runs the check. A crate that needs one of them needs a different
+  crate; where a dependency offers a choice of backend, select the RustCrypto
+  one explicitly in `Cargo.toml` rather than taking the default.
 
 ## Issue tracking
 

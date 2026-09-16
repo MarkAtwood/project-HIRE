@@ -1,0 +1,20 @@
+# Dependency policy.
+#
+# Checked by `make bans`, which is part of `make ci`.
+
+[graph]
+all-features = true
+
+[bans]
+multiple-versions = "allow"
+
+# Not used. A crate that needs one of these needs a different crate.
+#
+# The one wrapper below is the entire exception. It is not a list to add to:
+# anything else that reaches `ring` fails the check, including a second path
+# through the same crate.
+deny = [
+    { name = "ring", wrappers = ["ctap-hid-fido2"] },
+    { name = "aws-lc-rs" },
+    { name = "aws-lc-sys" },
+]

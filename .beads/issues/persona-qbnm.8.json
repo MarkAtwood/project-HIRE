@@ -1,0 +1,28 @@
+{
+  "id": "persona-qbnm.8",
+  "title": "The CTAP2 crate must not be the one that needs the exception",
+  "description": "deny.toml denies ring, aws-lc-rs and aws-lc-sys, with exactly one\nwrapper exception: ctap-hid-fido2. That exception exists because the\ncrate is already in the tree, not because it was chosen.\n\nWHAT THE CRATE IS USED FOR TODAY: get_fidokey_devices() and HidParam.\nHID device listing, and nothing else. prove() is unimplemented, so the\nattestor enumerates candidates it can never prove and the ring edge buys\nan enumeration.\n\nWHY THIS BELONGS TO persona-qbnm.3 RATHER THAN TO DEPENDENCY HYGIENE:\nthe crate choice is not settled until something actually speaks CTAP2 to\na key, and that is qbnm.3's job. Whatever crate does it is the one this\nproject lives with, so \"reaches ring through nothing\" is a selection\ncriterion alongside the ones that are about function.\n\nWORTH KNOWING BEFORE SHOPPING: talking to a hardware key does not\nrequire us to do much cryptography. The key signs; the host sends CBOR\nover HID. The host-side crypto is the PIN/pinUvAuth protocol -- ECDH on\nP-256, HKDF, AES-CBC, HMAC-SHA-256 -- and every one of those is already\nin this tree or is a RustCrypto crate away: p256, hkdf, aes, hmac, sha2.\nSo a raw-HID crate plus the protocol is a real option and not an\nunbounded one, if no existing crate fits.\n\nTHE EXCEPTION IS NARROW BY CONSTRUCTION. cargo-deny's wrappers form\nallows ring only as a direct dependency of ctap-hid-fido2; a second path\nto ring fails the check, including a second path through the same crate.\nSo this does not silently widen while it waits.\n",
+  "acceptance_criteria": "Either ctap-hid-fido2 is replaced by a crate that reaches ring through nothing, or the wrapper exception in deny.toml is recorded as permanent with the reason it cannot be removed.",
+  "status": "open",
+  "priority": 2,
+  "issue_type": "task",
+  "owner": "mark@reviewcommit.com",
+  "created_at": "2026-09-16T20:37:49.418322396Z",
+  "created_by": "agent",
+  "updated_at": "2026-09-16T20:37:49.418322396Z",
+  "labels": [
+    "attestor",
+    "deps",
+    "driver"
+  ],
+  "dependencies": [
+    {
+      "issue_id": "persona-qbnm.8",
+      "depends_on_id": "persona-qbnm",
+      "type": "parent-child",
+      "created_at": "2026-09-16T20:37:49.447190158Z",
+      "created_by": "agent",
+      "metadata": "{}"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-.PHONY: check portability fmt lint test audit clean roadmap
+.PHONY: check portability fmt lint test audit bans clean roadmap
 
 check:
 	cargo check --workspace
@@ -30,10 +30,14 @@ test:
 audit:
 	cargo audit
 
+# Dependency policy, in deny.toml. Needs: cargo install cargo-deny
+bans:
+	cargo deny check bans
+
 roadmap:
 	python3 scripts/gen-roadmap.py
 
-ci: fmt-check lint test audit portability
+ci: fmt-check lint test audit bans portability
 	@echo "CI passed"
 
 clean:

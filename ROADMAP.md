@@ -102,7 +102,7 @@ find out.
 
 <!-- BEGIN GENERATED -- regenerate with `make roadmap`, do not edit by hand -->
 
-*Generated from the issue tracker on 2026-09-16: 98 open, 126 closed.*
+*Generated from the issue tracker on 2026-09-16: 99 open, 126 closed.*
 
 ### Readiness: what adoption arriving in a lump would need
 
@@ -152,7 +152,7 @@ find out.
 
 ### Seven attestors enumerate but cannot prove
 
-`persona-qbnm` -- 3 of 13 done
+`persona-qbnm` -- 3 of 14 done
 
 - **P1** `persona-qbnm.3` -- fido2: the first attestor that establishes presence
 - **P1** `persona-qbnm.7.2` -- The issuer URL comes from a file anyone on the box can write
@@ -163,6 +163,7 @@ find out.
 - **P2** `persona-qbnm.7.3` -- Resolve the issuer's JWKS: discovery, cache, and kid-miss refresh
 - **P2** `persona-qbnm.7.5` -- The verifying constructor, and what Validation must and must not check
 - **P2** `persona-qbnm.7.6` -- Wire oidc prove() and re-anchor the identity to its own trust domain
+- **P2** `persona-qbnm.8` -- The CTAP2 crate must not be the one that needs the exception
 - *and 1 lower-priority item*
 
 ### Specified sources with no implementation at all

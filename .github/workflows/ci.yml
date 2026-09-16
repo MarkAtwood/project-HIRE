@@ -172,3 +172,19 @@ jobs:
       # its reachability argument and re-verification conditions.
       - name: cargo audit
         run: cargo audit
+
+  bans:
+    name: Dependency policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+
+      # Only the bans section. Advisories are the audit job's, and nothing
+      # here reads the licence or source sections. Matches `make bans`.
+      - name: cargo deny check bans
+        run: cargo deny check bans
